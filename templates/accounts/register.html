@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-7">
+            <div class="card p-4 p-md-5 border-0 rounded-4 feature-card shadow-lg">
+                <div class="text-center mb-4">
+                    <div class="brand-icon-box mx-auto mb-3" style="width: 52px; height: 52px;">
+                        <i class="bi bi-person-plus-fill text-primary fs-3"></i>
+                    </div>
+                    <h2 class="fw-bold mb-1">Create an Account</h2>
+                    <p class="text-secondary small">Join the EduConnect institutional network</p>
+                </div>
+
+                <div class="alert alert-dark border border-secondary-subtle rounded-3 p-3 mb-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+                    <span class="small text-secondary">
+                        Public registration is available for <strong>Applicants, Students, Parents, and Teachers</strong>. Administrative &amp; Accounts Staff accounts are provisioned exclusively by school administration.
+                    </span>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger border-0 rounded-3 small py-2 px-3 mb-4">
+                    {% for error in form.non_field_errors %}
+                    <div><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'accounts:register' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">First Name</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Last Name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Username</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Email Address</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Role in Institution</label>
+                            {{ form.role }}
+                            {% if form.role.errors %}
+                            <div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Phone Number (Optional)</label>
+                            {{ form.phone_number }}
+                            {% if form.phone_number.errors %}
+                            <div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Password</label>
+                            <input type="password" name="password1" class="form-control" placeholder="Create strong password" required id="id_password1">
+                            {% if form.password1.errors %}
+                            <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Confirm Password</label>
+                            <input type="password" name="password2" class="form-control" placeholder="Re-enter password" required id="id_password2">
+                            {% if form.password2.errors %}
+                            <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if form.help_text %}
+                    <div class="form-text text-secondary small mb-3">{{ form.help_text }}</div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 mt-3 fw-bold">
+                        <i class="bi bi-check2-circle me-1"></i> Complete Registration
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top border-secondary-subtle">
+                    <p class="text-secondary small mb-0">
+                        Already have an account? 
+                        <a href="{% url 'accounts:login' %}" class="text-primary fw-semibold text-decoration-none">Sign in here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Applicant Portal - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-danger"></span>
+                <span class="small fw-bold text-danger text-uppercase">Role 6: Applicant</span>
+            </div>
+            <h2 class="fw-bold mb-1">Admissions &amp; Application Status</h2>
+            <p class="text-secondary small mb-0">Prospective student admission tracking and onboarding checklist</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-person-circle me-1"></i> My Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Application Status Banner -->
+    <div class="card p-4 border-0 rounded-4 hero-card mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <h4 class="fw-bold text-light mb-1">Application for {{ applicant.get_full_name|default:applicant.username }}</h4>
+                <p class="text-secondary small mb-2">
+                    Registered Email: <strong class="text-light">{{ applicant.email }}</strong>
+                </p>
+                <p class="text-secondary small mb-0">
+                    Application ID: <code>APP-{{ applicant.id|stringformat:"s"|slice:":8" }}</code>
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="badge bg-warning-subtle text-warning px-3 py-2 border border-warning-subtle">
+                    <i class="bi bi-hourglass-split me-1"></i> Under Review
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Steps -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex align-items-center gap-2 text-success mb-2">
+                    <i class="bi bi-check-circle-fill fs-4"></i>
+                    <h6 class="fw-bold text-light mb-0">Step 1: Profile Creation</h6>
+                </div>
+                <p class="text-secondary small mb-0">Online user account registered and email registered.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex align-items-center gap-2 text-warning mb-2">
+                    <i class="bi bi-clock-fill fs-4"></i>
+                    <h6 class="fw-bold text-light mb-0">Step 2: Document Review</h6>
+                </div>
+                <p class="text-secondary small mb-0">Transcripts and identification papers being audited by Admissions staff.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex align-items-center gap-2 text-secondary mb-2">
+                    <i class="bi bi-circle fs-4"></i>
+                    <h6 class="fw-bold text-light mb-0">Step 3: Enrollment Offer</h6>
+                </div>
+                <p class="text-secondary small mb-0">Upon acceptance, role updates to Student with enrolled Student ID.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

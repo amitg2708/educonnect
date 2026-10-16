@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}System Health - EduConnect Diagnostics{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-heart-pulse-fill text-danger"></i> System Health & Diagnostics
+            </h2>
+            <p class="text-secondary small mb-0">Real-time infrastructure and database connection diagnostics</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-light btn-sm" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh Status
+            </button>
+            <a href="{% url 'core:api_health' %}" target="_blank" class="btn btn-primary btn-sm">
+                <i class="bi bi-terminal me-1"></i> Raw JSON Probe
+            </a>
+        </div>
+    </div>
+
+    <!-- Health Overview Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4 h-100 border-0 rounded-4 feature-card">
+                <span class="text-secondary small text-uppercase fw-semibold mb-1">Overall System Status</span>
+                <div class="d-flex align-items-center gap-2 my-2">
+                    {% if is_healthy %}
+                    <span class="badge-status-dot bg-success"></span>
+                    <h3 class="fw-bold text-success mb-0">OPERATIONAL</h3>
+                    {% else %}
+                    <span class="badge-status-dot bg-danger"></span>
+                    <h3 class="fw-bold text-danger mb-0">DEGRADED</h3>
+                    {% endif %}
+                </div>
+                <p class="text-secondary small mb-0 mt-2">
+                    Django web services running under <code>{{ ENVIRONMENT }}</code> mode with <code>DEBUG={{ DEBUG_MODE }}</code>.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 h-100 border-0 rounded-4 feature-card">
+                <span class="text-secondary small text-uppercase fw-semibold mb-1">MongoDB Connectivity</span>
+                <div class="d-flex align-items-center gap-2 my-2">
+                    {% if db_health.ok %}
+                    <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                    <h3 class="fw-bold text-light mb-0">Connected</h3>
+                    {% else %}
+                    <i class="bi bi-x-circle-fill text-danger fs-3"></i>
+                    <h3 class="fw-bold text-danger mb-0">Disconnected</h3>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between text-secondary small border-top border-secondary-subtle pt-2 mt-2">
+                    <span>Ping Latency:</span>
+                    <span class="fw-bold text-success">{{ db_health.latency_ms }} ms</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-4 h-100 border-0 rounded-4 feature-card">
+                <span class="text-secondary small text-uppercase fw-semibold mb-1">Active Collections</span>
+                <div class="d-flex align-items-center gap-2 my-2">
+                    <i class="bi bi-collection-fill text-primary fs-3"></i>
+                    <h3 class="fw-bold text-light mb-0">{{ db_health.collections_count }} Collections</h3>
+                </div>
+                <div class="d-flex justify-content-between text-secondary small border-top border-secondary-subtle pt-2 mt-2">
+                    <span>Database Target:</span>
+                    <span class="fw-bold text-light">{{ db_health.database_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagnostic Details Table -->
+    <div class="card p-4 border-0 rounded-4 checklist-card mb-4">
+        <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-sliders text-primary"></i> Subsystem Diagnostics
+        </h4>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Component</th>
+                        <th>Status</th>
+                        <th>Configured Target</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong class="d-block text-light">Database Backend</strong>
+                            <span class="text-secondary small">Django ORM Driver</span>
+                        </td>
+                        <td><span class="badge bg-success-subtle text-success">Active</span></td>
+                        <td><code>{{ db_health.engine }}</code></td>
+                        <td class="text-secondary small">Official MongoDB Inc. Backend for Django</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong class="d-block text-light">Database Name</strong>
+                            <span class="text-secondary small">Isolated Namespace</span>
+                        </td>
+                        <td><span class="badge bg-success-subtle text-success">Mounted</span></td>
+                        <td><code>{{ db_health.database_name }}</code></td>
+                        <td class="text-secondary small">Defined via <code>MONGODB_NAME</code> in environment</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong class="d-block text-light">Credential Protection</strong>
+                            <span class="text-secondary small">Security Layer</span>
+                        </td>
+                        <td><span class="badge bg-primary-subtle text-primary">Protected</span></td>
+                        <td><code>Zero Exposure</code></td>
+                        <td class="text-secondary small">Database passwords and connection strings are strictly redacted</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <strong class="d-block text-light">Server Timestamp</strong>
+                            <span class="text-secondary small">UTC Clock</span>
+                        </td>
+                        <td><span class="badge bg-info-subtle text-info">Synchronized</span></td>
+                        <td><code>{{ current_time|date:"Y-m-d H:i:s" }} UTC</code></td>
+                        <td class="text-secondary small">System time reference</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Security & Best Practices Callout -->
+    <div class="alert alert-dark border border-secondary-subtle rounded-4 p-4 d-flex align-items-start gap-3">
+        <i class="bi bi-shield-check text-success fs-2 flex-shrink-0"></i>
+        <div>
+            <h5 class="fw-bold text-light mb-1">Production Security Guarantee</h5>
+            <p class="text-secondary small mb-0">
+                This endpoint follows production best practices: it performs a live diagnostic round-trip without disclosing connection strings, credentials, or cluster topology. Automated monitors can safely ping <code>/api/health/</code> at regular intervals.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

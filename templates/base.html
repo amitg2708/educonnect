@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EduConnect - Production-ready School & College Management Platform powered by Django and MongoDB">
+    <meta name="author" content="EduConnect Team">
+    <title>{% block title %}EduConnect - School & College Management{% endblock %}</title>
+
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/main.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Top Bar -->
+    <div class="top-announcement-bar py-1 px-3 border-bottom border-secondary-subtle small text-secondary d-none d-md-block">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <span><i class="bi bi-geo-alt-fill text-primary me-1"></i> 100 University Avenue, Academic Valley</span>
+                <span><i class="bi bi-telephone-fill text-success me-1"></i> +1 (800) 555-EDU1</span>
+                <span><i class="bi bi-envelope-fill text-info me-1"></i> admissions@educonnect.edu</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'core:health' %}" class="text-secondary text-decoration-none">
+                    <i class="bi bi-activity text-success me-1"></i> System Online
+                </a>
+                <span class="badge env-badge px-2 py-1 text-uppercase">{{ ENVIRONMENT|default:"development" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-xl border-bottom sticky-top glass-navbar py-2" id="main-nav">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-decoration-none" href="{% url 'core:index' %}">
+                <div class="brand-icon-box">
+                    <i class="bi bi-mortarboard-fill text-primary"></i>
+                </div>
+                <span class="brand-text">Edu<span class="text-gradient">Connect</span></span>
+            </a>
+
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-xl-0 ms-xl-3">
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'core:index' %}">
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'core:about' %}">
+                            About Us
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if 'courses' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:courses' %}">
+                            Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'admissions' %}active{% endif %}" href="{% url 'core:admissions' %}">
+                            Admissions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'achievements' %}active{% endif %}" href="{% url 'core:achievements' %}">
+                            Achievements
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% url 'core:gallery' %}">
+                            Gallery
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" href="{% url 'core:contact' %}">
+                            Contact
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-sm btn-primary px-3 py-2 fw-semibold">
+                        <i class="bi bi-speedometer2 me-1"></i> My Portal
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="badge bg-primary-subtle text-primary text-uppercase">{{ user.get_role_display }}</span>
+                            <span class="fw-semibold">{{ user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-secondary-subtle shadow-lg">
+                            <li>
+                                <div class="px-3 py-1 text-secondary small">
+                                    Signed in as <strong class="text-light d-block">{{ user.get_full_name|default:user.username }}</strong>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider border-secondary-subtle"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:dashboard_redirect' %}">
+                                    <i class="bi bi-speedometer2 text-primary"></i> My Role Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}">
+                                    <i class="bi bi-person-gear text-info"></i> Edit Profile
+                                </a>
+                            </li>
+                            {% if user.is_admin_role %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:admin_users' %}">
+                                    <i class="bi bi-people-fill text-warning"></i> User Directory
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="/admin/" target="_blank">
+                                    <i class="bi bi-shield-lock text-danger"></i> Django Admin
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider border-secondary-subtle"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'accounts:logout' %}">
+                                    <i class="bi bi-box-arrow-right"></i> Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-light px-3 py-2">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-primary px-3 py-2 fw-semibold">
+                        <i class="bi bi-person-plus me-1"></i> Register
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Messages Container -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Breadcrumb Component -->
+    {% block breadcrumb %}{% endblock %}
+
+    <!-- Main Content Block -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="footer mt-auto pt-5 pb-4 border-top border-secondary-subtle bg-dark-subtle">
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <div class="col-lg-4">
+                    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-decoration-none mb-3" href="{% url 'core:index' %}">
+                        <div class="brand-icon-box">
+                            <i class="bi bi-mortarboard-fill text-primary"></i>
+                        </div>
+                        <span class="brand-text">Edu<span class="text-gradient">Connect</span></span>
+                    </a>
+                    <p class="text-secondary small mb-3">
+                        A modern, production-oriented educational management system designed for colleges and schools. Engineered with Django, native MongoDB Atlas persistence, and enterprise role-based security.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="https://github.com/mongodb/django-mongodb-backend" target="_blank" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-github"></i> MongoDB Backend
+                        </a>
+                        <a href="{% url 'core:health' %}" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-activity"></i> System Status
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="fw-bold text-light mb-3 text-uppercase small">Quick Navigation</h6>
+                    <ul class="list-unstyled small text-secondary">
+                        <li class="mb-2"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                        <li class="mb-2"><a href="{% url 'core:about' %}" class="text-secondary text-decoration-none">About Us</a></li>
+                        <li class="mb-2"><a href="{% url 'core:courses' %}" class="text-secondary text-decoration-none">Courses</a></li>
+                        <li class="mb-2"><a href="{% url 'core:admissions' %}" class="text-secondary text-decoration-none">Admissions</a></li>
+                        <li class="mb-2"><a href="{% url 'core:achievements' %}" class="text-secondary text-decoration-none">Achievements</a></li>
+                        <li class="mb-2"><a href="{% url 'core:gallery' %}" class="text-secondary text-decoration-none">Gallery</a></li>
+                        <li class="mb-2"><a href="{% url 'core:contact' %}" class="text-secondary text-decoration-none">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h6 class="fw-bold text-light mb-3 text-uppercase small">Portal Access</h6>
+                    <ul class="list-unstyled small text-secondary">
+                        <li class="mb-2"><a href="{% url 'accounts:login' %}" class="text-secondary text-decoration-none">Member Login</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:register' %}" class="text-secondary text-decoration-none">Student / Parent Sign Up</a></li>
+                        <li class="mb-2"><a href="{% url 'accounts:password_reset' %}" class="text-secondary text-decoration-none">Password Recovery</a></li>
+                        <li class="mb-2"><a href="{% url 'core:api_health' %}" target="_blank" class="text-secondary text-decoration-none">Health Check API</a></li>
+                        <li class="mb-2"><a href="/admin/" target="_blank" class="text-secondary text-decoration-none">Administration</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <h6 class="fw-bold text-light mb-3 text-uppercase small">Institutional Campus</h6>
+                    <p class="text-secondary small mb-2">
+                        <i class="bi bi-geo-alt text-primary me-2"></i> 100 University Avenue, Academic Valley, Campus West
+                    </p>
+                    <p class="text-secondary small mb-2">
+                        <i class="bi bi-telephone text-success me-2"></i> Admissions: +1 (800) 555-EDU1 (09:00 - 17:00)
+                    </p>
+                    <p class="text-secondary small mb-2">
+                        <i class="bi bi-envelope text-info me-2"></i> info@educonnect.edu
+                    </p>
+                    <p class="text-secondary small mb-0">
+                        <i class="bi bi-clock text-warning me-2"></i> Monday - Saturday: 8:00 AM - 5:00 PM
+                    </p>
+                </div>
+            </div>
+
+            <div class="row align-items-center g-3 pt-4 border-top border-secondary-subtle">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-secondary small">
+                        &copy; 2026 <strong class="text-light">EduConnect Platform</strong>. All Rights Reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-inline-flex align-items-center gap-3 small text-secondary">
+                        <span><i class="bi bi-cpu text-info me-1"></i> Django 6.1.2</span>
+                        <span><i class="bi bi-layers-fill text-success me-1"></i> MongoDB 6.1 Backend</span>
+                        <span><i class="bi bi-shield-check text-primary me-1"></i> ISO 27001 Ready</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

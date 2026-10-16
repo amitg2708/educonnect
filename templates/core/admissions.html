@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Admissions & Enrollment - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Admissions</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-primary text-uppercase fw-bold small">Academic Year 2026-27</span>
+        <h1 class="display-5 fw-extrabold text-light mb-2">Admissions &amp; <span class="text-gradient">Enrollment</span></h1>
+        <p class="lead text-secondary">
+            Join a welcoming community dedicated to academic rigor, personal character, and visionary leadership.
+        </p>
+    </div>
+
+    <!-- Admissions Roadmap (4 Steps) -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 text-center">
+                <div class="badge-status-dot bg-primary mx-auto mb-2"></div>
+                <h6 class="fw-bold text-light mb-1">1. Online Inquiry</h6>
+                <p class="text-secondary small mb-0">Submit an online inquiry or create an applicant account.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 text-center">
+                <div class="badge-status-dot bg-info mx-auto mb-2"></div>
+                <h6 class="fw-bold text-light mb-1">2. Document Review</h6>
+                <p class="text-secondary small mb-0">Submit academic transcripts and recommendation forms.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 text-center">
+                <div class="badge-status-dot bg-warning mx-auto mb-2"></div>
+                <h6 class="fw-bold text-light mb-1">3. Interview &amp; Tour</h6>
+                <p class="text-secondary small mb-0">Personal interaction with our academic assessment team.</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 text-center">
+                <div class="badge-status-dot bg-success mx-auto mb-2"></div>
+                <h6 class="fw-bold text-light mb-1">4. Official Enrollment</h6>
+                <p class="text-secondary small mb-0">Acceptance letter issued and student portal credentials assigned.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inquiry Form & Account Creation Split -->
+    <div class="row g-5 mb-5">
+        <div class="col-lg-7">
+            <div class="card p-4 p-md-5 border-0 rounded-4 feature-card shadow-lg">
+                <h3 class="fw-bold text-light mb-2 d-flex align-items-center gap-2">
+                    <i class="bi bi-pencil-square text-primary"></i> Admissions Inquiry Form
+                </h3>
+                <p class="text-secondary small mb-4">
+                    Complete this form and an admissions counselor will reach out within 24 business hours.
+                </p>
+
+                <form method="post" action="{% url 'core:admissions' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Applicant / Student Full Name</label>
+                        {{ form.applicant_name }}
+                        {% if form.applicant_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.applicant_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Email Address</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Contact Phone Number</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Target Program / Grade</label>
+                            {{ form.target_program }}
+                            {% if form.target_program.errors %}
+                            <div class="text-danger small mt-1">{{ form.target_program.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Previous School Attended</label>
+                            {{ form.prior_school }}
+                            {% if form.prior_school.errors %}
+                            <div class="text-danger small mt-1">{{ form.prior_school.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-secondary small fw-semibold">Comments or Special Academic Interests</label>
+                        {{ form.comments }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">
+                        <i class="bi bi-send me-1"></i> Submit Admissions Inquiry
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <!-- Fast Track Account Box -->
+            <div class="card p-4 border-0 rounded-4 hero-card mb-4">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small mb-2">Direct Portal Application</span>
+                <h4 class="fw-bold text-light mb-2">Ready to Apply Now?</h4>
+                <p class="text-secondary small mb-4">
+                    Create an <strong>Applicant Account</strong> to track your application status in real-time through the EduConnect Portal.
+                </p>
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 py-2 fw-semibold mb-2">
+                    <i class="bi bi-person-plus me-1"></i> Register as Applicant
+                </a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-light w-100 py-2 small">
+                    Sign In to Existing Application
+                </a>
+            </div>
+
+            <!-- Financial Assistance Box -->
+            <div class="card p-4 border-0 rounded-4 checklist-card">
+                <h5 class="fw-bold text-light mb-2"><i class="bi bi-award text-warning me-2"></i> Scholarships &amp; Aid</h5>
+                <p class="text-secondary small mb-3">
+                    Merit-based scholarships and need-based financial aid grants are available for qualified applicants. Inquire during your admissions assessment.
+                </p>
+                <div class="text-secondary small">
+                    <i class="bi bi-telephone text-success me-1"></i> Admissions Helpline: <strong>+1 (800) 555-EDU1</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

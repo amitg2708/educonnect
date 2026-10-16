@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - EduConnect Heritage & Vision{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">About Us</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-primary text-uppercase fw-bold small">Our Heritage &bull; Founded 1976</span>
+        <h1 class="display-5 fw-extrabold text-light mb-3">About <span class="text-gradient">EduConnect</span></h1>
+        <p class="lead text-secondary">
+            Committed to intellectual curiosity, academic rigor, and compassionate community leadership for over five decades.
+        </p>
+    </div>
+
+    <!-- Mission & Vision Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card p-4 p-md-5 border-0 rounded-4 feature-card h-100">
+                <div class="card-icon-box mb-3 text-primary">
+                    <i class="bi bi-compass-fill fs-2"></i>
+                </div>
+                <h3 class="fw-bold text-light mb-3">Our Mission</h3>
+                <p class="text-secondary leading-relaxed mb-0">
+                    To cultivate a dynamic, supportive, and intellectually challenging educational environment where every student develops the critical thinking, ethical grounding, and creative resilience necessary to thrive in an interconnected global society.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-4 p-md-5 border-0 rounded-4 feature-card h-100">
+                <div class="card-icon-box mb-3 text-success">
+                    <i class="bi bi-eye-fill fs-2"></i>
+                </div>
+                <h3 class="fw-bold text-light mb-3">Our Vision</h3>
+                <p class="text-secondary leading-relaxed mb-0">
+                    To stand as an internationally recognized beacon of holistic education, blending timeless academic scholarship with cutting-edge technological literacy, environmental stewardship, and student-centered mentorship.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Values -->
+    <div class="card p-4 p-md-5 border-0 rounded-4 checklist-card mb-5">
+        <h3 class="fw-bold text-light mb-4 text-center">Institutional Core Values</h3>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="p-3 rounded-3 verification-item text-center">
+                    <i class="bi bi-star-fill text-warning fs-3 mb-2 d-block"></i>
+                    <strong class="text-light d-block mb-1">Academic Rigor</strong>
+                    <p class="text-secondary small mb-0">Fostering relentless curiosity, precision, and deep conceptual understanding.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded-3 verification-item text-center">
+                    <i class="bi bi-shield-check text-success fs-3 mb-2 d-block"></i>
+                    <strong class="text-light d-block mb-1">Integrity &amp; Honor</strong>
+                    <p class="text-secondary small mb-0">Championing ethical conduct, transparency, and personal accountability.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded-3 verification-item text-center">
+                    <i class="bi bi-lightbulb-fill text-info fs-3 mb-2 d-block"></i>
+                    <strong class="text-light d-block mb-1">Innovation</strong>
+                    <p class="text-secondary small mb-0">Embracing novel educational paradigms, technological exploration, and research.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-3 rounded-3 verification-item text-center">
+                    <i class="bi bi-people-fill text-primary fs-3 mb-2 d-block"></i>
+                    <strong class="text-light d-block mb-1">Global Community</strong>
+                    <p class="text-secondary small mb-0">Celebrating diverse backgrounds, inclusive perspectives, and mutual empathy.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Institutional Highlights -->
+    <div class="row align-items-center g-5 mb-5">
+        <div class="col-lg-6">
+            <span class="text-primary text-uppercase fw-bold small">Campus &amp; Faculty</span>
+            <h2 class="fw-bold text-light mb-3">Distinguished Mentorship</h2>
+            <p class="text-secondary">
+                Our faculty body consists of passionate educators, certified master teachers, and active researchers who provide individualized guidance to every learner.
+            </p>
+            <ul class="list-unstyled text-secondary small">
+                <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i> Over 85% of faculty possess advanced post-graduate or doctoral degrees</li>
+                <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i> Low 15:1 student-to-teacher ratio ensuring personalized attention</li>
+                <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i> Dedicated college counseling and career guidance cell</li>
+                <li class="mb-2"><i class="bi bi-check2 text-primary me-2"></i> Active partnerships with university research laboratories</li>
+            </ul>
+        </div>
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 hero-card text-center">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="p-3 border-bottom border-end border-secondary-subtle">
+                            <h2 class="display-6 fw-extrabold text-light mb-1">{{ courses_count|default:"24" }}+</h2>
+                            <span class="text-secondary small">Active Programs</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border-bottom border-secondary-subtle">
+                            <h2 class="display-6 fw-extrabold text-primary mb-1">100%</h2>
+                            <span class="text-secondary small">University Acceptance</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 border-end border-secondary-subtle">
+                            <h2 class="display-6 fw-extrabold text-success mb-1">{{ achievements_count|default:"35" }}+</h2>
+                            <span class="text-secondary small">National Awards</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3">
+                            <h2 class="display-6 fw-extrabold text-warning mb-1">50</h2>
+                            <span class="text-secondary small">Years of Legacy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

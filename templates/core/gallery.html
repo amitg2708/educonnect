@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Life & Gallery - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Campus Gallery</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-primary text-uppercase fw-bold small">Visual Showcase</span>
+        <h1 class="display-5 fw-extrabold text-light mb-2">Campus <span class="text-gradient">Gallery</span></h1>
+        <p class="lead text-secondary">
+            A glimpse into our campus spaces, STEM research hubs, digital libraries, and student life activities.
+        </p>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="card p-3 border-0 rounded-4 checklist-card mb-5">
+        <div class="d-flex flex-wrap align-items-center gap-2 justify-content-center">
+            <a href="{% url 'core:gallery' %}" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-light{% endif %}">
+                All Photos
+            </a>
+            {% for code, name in categories %}
+            <a href="{% url 'core:gallery' %}?category={{ code }}" class="btn btn-sm {% if current_category == code %}btn-primary{% else %}btn-outline-light{% endif %}">
+                {{ name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="row g-4 mb-5">
+        {% for item in gallery_items %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 rounded-4 feature-card overflow-hidden h-100">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.title }}" style="height: 220px; object-fit: cover;">
+                {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-dark" style="height: 200px;">
+                    <div class="text-center text-secondary">
+                        <i class="bi bi-camera fs-1 mb-2 d-block text-primary"></i>
+                        <span class="small">{{ item.get_category_display }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="card-body p-4">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small mb-2">
+                        {{ item.get_category_display }}
+                    </span>
+                    <h5 class="fw-bold text-light mb-2">{{ item.title }}</h5>
+                    {% if item.caption %}
+                    <p class="text-secondary small mb-0">{{ item.caption }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card p-5 border-0 rounded-4 checklist-card text-center">
+                <i class="bi bi-images text-secondary fs-1 mb-3"></i>
+                <h4 class="text-light fw-bold mb-1">No Gallery Photos Found</h4>
+                <p class="text-secondary small mb-3">No images uploaded under this category yet.</p>
+                <a href="{% url 'core:gallery' %}" class="btn btn-outline-primary btn-sm mx-auto">Clear Filter</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

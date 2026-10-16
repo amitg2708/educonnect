@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Authorize Parent-Student Link - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card p-4 p-md-5 border-0 rounded-4 feature-card shadow-lg">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h3 class="fw-bold mb-0">Authorize Parent-Student Link</h3>
+                        <p class="text-secondary small mb-0">Establish legal parental authority over student records</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-dark border border-secondary-subtle rounded-3 p-3 mb-4 small text-secondary">
+                    <i class="bi bi-info-circle-fill text-primary me-1"></i>
+                    This action grants the designated parent account permission to inspect the student's grades, attendance, and educational records.
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger border-0 rounded-3 small py-2 px-3 mb-4">
+                    {% for error in form.non_field_errors %}
+                    <div><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'accounts:admin_link_parent' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Select Parent Account</label>
+                        {{ form.parent }}
+                        {% if form.parent.errors %}
+                        <div class="text-danger small mt-1">{{ form.parent.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Select Student Account</label>
+                        {{ form.student }}
+                        {% if form.student.errors %}
+                        <div class="text-danger small mt-1">{{ form.student.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Relationship Type</label>
+                        {{ form.relationship_type }}
+                        {% if form.relationship_type.errors %}
+                        <div class="text-danger small mt-1">{{ form.relationship_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.is_authorized }}
+                        <label class="form-check-label text-secondary small fw-semibold" for="{{ form.is_authorized.id_for_label }}">
+                            Mark relationship as verified &amp; authorized
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-secondary small fw-semibold">Administrative Notes (Optional)</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-link-45deg me-1"></i> Confirm &amp; Save Parental Link
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}EduConnect - Project Foundation Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Banner -->
+    <div class="hero-card p-4 p-md-5 mb-5 rounded-4 position-relative overflow-hidden">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3 rounded-pill status-pill">
+                    {% if is_healthy %}
+                    <span class="badge-status-dot bg-success"></span>
+                    <span class="small fw-semibold text-success">MongoDB Connected & Operational ({{ db_health.latency_ms }} ms)</span>
+                    {% else %}
+                    <span class="badge-status-dot bg-danger"></span>
+                    <span class="small fw-semibold text-danger">Database Degraded / Disconnected</span>
+                    {% endif %}
+                </div>
+                <h1 class="display-5 fw-extrabold mb-3">
+                    Welcome to <span class="text-gradient">EduConnect</span>
+                </h1>
+                <p class="lead text-secondary mb-4">
+                    Production-oriented school and college management platform built on Python, Django 6, and the official MongoDB Django Backend with MongoDB Atlas support.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'core:health' %}" class="btn btn-primary px-4 py-2 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-activity"></i> View System Health
+                    </a>
+                    <a href="{% url 'core:api_health' %}" target="_blank" class="btn btn-outline-light px-4 py-2 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-braces"></i> JSON Health API
+                    </a>
+                    <a href="/admin/" target="_blank" class="btn btn-outline-secondary px-4 py-2 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check"></i> Django Admin
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="foundation-badge-card p-4 rounded-4">
+                    <div class="metric-icon-circle mx-auto mb-3">
+                        <i class="bi bi-database-fill-gear text-primary fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1">MongoDB Engine</h5>
+                    <p class="text-secondary small mb-3">Official Native Backend</p>
+                    <div class="d-flex justify-content-between align-items-center border-top border-secondary-subtle pt-3 small">
+                        <span class="text-secondary">Database:</span>
+                        <span class="fw-semibold text-light">{{ db_health.database_name }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 small">
+                        <span class="text-secondary">Collections:</span>
+                        <span class="badge bg-secondary-subtle text-light px-2">{{ db_health.collections_count }} active</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 small">
+                        <span class="text-secondary">Latency:</span>
+                        <span class="badge bg-success-subtle text-success px-2">{{ db_health.latency_ms }} ms</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Foundation Highlights Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 feature-card p-4 border-0 rounded-4">
+                <div class="card-icon-box mb-3 text-primary">
+                    <i class="bi bi-database-check fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Native MongoDB ORM</h5>
+                <p class="text-secondary small mb-0">
+                    Configured with <code>django_mongodb_backend</code>, using native <code>ObjectIdAutoField</code>, PyMongo pooling, and <code>MongoRouter</code>.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 feature-card p-4 border-0 rounded-4">
+                <div class="card-icon-box mb-3 text-info">
+                    <i class="bi bi-layers-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Dual Settings Architecture</h5>
+                <p class="text-secondary small mb-0">
+                    Separated <code>development.py</code> and <code>production.py</code> settings managed cleanly through environment variables.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 feature-card p-4 border-0 rounded-4">
+                <div class="card-icon-box mb-3 text-success">
+                    <i class="bi bi-cloud-check-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Atlas & Local Ready</h5>
+                <p class="text-secondary small mb-0">
+                    Switch effortlessly between local MongoDB and MongoDB Atlas cloud clusters using standard <code>mongodb+srv://</code> URIs.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 feature-card p-4 border-0 rounded-4">
+                <div class="card-icon-box mb-3 text-warning">
+                    <i class="bi bi-shield-lock-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Zero-Leak Health Check</h5>
+                <p class="text-secondary small mb-0">
+                    Credential-safe health and readiness endpoints for Docker/Kubernetes probes and real-time operations diagnostics.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Checklist Section -->
+    <div class="card checklist-card p-4 p-md-5 border-0 rounded-4 mb-5">
+        <h3 class="fw-bold mb-4 d-flex align-items-center gap-2">
+            <i class="bi bi-check2-all text-primary"></i> Part 1 Foundation Verification
+        </h3>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-start gap-3 p-3 rounded-3 verification-item">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <div>
+                        <strong class="text-light">Official MongoDB Project Template</strong>
+                        <p class="text-secondary small mb-0">Integrated official <code>mongodb-labs</code> project structure with pre-packaged migrations.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-start gap-3 p-3 rounded-3 verification-item">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <div>
+                        <strong class="text-light">Environment Variable Isolation</strong>
+                        <p class="text-secondary small mb-0">Fully configured <code>.env</code> and <code>.env.example</code> with <code>.gitignore</code> protection.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-start gap-3 p-3 rounded-3 verification-item">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <div>
+                        <strong class="text-light">Active Database Migrations</strong>
+                        <p class="text-secondary small mb-0">Auth, sessions, admin, and contenttypes applied directly to MongoDB collections.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-start gap-3 p-3 rounded-3 verification-item">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <div>
+                        <strong class="text-light">Directory Organization</strong>
+                        <p class="text-secondary small mb-0">Structured <code>templates/</code>, <code>static/</code>, <code>media/</code>, <code>apps/</code>, and <code>tests/</code>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

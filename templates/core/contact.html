@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - EduConnect Campus & Inquiries{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Contact Us</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-primary text-uppercase fw-bold small">Get in Touch</span>
+        <h1 class="display-5 fw-extrabold text-light mb-2">Contact <span class="text-gradient">EduConnect</span></h1>
+        <p class="lead text-secondary">
+            Have questions about curriculum, admissions, or student services? Our administrative team is here to help.
+        </p>
+    </div>
+
+    <div class="row g-5 mb-5">
+        <!-- Contact Information Column -->
+        <div class="col-lg-5">
+            <div class="card p-4 p-md-5 border-0 rounded-4 feature-card h-100 shadow-lg">
+                <h3 class="fw-bold text-light mb-4">Campus Information</h3>
+
+                <div class="d-flex align-items-start gap-3 mb-4">
+                    <div class="card-icon-box flex-shrink-0 text-primary">
+                        <i class="bi bi-geo-alt-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <strong class="text-light d-block mb-1">Campus Location</strong>
+                        <p class="text-secondary small mb-0">100 University Avenue, Academic Valley, Campus West, AC 98210</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start gap-3 mb-4">
+                    <div class="card-icon-box flex-shrink-0 text-success">
+                        <i class="bi bi-telephone-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <strong class="text-light d-block mb-1">Telephone Contacts</strong>
+                        <p class="text-secondary small mb-1">Main Switchboard: <strong>+1 (800) 555-EDU1</strong></p>
+                        <p class="text-secondary small mb-0">Admissions Line: <strong>+1 (800) 555-EDU2</strong></p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start gap-3 mb-4">
+                    <div class="card-icon-box flex-shrink-0 text-info">
+                        <i class="bi bi-envelope-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <strong class="text-light d-block mb-1">Electronic Mail</strong>
+                        <p class="text-secondary small mb-1">General: <strong>info@educonnect.edu</strong></p>
+                        <p class="text-secondary small mb-0">Admissions: <strong>admissions@educonnect.edu</strong></p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start gap-3">
+                    <div class="card-icon-box flex-shrink-0 text-warning">
+                        <i class="bi bi-clock-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <strong class="text-light d-block mb-1">Office Hours</strong>
+                        <p class="text-secondary small mb-1">Monday - Friday: <strong>8:00 AM - 5:00 PM</strong></p>
+                        <p class="text-secondary small mb-0">Saturday: <strong>9:00 AM - 1:00 PM</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Form Column -->
+        <div class="col-lg-7">
+            <div class="card p-4 p-md-5 border-0 rounded-4 feature-card shadow-lg">
+                <h3 class="fw-bold text-light mb-2 d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-dots-fill text-primary"></i> Send Us a Message
+                </h3>
+                <p class="text-secondary small mb-4">
+                    Please submit your inquiry below. Our team typically replies within one business day.
+                </p>
+
+                <form method="post" action="{% url 'core:contact' %}" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Your Full Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Email Address</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Phone Number (Optional)</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Subject</label>
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                            <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-secondary small fw-semibold">Your Message</label>
+                        {{ form.message }}
+                        {% if form.message.errors %}
+                        <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">
+                        <i class="bi bi-send me-1"></i> Send Inquiry Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

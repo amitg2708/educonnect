@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Student Portal - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Role 3: Student</span>
+            </div>
+            <h2 class="fw-bold mb-1">Student Academic Workspace</h2>
+            <p class="text-secondary small mb-0">Your personalized learning dashboard, grades, and profile</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-pencil-square me-1"></i> Edit Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Student Info Card -->
+    <div class="card p-4 border-0 rounded-4 hero-card mb-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <h4 class="fw-bold text-light mb-1">{{ student.get_full_name|default:student.username }}</h4>
+                <p class="text-secondary small mb-2">
+                    <i class="bi bi-mortarboard text-primary me-1"></i> Grade / Program: 
+                    <strong class="text-light">{{ student.grade_level|default:"Grade 10 - Academic" }}</strong>
+                </p>
+                <p class="text-secondary small mb-0">
+                    <i class="bi bi-envelope text-secondary me-1"></i> {{ student.email|default:"No email set" }}
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <span class="badge bg-primary-subtle text-primary px-3 py-2 border border-primary-subtle">
+                    Student ID: {{ student.student_id|default:"STU-2026-001" }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Cards Grid -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill text-success"></i> Authorized Parents &amp; Guardians
+                </h5>
+                <p class="text-secondary small">Parents or legal guardians authorized to review your academic progress:</p>
+                <div class="list-group list-group-flush">
+                    {% for link in parent_links %}
+                    <div class="list-group-item bg-transparent text-light border-secondary-subtle px-0 py-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ link.parent.get_full_name|default:link.parent.username }}</strong>
+                            <span class="text-secondary d-block small">{{ link.get_relationship_type_display }}</span>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">Authorized</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-secondary small my-2">No linked parents on record. Contact administration to add guardian.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-check text-primary"></i> Data Isolation &amp; Privacy Notice
+                </h5>
+                <p class="text-secondary small">
+                    Under EduConnect's strict role-based access control, your personal academic records, attendance history, and grades are private. Only you, your assigned subject teachers, and your verified parents can access this data.
+                </p>
+                <div class="d-flex align-items-center gap-2 text-success small">
+                    <i class="bi bi-lock-fill"></i> Data isolation verified for user <code>{{ student.username }}</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

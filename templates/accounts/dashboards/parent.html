@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Portal - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-success"></span>
+                <span class="small fw-bold text-success text-uppercase">Role 4: Parent / Legal Guardian</span>
+            </div>
+            <h2 class="fw-bold mb-1">Parent &amp; Guardian Portal</h2>
+            <p class="text-secondary small mb-0">Authorized monitoring for your enrolled children</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-person-circle me-1"></i> My Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Security Information Banner -->
+    <div class="alert alert-dark border border-secondary-subtle rounded-4 p-3 mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-shield-lock-fill text-success fs-3"></i>
+        <div class="small text-secondary">
+            <strong>Parent-Child Authorization Active:</strong> You are granted access exclusively to your verified, linked children. Viewing records for other students is strictly blocked by EduConnect's server-side authorization layer.
+        </div>
+    </div>
+
+    <!-- Children Cards Grid -->
+    <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-people-fill text-primary"></i> Your Authorized Children ({{ child_links.count }})
+    </h4>
+
+    <div class="row g-4 mb-5">
+        {% for link in child_links %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="brand-icon-box" style="width: 48px; height: 48px;">
+                        <i class="bi bi-mortarboard-fill text-primary fs-4"></i>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                        {{ link.get_relationship_type_display }}
+                    </span>
+                </div>
+                <h5 class="fw-bold mb-1 text-light">{{ link.student.get_full_name|default:link.student.username }}</h5>
+                <p class="text-secondary small mb-2">Student ID: <code>{{ link.student.student_id|default:"STU-ENROLLED" }}</code></p>
+                <p class="text-secondary small mb-3">Grade: <strong class="text-light">{{ link.student.grade_level|default:"Grade 10" }}</strong></p>
+
+                <div class="border-top border-secondary-subtle pt-3 mt-auto">
+                    <a href="{% url 'accounts:parent_child_detail' link.student.id %}" class="btn btn-outline-primary w-100 btn-sm fw-semibold">
+                        <i class="bi bi-eye me-1"></i> View Child's Academic Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card p-5 border-0 rounded-4 checklist-card text-center">
+                <i class="bi bi-person-x-fill text-secondary fs-1 mb-3"></i>
+                <h5 class="fw-bold text-light mb-1">No Linked Children Found</h5>
+                <p class="text-secondary small mb-3">
+                    Your parent account has not yet been linked to an enrolled student. Please contact the school administrative office to authorize your parental relationship.
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

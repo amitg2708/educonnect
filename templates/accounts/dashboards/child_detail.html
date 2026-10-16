@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Child Details - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'accounts:parent_dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Children Overview
+            </a>
+            <h2 class="fw-bold mb-1">{{ student.get_full_name|default:student.username }}</h2>
+            <p class="text-secondary small mb-0">Authorized Guardian File | Relationship: {{ link.get_relationship_type_display }}</p>
+        </div>
+        <span class="badge bg-success-subtle text-success px-3 py-2 border border-success-subtle">
+            <i class="bi bi-shield-check me-1"></i> Authorized Link
+        </span>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card text-center">
+                <div class="metric-icon-circle mx-auto mb-3" style="width: 72px; height: 72px;">
+                    <i class="bi bi-mortarboard text-primary fs-2"></i>
+                </div>
+                <h4 class="fw-bold mb-1">{{ student.get_full_name|default:student.username }}</h4>
+                <p class="text-secondary small mb-2">@{{ student.username }}</p>
+                <span class="badge bg-primary-subtle text-primary mb-3">Enrolled Student</span>
+
+                <div class="text-start border-top border-secondary-subtle pt-3 small text-secondary">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Student ID:</span>
+                        <code class="text-light">{{ student.student_id|default:"STU-2026" }}</code>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Current Grade:</span>
+                        <strong class="text-light">{{ student.grade_level|default:"Grade 10" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Student Email:</span>
+                        <span class="text-light">{{ student.email|default:"None on file" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-text text-info"></i> Academic Records &amp; Progress
+                </h5>
+                <p class="text-secondary small">
+                    This section connects to student academic records, attendance history, and report cards. Data access is restricted to verified parent links.
+                </p>
+                <div class="alert alert-dark border border-secondary-subtle rounded-3 p-3">
+                    <div class="d-flex align-items-center gap-2 text-success small mb-1">
+                        <i class="bi bi-check-circle-fill"></i> Verified authorization token
+                    </div>
+                    <span class="text-secondary small">
+                        Parent <code>{{ user.username }}</code> authorized for Student <code>{{ student.username }}</code> under relationship <strong>{{ link.get_relationship_type_display }}</strong>.
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Oversight - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-danger"></span>
+                <span class="small fw-bold text-danger text-uppercase">Role 1: Administrator</span>
+            </div>
+            <h2 class="fw-bold mb-1">Administrative Control Center</h2>
+            <p class="text-secondary small mb-0">System oversight, institutional permissions, and user auditing</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'accounts:admin_users' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-people-fill me-1"></i> User Directory
+            </a>
+            <a href="{% url 'accounts:admin_link_parent' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-link-45deg me-1"></i> Link Parent &amp; Child
+            </a>
+            <a href="/admin/" target="_blank" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-shield-lock-fill me-1"></i> Django Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Total Users</span>
+                <h3 class="fw-bold my-1 text-light">{{ total_users }}</h3>
+                <span class="badge bg-secondary-subtle text-secondary small">Registered</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Teachers</span>
+                <h3 class="fw-bold my-1 text-info">{{ teachers_count }}</h3>
+                <span class="badge bg-info-subtle text-info small">Faculty</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Students</span>
+                <h3 class="fw-bold my-1 text-primary">{{ students_count }}</h3>
+                <span class="badge bg-primary-subtle text-primary small">Enrolled</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Parents</span>
+                <h3 class="fw-bold my-1 text-success">{{ parents_count }}</h3>
+                <span class="badge bg-success-subtle text-success small">Guardians</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Accounts Staff</span>
+                <h3 class="fw-bold my-1 text-warning">{{ accounts_count }}</h3>
+                <span class="badge bg-warning-subtle text-warning small">Finance</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Applicants</span>
+                <h3 class="fw-bold my-1 text-danger">{{ applicants_count }}</h3>
+                <span class="badge bg-danger-subtle text-danger small">Admissions</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Users and Active Links -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 checklist-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-person-lines-fill text-primary me-2"></i> Recently Registered Users</h5>
+                    <a href="{% url 'accounts:admin_users' %}" class="small text-primary text-decoration-none">View All &rarr;</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in recent_users %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ u.get_full_name|default:u.username }}</strong>
+                                    <span class="text-secondary d-block">@{{ u.username }}</span>
+                                </td>
+                                <td class="text-secondary">{{ u.email|default:"-" }}</td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary">{{ u.get_role_display }}</span>
+                                </td>
+                                <td class="text-secondary">{{ u.date_joined|date:"M d, H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-3">No users registered yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 checklist-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-link-45deg text-success me-2"></i> Verified Parent-Child Links</h5>
+                    <a href="{% url 'accounts:admin_link_parent' %}" class="small text-success text-decoration-none">+ New Link</a>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for link in active_links %}
+                    <div class="list-group-item bg-transparent text-light border-secondary-subtle px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <i class="bi bi-people text-success me-1"></i>
+                                <strong>{{ link.parent.get_full_name|default:link.parent.username }}</strong>
+                                <span class="text-secondary small">&rarr; {{ link.student.get_full_name|default:link.student.username }}</span>
+                            </div>
+                            <span class="badge bg-success-subtle text-success small">{{ link.get_relationship_type_display }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-secondary small my-3 text-center">No parent-child links established yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

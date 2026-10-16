@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Achievements & Distinctions - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Achievements</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-primary text-uppercase fw-bold small">Recognitions &bull; Honors &bull; Laurels</span>
+        <h1 class="display-5 fw-extrabold text-light mb-2">Our <span class="text-gradient">Achievements</span></h1>
+        <p class="lead text-secondary">
+            Celebrating academic excellence, competitive athletics, scientific discoveries, and institutional recognitions.
+        </p>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="card p-3 border-0 rounded-4 checklist-card mb-5">
+        <div class="d-flex flex-wrap align-items-center gap-2 justify-content-center">
+            <a href="{% url 'core:achievements' %}" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-light{% endif %}">
+                All Recognitions
+            </a>
+            {% for code, name in categories %}
+            <a href="{% url 'core:achievements' %}?category={{ code }}" class="btn btn-sm {% if current_category == code %}btn-primary{% else %}btn-outline-light{% endif %}">
+                {{ name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Achievements Grid -->
+    <div class="row g-4 mb-5">
+        {% for achievement in achievements %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle text-uppercase small">
+                        <i class="bi bi-award-fill me-1"></i> {{ achievement.year }}
+                    </span>
+                    <span class="badge bg-secondary-subtle text-light small">
+                        {{ achievement.get_category_display }}
+                    </span>
+                </div>
+
+                <h5 class="fw-bold text-light mb-2">{{ achievement.title }}</h5>
+
+                {% if achievement.recipient %}
+                <p class="text-secondary small mb-2">
+                    Awarded to: <strong class="text-light">{{ achievement.recipient }}</strong>
+                </p>
+                {% endif %}
+
+                <p class="text-secondary small mb-0 flex-grow-1">
+                    {{ achievement.description }}
+                </p>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card p-5 border-0 rounded-4 checklist-card text-center">
+                <i class="bi bi-trophy text-secondary fs-1 mb-3"></i>
+                <h4 class="text-light fw-bold mb-1">No Achievements Found</h4>
+                <p class="text-secondary small mb-3">No honors recorded under this category filter.</p>
+                <a href="{% url 'core:achievements' %}" class="btn btn-outline-primary btn-sm mx-auto">Clear Filter</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+# Python & Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment variables & local secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+
+# Django media & static files
+media/
+staticfiles/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+nosetests.xml
+coverage.xml
+
+# IDE & Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & scratch
+*.log
+logs/
+scratch/

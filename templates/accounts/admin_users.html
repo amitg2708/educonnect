@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - EduConnect Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'accounts:admin_dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Admin Dashboard
+            </a>
+            <h2 class="fw-bold mb-1">User Directory &amp; Role Management</h2>
+            <p class="text-secondary small mb-0">List of all provisioned accounts across the six institutional roles</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'accounts:admin_link_parent' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-link-45deg me-1"></i> Authorize Parent-Child Link
+            </a>
+        </div>
+    </div>
+
+    <!-- Role Filter Pills -->
+    <div class="card p-3 border-0 rounded-4 checklist-card mb-4">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary small fw-semibold me-2"><i class="bi bi-funnel-fill me-1"></i> Filter Role:</span>
+            <a href="{% url 'accounts:admin_users' %}" class="btn btn-sm {% if not current_role %}btn-primary{% else %}btn-outline-light{% endif %}">
+                All Roles ({{ users.count }})
+            </a>
+            {% for r_code, r_name in roles %}
+            <a href="{% url 'accounts:admin_users' %}?role={{ r_code }}" class="btn btn-sm {% if current_role == r_code %}btn-primary{% else %}btn-outline-light{% endif %}">
+                {{ r_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary text-uppercase">
+                        <th>Username / Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Institutional ID</th>
+                        <th>Staff Status</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ u.get_full_name|default:u.username }}</strong>
+                            <span class="text-secondary d-block">@{{ u.username }}</span>
+                        </td>
+                        <td class="text-secondary">{{ u.email|default:"-" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if u.role == 'admin' %}bg-danger-subtle text-danger
+                                {% elif u.role == 'teacher' %}bg-info-subtle text-info
+                                {% elif u.role == 'student' %}bg-primary-subtle text-primary
+                                {% elif u.role == 'parent' %}bg-success-subtle text-success
+                                {% elif u.role == 'accounts' %}bg-warning-subtle text-warning
+                                {% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                {{ u.get_role_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if u.student_id %}<code>{{ u.student_id }}</code>
+                            {% elif u.employee_id %}<code>{{ u.employee_id }}</code>
+                            {% else %}<span class="text-secondary">-</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_staff %}<span class="badge bg-success-subtle text-success">Staff</span>
+                            {% else %}<span class="text-secondary">Standard</span>{% endif %}
+                        </td>
+                        <td class="text-secondary">{{ u.date_joined|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-4">No users found matching the filter.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

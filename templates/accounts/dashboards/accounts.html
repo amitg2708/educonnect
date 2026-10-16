@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts & Billing - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-warning"></span>
+                <span class="small fw-bold text-warning text-uppercase">Role 5: Accounts Staff</span>
+            </div>
+            <h2 class="fw-bold mb-1">Financial &amp; Accounts Management</h2>
+            <p class="text-secondary small mb-0">Fee collections, invoices, financial auditing, and scholarship tracking</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-person-circle me-1"></i> Staff Profile
+            </a>
+        </div>
+    </div>
+
+    <!-- Accounts Metrics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small text-uppercase fw-semibold mb-1">Billing Accounts</span>
+                <h3 class="fw-bold text-warning my-2">{{ students_count }}</h3>
+                <p class="text-secondary small mb-0">Total active student billing ledgers in system.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small text-uppercase fw-semibold mb-1">Fee Collection Cycle</span>
+                <h3 class="fw-bold text-success my-2">Active</h3>
+                <p class="text-secondary small mb-0">Fall 2026 Academic Term Tuition &amp; Levies.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small text-uppercase fw-semibold mb-1">Financial Role Isolation</span>
+                <h3 class="fw-bold text-primary my-2">Audited</h3>
+                <p class="text-secondary small mb-0">Role restricted to verified finance personnel.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Notice -->
+    <div class="card p-4 border-0 rounded-4 checklist-card">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-cash-stack text-warning"></i> Institutional Financial Ledger
+        </h5>
+        <p class="text-secondary small mb-0">
+            Accounts staff access financial statements, invoice generation, and tuition payments. Access to student grades or faculty evaluations is strictly prohibited by server-side role filters.
+        </p>
+    </div>
+</div>
+{% endblock %}

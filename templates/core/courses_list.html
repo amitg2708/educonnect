@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Curriculum & Courses - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Courses &amp; Programs</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-primary text-uppercase fw-bold small">Academic Catalog</span>
+        <h1 class="display-5 fw-extrabold text-light mb-2">Explore Our <span class="text-gradient">Programs</span></h1>
+        <p class="lead text-secondary">
+            Comprehensive curricula spanning secondary education, STEM, business, and postgraduate specializations.
+        </p>
+    </div>
+
+    <!-- Filter and Search Bar -->
+    <div class="card p-3 border-0 rounded-4 checklist-card mb-5">
+        <form method="get" action="{% url 'core:courses' %}" class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary-subtle text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ search_query }}" class="form-control" placeholder="Search by course title...">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <select name="level" class="form-select">
+                    <option value="">All Academic Levels</option>
+                    {% for code, name in levels %}
+                    <option value="{{ code }}" {% if current_level == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold">Filter</button>
+                {% if search_query or current_level %}
+                <a href="{% url 'core:courses' %}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="row g-4 mb-5">
+        {% for course in courses %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase small">
+                        {{ course.get_level_display }}
+                    </span>
+                    <code class="text-light">{{ course.code }}</code>
+                </div>
+
+                <h5 class="fw-bold text-light mb-2">{{ course.title }}</h5>
+                <p class="text-secondary small mb-2 text-uppercase fw-semibold">
+                    <i class="bi bi-building me-1 text-info"></i> {{ course.department }}
+                </p>
+                <p class="text-secondary small mb-3 flex-grow-1">
+                    {{ course.description|truncatewords:22 }}
+                </p>
+
+                <div class="border-top border-secondary-subtle pt-3 mt-auto">
+                    <div class="d-flex justify-content-between align-items-center text-secondary small mb-3">
+                        <span><i class="bi bi-clock me-1"></i> {{ course.duration }}</span>
+                        <span class="fw-bold text-light">${{ course.fee_per_term }} / term</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'core:course_detail' course.slug %}" class="btn btn-outline-light w-50 btn-sm fw-semibold">
+                            Syllabus
+                        </a>
+                        <a href="{% url 'core:admissions' %}?program={{ course.title|urlencode }}" class="btn btn-primary w-50 btn-sm fw-semibold">
+                            Apply Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card p-5 border-0 rounded-4 checklist-card text-center">
+                <i class="bi bi-search text-secondary fs-1 mb-3"></i>
+                <h4 class="text-light fw-bold mb-1">No Courses Found</h4>
+                <p class="text-secondary small mb-3">
+                    No programs matched your filter criteria{% if search_query %} for "{{ search_query }}"{% endif %}.
+                </p>
+                <a href="{% url 'core:courses' %}" class="btn btn-outline-primary btn-sm mx-auto">Clear Filters</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
