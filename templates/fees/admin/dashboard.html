@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Fees &amp; Treasury Dashboard - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-warning"></span>
+                <span class="small fw-bold text-warning text-uppercase">Financial Treasury Office</span>
+            </div>
+            <h2 class="fw-bold mb-1">Fee Management &amp; Billing Control</h2>
+            <p class="text-secondary small mb-0">Institutions fee schedules, offline payment counter, online reconciliation, and audit adjustments.</p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'fees:structure_create' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> New Fee Structure
+            </a>
+            <a href="{% url 'fees:assign_fees' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-person-plus-fill me-1"></i> Assign Fees
+            </a>
+            <a href="{% url 'fees:payment_list' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-receipt me-1"></i> Transaction Ledger
+            </a>
+        </div>
+    </div>
+
+    <!-- Institutional Treasury Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Gross Allocated</span>
+                <h4 class="fw-bold my-1 text-light">${{ total_gross|floatformat:0 }}</h4>
+                <span class="badge bg-secondary-subtle text-secondary small">Base Fees</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Concessions</span>
+                <h4 class="fw-bold my-1 text-info">${{ total_concessions|floatformat:0 }}</h4>
+                <span class="badge bg-info-subtle text-info small">Scholarships</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Net Receivables</span>
+                <h4 class="fw-bold my-1 text-light">${{ total_net|floatformat:0 }}</h4>
+                <span class="badge bg-secondary-subtle text-secondary small">Payable Dues</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Total Collected</span>
+                <h4 class="fw-bold my-1 text-success">${{ total_collected|floatformat:0 }}</h4>
+                <span class="badge bg-success-subtle text-success small">Verified</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Outstanding</span>
+                <h4 class="fw-bold my-1 {% if total_outstanding > 0 %}text-danger{% else %}text-success{% endif %}">
+                    ${{ total_outstanding|floatformat:0 }}
+                </h4>
+                <span class="badge {% if total_outstanding > 0 %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %} small">
+                    Pending Dues
+                </span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Overdue Accounts</span>
+                <h4 class="fw-bold my-1 {% if overdue_count > 0 %}text-danger{% else %}text-light{% endif %}">{{ overdue_count }}</h4>
+                <a href="{% url 'fees:overdue_report' %}" class="badge bg-danger text-decoration-none small">
+                    View Report &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Bar -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{% url 'fees:structure_list' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-layers-fill text-info me-1"></i> Fee Structures
+        </a>
+        <a href="{% url 'fees:allocation_list' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-people text-primary me-1"></i> Student Fee Ledgers
+        </a>
+        <a href="{% url 'fees:payment_list' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-card-checklist text-success me-1"></i> All Transactions
+        </a>
+        <a href="{% url 'fees:overdue_report' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-exclamation-triangle text-danger me-1"></i> Overdue Dues Report
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Payments Table -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-success"></i> Recent Confirmed Payments
+                    </h5>
+                    <a href="{% url 'fees:payment_list' %}" class="small text-secondary text-decoration-none">
+                        View All &rarr;
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Student</th>
+                                <th>Reference</th>
+                                <th>Method</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-center">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in recent_payments %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ p.student.get_full_name|default:p.student.username }}</strong>
+                                    <span class="text-secondary d-block"><code>{{ p.student.student_id|default:p.student.username }}</code></span>
+                                </td>
+                                <td><code>{{ p.transaction_reference }}</code></td>
+                                <td>{{ p.get_payment_method_display }}</td>
+                                <td class="text-end fw-bold text-success">${{ p.amount|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    {% if p.receipt %}
+                                    <a href="{% url 'fees:download_receipt' p.receipt.id %}" class="badge bg-success-subtle text-success text-decoration-none" title="Download PDF Receipt">
+                                        <i class="bi bi-file-earmark-pdf"></i> {{ p.receipt.receipt_number }}
+                                    </a>
+                                    {% else %}
+                                    <span class="text-secondary small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-4">No recent payments recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue Accounts Table -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-octagon text-danger"></i> High-Priority Overdue Accounts
+                    </h5>
+                    <a href="{% url 'fees:overdue_report' %}" class="small text-danger text-decoration-none">
+                        Full List &rarr;
+                    </a>
+                </div>
+
+                <div class="list-group list-group-flush">
+                    {% for o in overdue_allocations %}
+                    <div class="list-group-item bg-transparent text-light border-secondary-subtle px-0 py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-light">{{ o.student.get_full_name|default:o.student.username }}</strong>
+                            <span class="text-secondary d-block small">{{ o.fee_structure.title }}</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-danger fw-bold d-block">${{ o.outstanding_balance|floatformat:2 }}</span>
+                            <a href="{% url 'fees:record_payment' o.id %}" class="btn btn-sm btn-outline-warning py-0 px-2 mt-1 small">
+                                Record Pay
+                            </a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-secondary py-4">
+                        <i class="bi bi-check2-circle text-success fs-3 mb-1 d-block"></i>
+                        No overdue student ledgers.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

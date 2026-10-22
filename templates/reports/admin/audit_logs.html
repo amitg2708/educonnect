@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Administrative Audit Logs - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Security &amp; Compliance Audit</span>
+            </div>
+            <h2 class="fw-bold mb-1">Administrative Audit Trail</h2>
+            <p class="text-secondary small mb-0">Immutable records of sensitive configuration updates, enrollment additions, faculty assignments, and data exports.</p>
+        </div>
+        <div>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Return to Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-6 col-lg-4">
+                <input type="text" name="action" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Filter by action code (e.g. EXPORT, SETTINGS)..." value="{{ selected_action|default:'' }}">
+            </div>
+            <div class="col-md-4 col-lg-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm px-3">
+                    <i class="bi bi-funnel me-1"></i> Filter Logs
+                </button>
+                {% if selected_action %}
+                <a href="{% url 'reports:admin_audit_logs' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="card border-0 rounded-4 feature-card overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>TIMESTAMP</th>
+                        <th>ACTOR</th>
+                        <th>ACTION</th>
+                        <th>DESCRIPTION</th>
+                        <th>TARGET RECORD</th>
+                        <th>IP ADDRESS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in page_obj %}
+                    <tr>
+                        <td class="text-nowrap small text-secondary">
+                            {{ log.created_at|date:"Y-m-d H:i:s" }}
+                        </td>
+                        <td>
+                            <strong class="text-light">{{ log.actor.get_full_name|default:log.actor.username }}</strong>
+                            <div class="small text-secondary">{{ log.actor.email }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-info fw-bold">{{ log.action }}</span>
+                        </td>
+                        <td class="small text-light">
+                            {{ log.description }}
+                        </td>
+                        <td class="small text-secondary text-nowrap">
+                            {% if log.target_model %}
+                            <span class="badge bg-dark border border-secondary">{{ log.target_model }}</span>
+                            {% if log.target_id %}<span class="text-muted ms-1">#{{ log.target_id|truncatechars:10 }}</span>{% endif %}
+                            {% else %}
+                            <span class="text-muted">&mdash;</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-secondary font-monospace">
+                            {{ log.ip_address|default:"127.0.0.1" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-secondary">
+                            <i class="bi bi-shield-x fs-1 d-block mb-2 text-muted"></i>
+                            No administrative audit records match your query.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="card-footer bg-transparent border-secondary-subtle p-3 d-flex justify-content-between align-items-center">
+            <small class="text-secondary">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </small>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-light border-secondary" href="?page={{ page_obj.previous_page_number }}{% if selected_action %}&action={{ selected_action }}{% endif %}">&laquo;</a>
+                </li>
+                {% endif %}
+                <li class="page-item active">
+                    <span class="page-link bg-primary border-primary">{{ page_obj.number }}</span>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark text-light border-secondary" href="?page={{ page_obj.next_page_number }}{% if selected_action %}&action={{ selected_action }}{% endif %}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

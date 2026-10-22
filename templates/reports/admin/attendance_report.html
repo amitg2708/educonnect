@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Summary Report - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Attendance Audit</span>
+            </div>
+            <h2 class="fw-bold mb-1">Classroom Attendance &amp; Defaulter Report</h2>
+            <p class="text-secondary small mb-0">Cohort attendance distribution, student percentages, and institutional threshold compliance.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="?{% if selected_classroom %}classroom={{ selected_classroom.id }}&{% endif %}export=csv" class="btn btn-outline-success btn-sm fw-bold">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to CSV
+            </a>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Classroom Selector -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-8">
+                <select name="classroom" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    {% for c in classrooms %}
+                    <option value="{{ c.id }}" {% if selected_classroom.id == c.id %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Load Classroom Roster</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Attendance Roster Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">
+                {{ selected_classroom.name }} ({{ selected_classroom.code }}) - Enrolled Students ({{ total_count }})
+            </h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>ROLL #</th>
+                        <th>STUDENT NAME</th>
+                        <th>EMAIL</th>
+                        <th>CLASSROOM</th>
+                        <th>ENROLLED DATE</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enr in enrollments %}
+                    <tr>
+                        <td><code>{{ enr.roll_number|default:"-" }}</code></td>
+                        <td><strong class="text-light">{{ enr.student.get_full_name|default:enr.student.username }}</strong> <small class="text-secondary d-block">@{{ enr.student.username }}</small></td>
+                        <td>{{ enr.student.email }}</td>
+                        <td><span class="badge bg-secondary">{{ enr.classroom.code }}</span></td>
+                        <td><small class="text-secondary">{{ enr.enrolled_date|date:"M d, Y" }}</small></td>
+                        <td>
+                            {% if enr.is_active %}
+                            <span class="badge bg-success">Active Enrolment</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center py-4 text-secondary">No enrolled students in this classroom cohort.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

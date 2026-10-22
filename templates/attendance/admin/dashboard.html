@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Control Desk - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-danger"></span>
+                <span class="small fw-bold text-danger text-uppercase">Administrative Desk</span>
+            </div>
+            <h2 class="fw-bold mb-1">Attendance Control &amp; Roster Operations</h2>
+            <p class="text-secondary small mb-0">Academic terms, classrooms, roster enrollment, teacher assignments, and correction disputes.</p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{% url 'attendance:admin_sessions' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-calendar-event me-1"></i> Academic Terms
+            </a>
+            <a href="{% url 'attendance:admin_classrooms' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-building me-1"></i> Classrooms &amp; Rosters
+            </a>
+            <a href="{% url 'attendance:admin_corrections' %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-file-earmark-medical me-1"></i> Corrections
+                {% if pending_corrections_count %}<span class="badge bg-danger ms-1">{{ pending_corrections_count }}</span>{% endif %}
+            </a>
+            <a href="{% url 'attendance:admin_report' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-graph-up me-1"></i> Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Active Classrooms</span>
+                <h3 class="fw-bold my-1 text-light">{{ total_classrooms }}</h3>
+                <span class="badge bg-secondary-subtle text-secondary small">Sections Configured</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Total Sessions Logged</span>
+                <h3 class="fw-bold my-1 text-success">{{ total_sessions_count }}</h3>
+                <span class="badge bg-success-subtle text-success small">Recorded Classes</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Pending Corrections</span>
+                <h3 class="fw-bold my-1 {% if pending_corrections_count > 0 %}text-warning{% else %}text-light{% endif %}">{{ pending_corrections_count }}</h3>
+                <span class="badge bg-warning-subtle text-warning small">Review Queue</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Mandatory Policy</span>
+                <h3 class="fw-bold my-1 text-info">{{ active_policy.minimum_required_percentage }}%</h3>
+                <span class="badge bg-info-subtle text-info small">Minimum Threshold</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Navigation Grid -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a href="{% url 'attendance:admin_sessions' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-calendar3 me-1 text-primary"></i> Academic Sessions
+        </a>
+        <a href="{% url 'attendance:admin_classrooms' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-door-open me-1 text-info"></i> Classrooms &amp; Enrollment
+        </a>
+        <a href="{% url 'attendance:admin_corrections' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-check2-circle me-1 text-warning"></i> Dispute &amp; Correction Queue
+        </a>
+        <a href="{% url 'attendance:admin_report' %}" class="btn btn-dark border-secondary-subtle btn-sm">
+            <i class="bi bi-file-earmark-bar-graph me-1 text-danger"></i> Low-Attendance Defaulters Report
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Sessions Marked -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-success"></i> Recently Conducted Sessions
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Date</th>
+                                <th>Classroom</th>
+                                <th>Subject</th>
+                                <th>Faculty</th>
+                                <th class="text-end">Roster</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in recent_sessions %}
+                            <tr>
+                                <td>{{ s.session_date|date:"Y-m-d" }}</td>
+                                <td><strong>{{ s.classroom.name }}</strong></td>
+                                <td>{{ s.subject_name }}</td>
+                                <td>{{ s.teacher.get_full_name|default:s.teacher.username }}</td>
+                                <td class="text-end fw-bold text-light">{{ s.records.count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-4">No attendance sessions logged.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Corrections Desk -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-inbox text-warning"></i> Correction Review Queue
+                    </h5>
+                    <a href="{% url 'attendance:admin_corrections' %}" class="small text-warning text-decoration-none">
+                        View All &rarr;
+                    </a>
+                </div>
+
+                <div class="list-group list-group-flush">
+                    {% for c in pending_corrections %}
+                    <div class="list-group-item bg-transparent text-light border-secondary-subtle px-0 py-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-light">{{ c.student.get_full_name|default:c.student.username }}</strong>
+                            <span class="text-secondary d-block small">
+                                {{ c.record.session.subject_name }} ({{ c.record.session.session_date }})
+                            </span>
+                            <span class="text-info small">Requested: {{ c.get_requested_status_display }}</span>
+                        </div>
+                        <a href="{% url 'attendance:admin_review_correction' c.id %}" class="btn btn-sm btn-outline-warning">
+                            Review
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-secondary py-4">
+                        <i class="bi bi-check2-circle text-success fs-3 mb-1 d-block"></i>
+                        No pending correction requests.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

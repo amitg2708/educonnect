@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Child Timetable: {{ child.username }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'accounts:parent_dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Children Overview
+            </a>
+            <h2 class="fw-bold mb-1">Class Timetable: {{ child.get_full_name|default:child.username }}</h2>
+            <p class="text-secondary small mb-0">
+                {% if classroom %}
+                Class: <strong class="text-light">{{ classroom.name }}</strong> | Term: <strong>{{ classroom.academic_session.name }}</strong>
+                {% else %}
+                No active classroom enrollment found for this child.
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-success-subtle text-success px-3 py-2 border border-success-subtle">
+                <i class="bi bi-shield-check me-1"></i> Authorized Guardian Access
+            </span>
+        </div>
+    </div>
+
+    <!-- Live Schedule Notifications Banner -->
+    {% if notifications %}
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4 border border-warning-subtle">
+        <h6 class="fw-bold mb-2 text-warning d-flex align-items-center gap-2">
+            <i class="bi bi-bell-fill"></i> Timetable &amp; Lecture Change Announcements
+        </h6>
+        <div class="list-group list-group-flush">
+            {% for n in notifications %}
+            <div class="list-group-item bg-transparent text-light border-secondary-subtle px-0 py-2 small d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge {% if n.change_type == 'CANCELLED' %}bg-danger{% elif n.change_type == 'RESCHEDULED' %}bg-warning{% else %}bg-info{% endif %} me-2">
+                        {{ n.change_type }}
+                    </span>
+                    <strong>{{ n.title }}:</strong> {{ n.message }}
+                </div>
+                <span class="text-secondary small ms-3 text-nowrap">{{ n.created_at|date:"M d, H:i" }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if classroom %}
+    <!-- Weekly Grid -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar3-week text-primary"></i> Weekly Class Schedule
+        </h5>
+
+        <div class="row g-3">
+            {% for day_val, day_name in day_choices %}
+            {% if day_val <= 6 %}
+            <div class="col-md-4 col-xl-2">
+                <div class="card border border-secondary-subtle rounded-3 h-100 bg-dark p-2">
+                    <div class="text-center py-2 border-bottom border-secondary-subtle mb-2">
+                        <strong class="text-light small text-uppercase">{{ day_name }}</strong>
+                    </div>
+
+                    <div class="d-flex flex-column gap-2">
+                        {% for slot in slots %}
+                        {% if slot.day_of_week == day_val %}
+                        <div class="p-2 rounded-2 {% if slot.status == 'cancelled' %}bg-danger-subtle border border-danger-subtle text-danger{% else %}bg-dark-subtle border border-secondary text-light{% endif %} small">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="badge bg-secondary-subtle text-light" style="font-size: 0.72rem;">
+                                    {{ slot.start_time|time:"H:i" }}-{{ slot.end_time|time:"H:i" }}
+                                </span>
+                                {% if slot.status == 'cancelled' %}<span class="badge bg-danger">Cancelled</span>{% endif %}
+                            </div>
+                            <strong class="d-block {% if slot.status == 'cancelled' %}text-decoration-line-through text-danger{% else %}text-light{% endif %}">
+                                {{ slot.subject_name }}
+                            </strong>
+                            <span class="text-secondary d-block" style="font-size: 0.75rem;">
+                                <i class="bi bi-person me-1"></i> {{ slot.teacher.get_full_name|default:slot.teacher.username }}
+                            </span>
+                            <span class="text-info d-block" style="font-size: 0.75rem;">
+                                <i class="bi bi-geo-alt me-1"></i> {{ slot.room_number }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <p class="text-secondary small my-3">No active timetable found for this student.</p>
+    {% endif %}
+</div>
+{% endblock %}

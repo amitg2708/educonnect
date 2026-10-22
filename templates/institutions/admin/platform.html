@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Operator Hub - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom border-secondary-subtle">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-danger text-uppercase px-2 py-1"><i class="bi bi-shield-lock-fill me-1"></i>Platform Superuser</span>
+                <span class="badge bg-secondary-subtle text-secondary">Global Control Plane</span>
+            </div>
+            <h1 class="h2 fw-bold text-light mb-1">Multi-Institute Platform Hub</h1>
+            <p class="text-secondary mb-0">Oversee all registered coaching institutes, provision new organizations, and monitor cross-tenant activity.</p>
+        </div>
+        <div>
+            <a href="{% url 'institutions:select_institution' %}" class="btn btn-outline-light">
+                <i class="bi bi-arrow-left-right me-1"></i> Switch Active Workspace
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Provision New Institute -->
+        <div class="col-lg-4 order-lg-2">
+            <div class="card border-secondary bg-dark shadow-sm">
+                <div class="card-header border-secondary bg-dark py-3">
+                    <h5 class="h6 fw-bold text-light mb-0">
+                        <i class="bi bi-plus-square-fill text-primary me-2"></i>Provision Coaching Institute
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label text-light fw-semibold small">Institute Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Apex Coaching Institute" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-light fw-semibold small">Institute Identifier Code <span class="text-danger">*</span></label>
+                            <input type="text" name="code" class="form-control bg-dark text-light border-secondary text-uppercase" placeholder="e.g. APEX" required>
+                            <div class="form-text text-secondary small">Unique short slug for the institute tenant.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-light fw-semibold small">Tagline / Mission</label>
+                            <input type="text" name="tagline" class="form-control bg-dark text-light border-secondary" placeholder="e.g. Empowering Excellence">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-light fw-semibold small">Brand Color</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <input type="color" name="primary_color" class="form-control form-control-color bg-dark border-secondary" value="#0d6efd">
+                                <span class="text-secondary small">Primary interface accent</span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary fw-semibold">
+                                <i class="bi bi-building-add me-1"></i> Create Coaching Institute
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Institutes Overview -->
+        <div class="col-lg-8 order-lg-1">
+            <div class="card border-secondary bg-dark shadow-sm">
+                <div class="card-header border-secondary bg-dark py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="h6 fw-bold text-light mb-0">
+                        <i class="bi bi-buildings-fill text-info me-2"></i>Registered Institutes ({{ institutions.count }})
+                    </h5>
+                    <span class="badge bg-secondary-subtle text-secondary">All Active Tenants</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary small text-uppercase border-secondary">
+                                    <th>Institute</th>
+                                    <th>Code</th>
+                                    <th>Campuses</th>
+                                    <th>Total Members</th>
+                                    <th>Status</th>
+                                    <th>Workspace Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inst in institutions %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-2 d-flex align-items-center justify-content-center text-white fw-bold small"
+                                                 style="width: 32px; height: 32px; background: {{ inst.primary_color|default:'#0d6efd' }};">
+                                                {{ inst.code|slice:":2" }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold text-light">{{ inst.name }}</div>
+                                                {% if inst.tagline %}<small class="text-secondary">{{ inst.tagline|truncatechars:35 }}</small>{% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-light font-monospace">{{ inst.code }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info">{{ inst.branches.count }} branch{{ inst.branches.count|pluralize:"es" }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-light small">{{ inst.memberships.count }} member{{ inst.memberships.count|pluralize }}</span>
+                                    </td>
+                                    <td>
+                                        {% if inst.is_active %}
+                                        <span class="badge bg-success-subtle text-success">Live</span>
+                                        {% else %}
+                                        <span class="badge bg-danger-subtle text-danger">Disabled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'institutions:switch_institution' inst.id %}" class="btn btn-sm btn-outline-primary py-1 px-2 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-box-arrow-in-right"></i> Open Workspace
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-secondary">No institutions registered on the platform.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

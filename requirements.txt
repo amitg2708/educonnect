@@ -8,3 +8,8 @@ tzdata>=2026.1
 asgiref>=3.9.1
 sqlparse>=0.5.0
 pillow>=10.0.0
+reportlab>=4.0.0
+
+# Production & Serving
+whitenoise>=6.9.0
+gunicorn>=21.2.0

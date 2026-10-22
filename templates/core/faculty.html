@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty & Educators - {{ institution.name|default:"EduConnect" }}{% endblock %}
+
+{% block content %}
+<!-- Header Hero -->
+<section class="py-5 border-bottom border-secondary-subtle position-relative overflow-hidden">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3 rounded-pill bg-primary-subtle text-primary border border-primary-subtle small fw-semibold">
+                    <i class="bi bi-award-fill"></i>
+                    <span>Academic Mentorship &bull; {{ institution.name|default:"EduConnect" }}</span>
+                </div>
+                <h1 class="display-5 fw-extrabold text-light mb-3">Distinguished Teaching Faculty</h1>
+                <p class="lead text-secondary mb-0">
+                    Learn from experienced subject matter specialists, researchers, and mentors committed to guiding every student towards academic excellence.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                {% if institution %}
+                <span class="badge bg-secondary-subtle text-light border border-secondary px-3 py-2 fs-6">
+                    <i class="bi bi-building me-1 text-primary"></i> {{ institution.name }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Faculty Grid -->
+<section class="py-5">
+    <div class="container">
+        {% if faculty_members %}
+        <div class="row g-4">
+            {% for teacher in faculty_members %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-secondary bg-dark shadow-sm hover-elevate transition-all">
+                    <div class="card-body p-4 text-center">
+                        <!-- Avatar / Placeholder -->
+                        <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center text-light fw-bold shadow"
+                             style="width: 80px; height: 80px; font-size: 1.75rem; background: linear-gradient(135deg, {{ institution.primary_color|default:'#6366f1' }} 0%, #8b5cf6 100%);">
+                            {{ teacher.first_name|default:teacher.username|slice:":1"|upper }}
+                        </div>
+                        
+                        <h5 class="fw-bold text-light mb-1">{{ teacher.get_full_name|default:teacher.username }}</h5>
+                        <p class="text-primary small fw-semibold mb-2">
+                            <i class="bi bi-book-fill me-1"></i> {{ teacher.subject_specialization|safe|default:"Subject Specialist" }}
+                        </p>
+                        
+                        {% if teacher.grade_level %}
+                        <div class="badge bg-secondary-subtle text-secondary small mb-3">
+                            {{ teacher.grade_level }}
+                        </div>
+                        {% endif %}
+
+                        <p class="text-secondary small mb-3 text-start" style="min-height: 48px;">
+                            {{ teacher.bio|default:"Dedicated educational instructor focusing on student conceptual clarity, problem solving, and analytical rigor."|truncatewords:25 }}
+                        </p>
+
+                        <div class="pt-3 border-top border-secondary-subtle d-flex justify-content-between align-items-center">
+                            <span class="text-secondary small">
+                                <i class="bi bi-check-circle-fill text-success me-1"></i> Verified Faculty
+                            </span>
+                            <a href="{% if institution %}{% url 'core:institute_admissions' institution.slug %}{% else %}{% url 'core:admissions' %}{% endif %}" class="btn btn-sm btn-outline-primary">
+                                Enquire
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border-secondary bg-dark p-5 text-center shadow-sm">
+            <div class="mb-3 text-secondary" style="font-size: 3rem;">
+                <i class="bi bi-people"></i>
+            </div>
+            <h4 class="text-light fw-bold">Faculty Profiles Being Updated</h4>
+            <p class="text-secondary mb-3">
+                Teaching faculty assignments for {{ institution.name|default:"EduConnect" }} are currently being scheduled for the upcoming term.
+            </p>
+            <div>
+                <a href="{% if institution %}{% url 'core:institute_courses' institution.slug %}{% else %}{% url 'core:courses' %}{% endif %}" class="btn btn-primary">
+                    <i class="bi bi-book me-1"></i> View Available Courses
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

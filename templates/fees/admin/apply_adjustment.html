@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Apply Accounting Adjustment - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'fees:allocation_detail' allocation.id %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                        &larr; Back to Student Ledger
+                    </a>
+                    <h2 class="fw-bold mb-1">Authorized Accounting Adjustment</h2>
+                    <p class="text-secondary small mb-0">
+                        Student: <strong class="text-light">{{ allocation.student.get_full_name|default:allocation.student.username }}</strong>
+                    </p>
+                </div>
+            </div>
+
+            <div class="alert alert-dark border border-secondary-subtle rounded-4 p-3 mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-secondary small d-block">Current Net Allocation:</span>
+                    <strong>${{ allocation.net_amount|floatformat:2 }}</strong>
+                </div>
+                <div class="text-end">
+                    <span class="text-secondary small d-block">Current Outstanding Dues:</span>
+                    <strong class="text-danger">${{ allocation.outstanding_balance|floatformat:2 }}</strong>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Adjustment Category <span class="text-danger">*</span></label>
+                        {{ form.adjustment_type }}
+                        {% if form.adjustment_type.errors %}<div class="text-danger small">{{ form.adjustment_type.errors }}</div>{% endif %}
+                        <div class="form-text small text-secondary">
+                            Waivers, scholarships, and corrections decrease dues; penalties increase dues.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Adjustment Amount ($) <span class="text-danger">*</span></label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}<div class="text-danger small">{{ form.amount.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Reference Document / Memo #</label>
+                        {{ form.reference_document }}
+                        {% if form.reference_document.errors %}<div class="text-danger small">{{ form.reference_document.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-light">Official Audit Reason / Justification <span class="text-danger">*</span></label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}<div class="text-danger small">{{ form.reason.errors }}</div>{% endif %}
+                        <div class="form-text small text-secondary">This explanation will be permanently recorded in the immutable audit log.</div>
+                    </div>
+
+                    <div class="border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                        <a href="{% url 'fees:allocation_detail' allocation.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-warning px-4 fw-bold">
+                            <i class="bi bi-shield-check me-1"></i> Authorize &amp; Recalculate Balance
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

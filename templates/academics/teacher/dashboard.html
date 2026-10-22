@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Academic Hub - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Academic Management</span>
+            </div>
+            <h2 class="fw-bold mb-1">Subject Faculty Academic Hub</h2>
+            <p class="text-secondary small mb-0">Manage study materials, homework assignments, student grading, assessments, and direct doubt clearing.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'academics:teacher_materials' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-file-earmark-plus me-1"></i> Upload Notes
+            </a>
+            <a href="{% url 'academics:teacher_assignments' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-journal-plus me-1"></i> New Assignment
+            </a>
+            <a href="{% url 'academics:teacher_assessments' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-card-checklist me-1"></i> Assessments
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">STUDY MATERIALS</span>
+                    <i class="bi bi-folder2-open text-primary fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-0 text-light">{{ total_materials_count }}</h3>
+                <span class="text-secondary small">Uploaded lecture files</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">ACTIVE ASSIGNMENTS</span>
+                    <i class="bi bi-journal-text text-info fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-0 text-light">{{ total_assignments_count }}</h3>
+                <span class="text-secondary small">Coursework modules</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">PENDING GRADING</span>
+                    <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-0 text-warning">{{ pending_grading_count }}</h3>
+                <span class="text-secondary small">Submissions needing review</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">PENDING DOUBTS</span>
+                    <i class="bi bi-question-circle text-danger fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-0 text-danger">{{ pending_doubts_count }}</h3>
+                <span class="text-secondary small">Awaiting teacher answer</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Active Assignments & Submissions -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-journal-check text-info"></i> Active Coursework Assignments
+                    </h5>
+                    <a href="{% url 'academics:teacher_assignments' %}" class="small text-info text-decoration-none">View All</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TITLE / SUBJECT</th>
+                                <th>CLASS</th>
+                                <th>DEADLINE</th>
+                                <th>SUBMISSIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in active_assignments %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ a.title }}</strong>
+                                    <div class="small text-secondary">{{ a.subject_name }}</div>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ a.classroom.code }}</span></td>
+                                <td>
+                                    <small class="{% if a.is_past_due %}text-danger fw-bold{% else %}text-light{% endif %}">
+                                        {{ a.due_datetime|date:"M d, H:i" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <a href="{% url 'academics:teacher_assignment_submissions' a.id %}" class="btn btn-outline-primary btn-sm">
+                                        {{ a.submissions.count }} Review
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-secondary">No active assignments created.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Doubts & Q&A Inbox -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-chat-left-dots text-warning"></i> Unresolved Student Questions
+                    </h5>
+                    <a href="{% url 'academics:teacher_doubts' %}" class="small text-info text-decoration-none">Open Inbox</a>
+                </div>
+
+                {% for d in pending_doubts %}
+                <div class="p-3 mb-2 rounded-3 bg-dark border border-secondary-subtle">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span class="badge bg-warning-subtle text-warning">{{ d.subject_name }}</span>
+                        <small class="text-secondary">{{ d.created_at|date:"M d, H:i" }}</small>
+                    </div>
+                    <h6 class="fw-bold mb-1 text-light">{{ d.question_title }}</h6>
+                    <p class="small text-secondary mb-2">{{ d.question_text|truncatechars:100 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-light">
+                            <i class="bi bi-person me-1"></i> {{ d.student.get_full_name|default:d.student.username }} ({{ d.classroom.code }})
+                        </small>
+                        <a href="{% url 'academics:teacher_answer_doubt' d.id %}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-reply me-1"></i> Answer
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5 text-secondary">
+                    <i class="bi bi-check2-circle fs-1 text-success d-block mb-2"></i>
+                    <p class="mb-0">All student academic doubts have been resolved!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Classes & Recent Assessments -->
+    <div class="row g-4">
+        <!-- Teaching Roster -->
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-person-video3 text-primary"></i> Authorized Teaching Roster
+                </h5>
+                <ul class="list-group list-group-flush bg-transparent">
+                    {% for ta in teacher_assignments %}
+                    <li class="list-group-item bg-transparent text-light border-secondary-subtle px-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-primary">{{ ta.subject_name }}</strong>
+                            <div class="small text-secondary">{{ ta.classroom.name }} ({{ ta.classroom.code }})</div>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">Active Assignment</span>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item bg-transparent text-secondary px-0">No active teaching assignments found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Assessments & Tests -->
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-award text-success"></i> Recent Assessments
+                    </h5>
+                    <a href="{% url 'academics:teacher_assessments' %}" class="small text-info text-decoration-none">Manage</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>ASSESSMENT</th>
+                                <th>CLASS</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asm in recent_assessments %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ asm.title }}</strong>
+                                    <div class="small text-secondary">{{ asm.subject_name }} (Max: {{ asm.max_marks }})</div>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ asm.classroom.code }}</span></td>
+                                <td>
+                                    {% if asm.is_published %}
+                                    <span class="badge bg-success">Published</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Confidential Draft</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'academics:teacher_enter_marks' asm.id %}" class="btn btn-sm btn-outline-light">
+                                        Scores
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-secondary">No assessments created.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

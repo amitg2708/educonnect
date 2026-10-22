@@ -254,3 +254,49 @@ EduConnect enforces strict server-side access control across six distinct user r
    - Role-specific server-side permission checks via `@role_required` decorator with HTTP 403 `PermissionDenied` enforcement.
    - Sensitive view data protected against unauthorized role horizontal escalation.
 
+---
+
+## 🚢 Production Deployment
+
+EduConnect is pre-configured for containerized, cloud PaaS, and virtual machine deployments.
+
+### Option 1: Docker Compose (All-in-One Stack)
+
+To run the complete production-ready stack with MongoDB 7 and EduConnect via Docker:
+```bash
+docker compose up --build -d
+```
+The application will automatically start on `http://localhost:8000` with MongoDB on `localhost:27017`.
+
+### Option 2: Cloud PaaS Deployment (Render / Heroku / Railway / Fly.io)
+
+1. Connect your repository to your PaaS provider.
+2. The provided [`Procfile`](file:///c:/Users/Amit%20Gupta/Desktop/project/New%20folder/Education/Procfile) is automatically detected:
+   ```text
+   web: gunicorn educonnect.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120
+   ```
+3. Set the following environment variables in your provider's dashboard:
+   - `DJANGO_ENV=production`
+   - `DJANGO_SECRET_KEY=<generate_strong_secret_50+_chars>`
+   - `DJANGO_ALLOWED_HOSTS=your-app-domain.com,*.onrender.com`
+   - `DJANGO_CSRF_TRUSTED_ORIGINS=https://your-app-domain.com,https://*.onrender.com`
+   - `MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/?retryWrites=true&w=majority`
+   - `MONGODB_NAME=educonnect_prod`
+   - `DJANGO_SECURE_SSL=True`
+4. WhiteNoise handles production static asset caching and compression automatically via `CompressedManifestStaticFilesStorage`.
+
+### Option 3: Manual Linux / Systemd / Nginx Deployment
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Collect static files:
+   ```bash
+   python manage.py collectstatic --noinput
+   ```
+3. Run with Gunicorn:
+   ```bash
+   gunicorn educonnect.wsgi:application --bind 0.0.0.0:8000 --workers 3
+   ```
+

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Enrol Student into Batch - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'academics:admin_enrollments' %}" class="btn btn-outline-light btn-sm mb-2">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Enrolments
+                    </a>
+                    <h2 class="fw-bold mb-0 text-light">Enrol Student into Coaching Batch</h2>
+                    <p class="text-secondary small mb-0">Select cohort, student account, and verify institutional boundary and schedule compatibility.</p>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-lg">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Target Coaching Batch *</label>
+                        <select name="batch" class="form-select bg-dark border-secondary text-light" required onchange="window.location.href='?batch=' + this.value;">
+                            <option value="">-- Choose Coaching Batch --</option>
+                            {% for b in all_batches %}
+                            <option value="{{ b.id }}" {% if selected_batch and selected_batch.id == b.id %}selected{% endif %}>
+                                {{ b.name }} [{{ b.code }}] ({{ b.available_seats }}/{{ b.capacity }} seats available{% if b.is_full %}, waitlist enabled{% endif %})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {% if selected_batch %}
+                    <div class="alert alert-dark border border-secondary rounded-3 p-3 mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="text-light">{{ selected_batch.name }}</strong>
+                                <span class="badge bg-secondary-subtle text-light font-monospace small ms-1">{{ selected_batch.code }}</span>
+                                <div class="text-secondary small mt-1">
+                                    {{ selected_batch.course.title }} &bull; {{ selected_batch.branch.name|default:"Main Campus" }}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge {% if selected_batch.is_full %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %}">
+                                    {{ selected_batch.active_enrollments_count }} / {{ selected_batch.capacity }} seats
+                                </span>
+                                {% if selected_batch.is_full %}
+                                <div class="text-warning small mt-1">Will be placed on waitlist</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if form %}
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label text-secondary small fw-semibold">Student Account *</label>
+                            {{ form.student }}
+                            {% if form.student.errors %}<div class="text-danger small mt-1">{{ form.student.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Roll Number</label>
+                            {{ form.roll_number }}
+                            {% if form.roll_number.errors %}<div class="text-danger small mt-1">{{ form.roll_number.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Start Date *</label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}<div class="text-danger small mt-1">{{ form.start_date.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-secondary small fw-semibold">Admission Remarks / Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-check form-switch mt-2">
+                                {{ form.force_waitlist }}
+                                <label class="form-check-label text-warning small fw-semibold ms-2">Place student on Waitlist directly (do not occupy active seat)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
+                        <a href="{% url 'academics:admin_enrollments' %}" class="btn btn-outline-light">Cancel</a>
+                        <button type="submit" class="btn btn-success fw-bold px-4">
+                            <i class="bi bi-check-lg me-1"></i> Complete Enrolment
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-4 text-secondary">
+                        <i class="bi bi-arrow-up-circle fs-3 d-block mb-2"></i>
+                        Please choose a coaching batch above to select and admit a student.
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Coaching Batches Desk - {{ institution.name|default:"EduConnect" }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-warning"></span>
+                <span class="small fw-bold text-warning text-uppercase">Academic Cohorts</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-light">Coaching Batches Desk</h2>
+            <p class="text-secondary small mb-0">Monitor coaching cohorts, track seat capacities, faculty assignments, and weekly class schedules.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'academics:admin_courses' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-book-half me-1"></i> Course Catalogue
+            </a>
+            <a href="{% url 'academics:admin_enrollments' %}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-people me-1"></i> Student Enrolments
+            </a>
+            <a href="{% url 'academics:admin_batch_create' %}" class="btn btn-warning btn-sm fw-semibold">
+                <i class="bi bi-plus-lg me-1"></i> Create Batch
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control bg-dark border-secondary text-light" placeholder="Search batch, code, class..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="course" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Courses / Programs</option>
+                    {% for c in courses %}
+                    <option value="{{ c.id }}" {% if selected_course == c.id|stringformat:"s" %}selected{% endif %}>{{ c.title }} ({{ c.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="branch" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Branches</option>
+                    {% for b in branches %}
+                    <option value="{{ b.id }}" {% if selected_branch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Statuses</option>
+                    {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-warning w-100 fw-semibold">Filter</button>
+                {% if search_query or selected_course or selected_branch or selected_status %}
+                <a href="{% url 'academics:admin_batches' %}" class="btn btn-sm btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Batches Table / Cards -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">Active &amp; Operational Cohorts ({{ total_batches }})</h5>
+            <span class="text-secondary small">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </div>
+
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Batch / Code</th>
+                        <th>Target Curriculum</th>
+                        <th>Class &amp; Stream</th>
+                        <th>Branch &amp; Room</th>
+                        <th>Schedule Slots</th>
+                        <th>Capacity &amp; Seats</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in page_obj %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'academics:admin_batch_detail' b.id %}" class="text-light fw-bold text-decoration-none d-block">
+                                {{ b.name }}
+                            </a>
+                            <span class="badge bg-secondary-subtle text-light font-monospace small">{{ b.code }}</span>
+                            <span class="text-secondary small ms-1">{{ b.start_date|date:"M d" }} - {{ b.end_date|date:"M d, Y" }}</span>
+                        </td>
+                        <td>
+                            <span class="text-light d-block">{{ b.course.title }}</span>
+                            <span class="badge bg-dark border border-secondary text-info small">{{ b.course.get_category_display }}</span>
+                        </td>
+                        <td>
+                            <span class="text-light d-block">{{ b.target_class|default:b.course.target_class|default:"Standard" }}</span>
+                            <span class="text-secondary small">{{ b.stream|default:b.course.get_stream_display }} • {{ b.board|default:b.course.board|default:"General" }}</span>
+                        </td>
+                        <td>
+                            <span class="text-light d-block">{{ b.branch.name|default:"Main Campus" }}</span>
+                            <span class="text-secondary small">{{ b.classroom.name|default:"Room Unassigned" }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-dark border border-secondary text-light">
+                                <i class="bi bi-clock me-1 text-warning"></i> {{ b.schedules.count }} Slots/wk
+                            </span>
+                        </td>
+                        <td style="min-width: 170px;">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-light fw-semibold">{{ b.active_enrollments_count }} / {{ b.capacity }} seats</span>
+                                {% if b.is_full %}
+                                <span class="badge bg-danger-subtle text-danger small">FULL</span>
+                                {% else %}
+                                <span class="badge bg-success-subtle text-success small">{{ b.available_seats }} left</span>
+                                {% endif %}
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar {% if b.is_full %}bg-danger{% else %}bg-primary{% endif %}" role="progressbar" style="width: {% widthratio b.active_enrollments_count b.capacity 100 %}%;"></div>
+                            </div>
+                            {% if b.waitlisted_enrollments_count > 0 %}
+                            <span class="text-warning small mt-1 d-block">
+                                <i class="bi bi-hourglass-split me-1"></i> {{ b.waitlisted_enrollments_count }} on waitlist
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if b.status == 'ongoing' %}
+                            <span class="badge bg-success-subtle text-success">Ongoing</span>
+                            {% elif b.status == 'upcoming' %}
+                            <span class="badge bg-info-subtle text-info">Upcoming</span>
+                            {% elif b.status == 'completed' %}
+                            <span class="badge bg-secondary-subtle text-secondary">Completed</span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger">{{ b.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'academics:admin_batch_detail' b.id %}" class="btn btn-sm btn-warning text-dark fw-semibold" title="Manage Roster & Schedule">
+                                <i class="bi bi-gear-fill me-1"></i> Manage
+                            </a>
+                            <a href="{% url 'academics:admin_batch_edit' b.id %}" class="btn btn-sm btn-outline-light" title="Edit Batch">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4" aria-label="Batch list pagination">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link bg-dark border-secondary text-light" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">&laquo;</a>
+                </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link {% if page_obj.number == num %}bg-warning border-warning text-dark fw-bold{% else %}bg-dark border-secondary text-light{% endif %}" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark border-secondary text-light" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_branch %}&branch={{ selected_branch }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-collection-play text-secondary" style="font-size: 3rem;"></i>
+            <h5 class="text-secondary mt-3">No coaching batches found</h5>
+            <p class="text-secondary small">Create coaching cohorts for Class 10 tuition, Class 11 Science, or Entrance Exams.</p>
+            <a href="{% url 'academics:admin_batch_create' %}" class="btn btn-sm btn-warning text-dark fw-semibold mt-2">
+                <i class="bi bi-plus-lg me-1"></i> Create First Batch
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

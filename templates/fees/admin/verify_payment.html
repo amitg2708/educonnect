@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Payment - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'fees:payment_list' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                        &larr; Back to Payment Ledger
+                    </a>
+                    <h2 class="fw-bold mb-1">Verify Payment Transaction</h2>
+                    <p class="text-secondary small mb-0">Reconcile transaction record with institution bank statement.</p>
+                </div>
+            </div>
+
+            <!-- Transaction Details Summary Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary-subtle pb-3 mb-3">
+                    <div>
+                        <span class="text-secondary small d-block">Transaction Reference:</span>
+                        <code class="fs-5 text-light">{{ payment.transaction_reference }}</code>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-secondary small d-block">Amount:</span>
+                        <h4 class="fw-bold text-success mb-0">${{ payment.amount|floatformat:2 }}</h4>
+                    </div>
+                </div>
+
+                <div class="row g-2 small text-secondary">
+                    <div class="col-sm-6">
+                        <span>Student:</span> <strong class="text-light">{{ payment.student.get_full_name|default:payment.student.username }}</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span>Payment Method:</span> <strong class="text-light">{{ payment.get_payment_method_display }}</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        <span>Payer:</span> <strong class="text-light">{{ payment.payer_name }}</strong> ({{ payment.payer_relationship }})
+                    </div>
+                    <div class="col-sm-6">
+                        <span>Submission Date:</span> <strong class="text-light">{{ payment.payment_date }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Action Form -->
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Verification Decision <span class="text-danger">*</span></label>
+                        <div class="d-flex flex-column gap-2 mt-1">
+                            {% for radio in form.decision %}
+                            <div class="form-check">
+                                {{ radio.tag }}
+                                <label class="form-check-label text-light small" for="{{ radio.id_for_label }}">
+                                    {{ radio.choice_label }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-light">Reconciliation Notes / Rejection Reason</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <div class="border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                        <a href="{% url 'fees:payment_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">Submit Decision</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

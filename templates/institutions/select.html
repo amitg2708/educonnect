@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Select Institution - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header Section -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom border-secondary-subtle">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge bg-primary-subtle text-primary text-uppercase px-2 py-1">Multi-Tenant Portal</span>
+                        {% if user.is_superuser %}
+                        <span class="badge bg-danger-subtle text-danger text-uppercase px-2 py-1">Platform Operator</span>
+                        {% endif %}
+                    </div>
+                    <h1 class="h2 fw-bold text-light mb-1">Select Active Institution</h1>
+                    <p class="text-secondary mb-0">Choose which coaching institute workspace you want to access. Your permissions and dashboard adapt automatically.</p>
+                </div>
+                {% if user.is_superuser %}
+                <div>
+                    <a href="{% url 'institutions:platform_admin' %}" class="btn btn-outline-info d-flex align-items-center gap-2">
+                        <i class="bi bi-gear-wide-connected"></i> Platform Hub
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Institutions Grid -->
+            <div class="row g-4">
+                {% for membership in memberships %}
+                <div class="col-md-6">
+                    <div class="card h-100 border-secondary bg-dark shadow-sm position-relative {% if current_institution and current_institution.id == membership.institution.id %}border-primary ring-active{% endif %}" style="transition: all 0.2s ease;">
+                        {% if current_institution and current_institution.id == membership.institution.id %}
+                        <div class="position-absolute top-0 end-0 m-3">
+                            <span class="badge bg-primary d-flex align-items-center gap-1 shadow-sm px-2 py-1">
+                                <i class="bi bi-check-circle-fill"></i> Current Workspace
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                     style="width: 52px; height: 52px; font-size: 1.25rem; background: {{ membership.institution.primary_color|default:'#0d6efd' }};">
+                                    {{ membership.institution.code|default:"INS"|slice:":3" }}
+                                </div>
+                                <div>
+                                    <h4 class="h5 fw-bold text-light mb-1">{{ membership.institution.name }}</h4>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-secondary-subtle text-secondary small">{{ membership.institution.code }}</span>
+                                        {% if membership.branch %}
+                                        <span class="badge bg-info-subtle text-info small">
+                                            <i class="bi bi-geo-alt me-1"></i>{{ membership.branch.name }}
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-dark-subtle text-muted small">All Campuses</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if membership.institution.tagline %}
+                            <p class="text-secondary small mb-3 fst-italic">"{{ membership.institution.tagline }}"</p>
+                            {% endif %}
+
+                            <div class="bg-secondary-subtle bg-opacity-10 rounded-3 p-3 mb-4">
+                                <div class="row g-2 text-sm">
+                                    <div class="col-6">
+                                        <span class="text-secondary small d-block">Your Active Role</span>
+                                        <span class="fw-semibold text-light">
+                                            <i class="bi bi-person-badge text-primary me-1"></i>{{ membership.get_role_display }}
+                                        </span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-secondary small d-block">Member Since</span>
+                                        <span class="text-light small">{{ membership.joined_at|date:"M d, Y" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                {% if current_institution and current_institution.id == membership.institution.id %}
+                                <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold">
+                                    <i class="bi bi-box-arrow-in-right"></i> Enter Dashboard
+                                </a>
+                                {% else %}
+                                <a href="{% url 'institutions:switch_institution' membership.institution.id %}" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold">
+                                    <i class="bi bi-arrow-repeat"></i> Switch to This Institute
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="card border-secondary bg-dark text-center py-5 px-4 shadow-sm">
+                        <i class="bi bi-building-exclamation text-warning display-4 mb-3"></i>
+                        <h3 class="h4 text-light fw-bold">No Active Institution Memberships</h3>
+                        <p class="text-secondary max-w-md mx-auto mb-4">
+                            You currently do not hold active memberships in any coaching institute. If you received an invitation link, please click it to activate your access.
+                        </p>
+                        {% if user.is_superuser %}
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'institutions:platform_admin' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i> Provision an Institution
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if user.is_superuser %}
+            <!-- Operator All Institutions Section -->
+            <div class="mt-5 pt-4 border-top border-secondary-subtle">
+                <h3 class="h5 fw-bold text-light mb-3">
+                    <i class="bi bi-shield-lock-fill text-danger me-2"></i>Platform Operator Quick Switch
+                </h3>
+                <p class="text-secondary small mb-3">As a platform administrator, you can switch into any registered coaching institute across EduConnect:</p>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for inst in user_institutions %}
+                    <a href="{% url 'institutions:switch_institution' inst.id %}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 {% if current_institution and current_institution.id == inst.id %}active border-primary text-primary{% endif %}">
+                        <span class="rounded-circle d-inline-block" style="width: 8px; height: 8px; background: {{ inst.primary_color|default:'#0d6efd' }};"></span>
+                        {{ inst.name }} ({{ inst.code }})
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

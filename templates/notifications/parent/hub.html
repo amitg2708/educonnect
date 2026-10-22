@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Parent Portal & Student Hub - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-success"></span>
+                <span class="small fw-bold text-success text-uppercase">Family Academic Portal</span>
+            </div>
+            <h2 class="fw-bold mb-1">Parent Command Center &amp; Student Hub</h2>
+            <p class="text-secondary small mb-0">Unified supervision of your children's attendance, daily routines, examination results, fee schedules, and campus notices.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'complaints:submit_ticket' %}" class="btn btn-primary btn-sm fw-bold">
+                <i class="bi bi-chat-square-dots me-1"></i> Submit Query / Complaint
+            </a>
+            <a href="{% url 'notifications:my_notifications' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-bell me-1"></i> Notifications
+            </a>
+        </div>
+    </div>
+
+    <!-- Multi-Children Switcher Tabs -->
+    {% if children_links|length > 1 %}
+    <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+        {% for link in children_links %}
+        <a href="{% url 'notifications:parent_hub_child' link.student.id %}"
+           class="btn btn-sm {% if selected_student.id == link.student.id %}btn-primary fw-bold{% else %}btn-outline-light{% endif %} rounded-pill px-4 py-2">
+            <i class="bi bi-person-circle me-1"></i> {{ link.student.get_full_name|default:link.student.username }}
+            <span class="badge bg-secondary ms-1">{{ link.get_relationship_type_display }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if selected_student %}
+    <!-- Child Profile Hero Card -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary bg-opacity-20 text-primary rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <i class="bi bi-mortarboard-fill fs-2"></i>
+                </div>
+                <div>
+                    <h4 class="fw-bold text-light mb-0">{{ selected_student.get_full_name|default:selected_student.username }}</h4>
+                    <div class="text-secondary small">
+                        Relation: <strong class="text-light">{{ relationship_name }}</strong> |
+                        Student Email: <strong class="text-light">{{ selected_student.email }}</strong>
+                    </div>
+                    {% if classroom %}
+                    <div class="text-secondary small mt-1">
+                        Class: <strong class="text-info">{{ classroom.name }} ({{ classroom.code }})</strong> |
+                        Session: <strong class="text-light">{{ classroom.academic_session.name }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Deep Link Action Desks -->
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'attendance:parent_child_attendance' selected_student.id %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-calendar-check me-1"></i> Attendance
+                </a>
+                <a href="{% url 'timetable:parent_child_timetable' selected_student.id %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-clock me-1"></i> Timetable
+                </a>
+                <a href="{% url 'academics:parent_child_academics_detail' selected_student.id %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-award me-1"></i> Academics
+                </a>
+                <a href="{% url 'fees:parent_child_fees' selected_student.id %}" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-credit-card me-1"></i> Fees
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4 Key Performance Metrics Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Attendance Metric -->
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">ATTENDANCE RATE</span>
+                    <i class="bi bi-calendar-check text-info fs-4"></i>
+                </div>
+                {% if attendance_metrics %}
+                <h3 class="fw-bold mb-0 text-light">{{ attendance_metrics.percentage }}%</h3>
+                <span class="small {% if attendance_metrics.is_below_minimum %}text-danger fw-bold{% else %}text-success{% endif %}">
+                    {% if attendance_metrics.is_below_minimum %}Attendance Alert: Below Threshold{% else %}Good Standing{% endif %}
+                </span>
+                {% else %}
+                <h3 class="fw-bold mb-0 text-light">-</h3>
+                <span class="text-secondary small">No registers marked</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Fees Outstanding Metric -->
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">FEE BALANCE</span>
+                    <i class="bi bi-cash-stack text-warning fs-4"></i>
+                </div>
+                {% if allocation %}
+                <h3 class="fw-bold mb-0 {% if allocation.balance_amount > 0 %}text-warning{% else %}text-success{% endif %}">
+                    ${{ allocation.balance_amount }}
+                </h3>
+                <span class="text-secondary small">Paid: ${{ allocation.paid_amount }} of ${{ allocation.net_amount }}</span>
+                {% else %}
+                <h3 class="fw-bold mb-0 text-success">$0.00</h3>
+                <span class="text-secondary small">No pending fees</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Academic Tests Metric -->
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">PUBLISHED EXAMS</span>
+                    <i class="bi bi-award text-success fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-0 text-success">{{ scores.count }}</h3>
+                <span class="text-secondary small">Official verified tests</span>
+            </div>
+        </div>
+
+        <!-- Coursework Metric -->
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">ASSIGNMENTS</span>
+                    <i class="bi bi-journal-text text-primary fs-4"></i>
+                </div>
+                <h3 class="fw-bold mb-0 text-primary">{{ assignments.count }}</h3>
+                <span class="text-secondary small">Current subject tasks</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 360-Degree Split Sections -->
+    <div class="row g-4 mb-4">
+        <!-- Today's Timetable Routine -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary"></i> Today's Class Schedule
+                    </h5>
+                    <a href="{% url 'timetable:parent_child_timetable' selected_student.id %}" class="small text-info text-decoration-none">Full Week &rarr;</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TIME</th>
+                                <th>SUBJECT</th>
+                                <th>FACULTY</th>
+                                <th>ROOM</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for slot in timetable_today %}
+                            <tr>
+                                <td><small class="text-primary fw-bold">{{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</small></td>
+                                <td><strong class="text-light">{{ slot.subject_name }}</strong></td>
+                                <td><small class="text-secondary">{{ slot.teacher.get_full_name|default:slot.teacher.username }}</small></td>
+                                <td><span class="badge bg-secondary">{{ slot.room_number|default:"TBA" }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-secondary">No classes scheduled for today.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Fee Installments -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-cash-coin text-warning"></i> Upcoming Fee Installments
+                    </h5>
+                    <a href="{% url 'fees:parent_child_fees' selected_student.id %}" class="small text-info text-decoration-none">Fee Ledger &rarr;</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>INSTALLMENT</th>
+                                <th>DUE DATE</th>
+                                <th>AMOUNT</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inst in upcoming_installments %}
+                            <tr>
+                                <td><strong class="text-light">{{ inst.title }}</strong></td>
+                                <td><small class="text-warning fw-bold">{{ inst.due_date|date:"M d, Y" }}</small></td>
+                                <td><span class="fw-bold text-light">${{ inst.amount }}</span></td>
+                                <td>
+                                    {% if inst.status == 'paid' or inst.is_paid %}
+                                    <span class="badge bg-success">Paid</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-secondary">All scheduled fee installments are cleared.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Official Published Grades & Campus Notices Row -->
+    <div class="row g-4">
+        <!-- Published Exam Marks -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-award text-success"></i> Official Published Results
+                    </h5>
+                    <a href="{% url 'academics:parent_child_academics_detail' selected_student.id %}" class="small text-info text-decoration-none">Transcript &rarr;</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TEST</th>
+                                <th>SUBJECT</th>
+                                <th>MARKS</th>
+                                <th>GRADE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in scores %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ s.assessment.title }}</strong>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ s.assessment.subject_name }}</span></td>
+                                <td>
+                                    <strong class="text-primary">{{ s.marks_obtained }}</strong> / {{ s.assessment.max_marks }}
+                                </td>
+                                <td>
+                                    <span class="badge {% if s.grade == 'F' %}bg-danger{% elif s.grade == 'A+' or s.grade == 'A' %}bg-success{% else %}bg-info{% endif %}">
+                                        {{ s.grade }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-secondary">No published assessment marks on record yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campus Circulars & Notices -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-megaphone text-info"></i> School Circulars &amp; Notices
+                    </h5>
+                    <a href="{% url 'notifications:announcements_list' %}" class="small text-info text-decoration-none">All Notices &rarr;</a>
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    {% for a in announcements %}
+                    <div class="p-3 rounded-3 bg-dark border border-secondary-subtle">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-primary-subtle text-primary">{{ a.get_target_role_display }}</span>
+                            <small class="text-secondary">{{ a.publish_date|date:"M d, Y" }}</small>
+                        </div>
+                        <h6 class="fw-bold text-light mb-1">{{ a.title }}</h6>
+                        <p class="small text-secondary mb-2">{{ a.content|truncatechars:90 }}</p>
+                        <a href="{% url 'notifications:announcement_detail' a.id %}" class="small text-info text-decoration-none">
+                            Read details &rarr;
+                        </a>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-secondary">No active campus notices.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

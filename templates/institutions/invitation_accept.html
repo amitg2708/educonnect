@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Accept Invitation - {{ invitation.institution.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card border-secondary bg-dark shadow-lg">
+                <div class="card-header border-secondary bg-dark p-4 text-center">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold mb-3 shadow"
+                         style="width: 64px; height: 64px; font-size: 1.5rem; background: {{ invitation.institution.primary_color|default:'#0d6efd' }};">
+                        <i class="bi bi-envelope-check-fill"></i>
+                    </div>
+                    <span class="badge bg-primary-subtle text-primary text-uppercase px-2 py-1 mb-2">Institute Invitation</span>
+                    <h2 class="h3 fw-bold text-light mb-1">Join {{ invitation.institution.name }}</h2>
+                    <p class="text-secondary small mb-0">You've been invited to join this coaching institute on EduConnect.</p>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="bg-secondary-subtle bg-opacity-10 rounded-3 p-3 mb-4 border border-secondary-subtle">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <span class="text-secondary small d-block">Invited Role</span>
+                                <span class="fw-bold text-light">
+                                    <i class="bi bi-person-badge text-primary me-1"></i>{{ invitation.get_role_display }}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-secondary small d-block">Assigned Branch</span>
+                                <span class="fw-bold text-light">
+                                    <i class="bi bi-geo-alt text-info me-1"></i>{{ invitation.branch.name|default:"Main Campus / All" }}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-secondary small d-block">Target Email</span>
+                                <span class="text-light small">{{ invitation.email }}</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-secondary small d-block">Link Valid Until</span>
+                                <span class="text-light small">{{ invitation.expires_at|date:"M d, Y H:i" }}</span>
+                            </div>
+                            {% if invitation.notes %}
+                            <div class="col-12 border-top border-secondary-subtle pt-2">
+                                <span class="text-secondary small d-block mb-1">Administrator Notes:</span>
+                                <p class="text-light small fst-italic mb-0 bg-dark p-2 rounded">{{ invitation.notes }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="alert alert-info border-info-subtle bg-info-subtle bg-opacity-10 small mb-4">
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-info-circle-fill fs-5 text-info"></i>
+                                <div>
+                                    Signed in as <strong>{{ user.username }}</strong> ({{ user.email }}).
+                                    Clicking below will add this institute role to your account and switch your active context.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                                <i class="bi bi-check-circle me-1"></i> Accept Invitation &amp; Enter Portal
+                            </button>
+                            <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-warning border-warning-subtle bg-warning-subtle bg-opacity-10 small mb-4">
+                        <div class="d-flex gap-2">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 text-warning"></i>
+                            <div>
+                                You must be logged into EduConnect to activate this membership. If you do not have an account, you can register first.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary fw-semibold">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Log In to Accept
+                        </a>
+                        <a href="{% url 'accounts:register' %}?next={{ request.path }}" class="btn btn-outline-light">
+                            <i class="bi bi-person-plus me-1"></i> Create an Account
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

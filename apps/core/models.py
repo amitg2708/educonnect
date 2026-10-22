@@ -14,22 +14,53 @@ class Course(models.Model):
     Academic program and curriculum offerings.
     """
 
+    class Category(models.TextChoices):
+        SCHOOL_TUITION = "school_tuition", "School Tuition (Classes 5-10)"
+        JUNIOR_COLLEGE = "junior_college", "Junior College (Classes 11-12)"
+        COMPETITIVE_EXAM = "competitive_exam", "Competitive & Entrance Exam Prep"
+        BOARD_PREP = "board_prep", "Board Exam Preparation & Revision"
+        FOUNDATION = "foundation", "Foundation & Olympiad"
+        SKILL = "skill", "Skill Development & Language"
+        UNDERGRADUATE = "undergraduate", "Undergraduate Degree"
+        POSTGRADUATE = "postgraduate", "Postgraduate / Master's"
+        OTHER = "other", "Other Academic Program"
+
+    class Stream(models.TextChoices):
+        SCIENCE = "science", "Science (PCM / PCB / PCMB)"
+        COMMERCE = "commerce", "Commerce"
+        ARTS = "arts", "Arts & Humanities"
+        GENERAL = "general", "General / All Streams"
+
     class Level(models.TextChoices):
         SECONDARY = "secondary", "Secondary Education (Grades 9-12)"
         UNDERGRADUATE = "undergraduate", "Undergraduate Degree"
         POSTGRADUATE = "postgraduate", "Postgraduate / Master's"
         DIPLOMA = "diploma", "Professional Certificate & Diploma"
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="courses",
+        null=True,
+        blank=True,
+        help_text="Institution offering this course.",
+    )
     title = models.CharField(max_length=200)
     code = models.CharField(max_length=50, unique=True, help_text="Unique course code e.g. CS-101")
     slug = models.SlugField(max_length=220, unique=True, blank=True)
+    category = models.CharField(max_length=40, choices=Category.choices, default=Category.OTHER)
+    target_class = models.CharField(max_length=60, blank=True, default="", help_text="Target grade/class e.g. Class 10, Class 11, Class 12")
+    stream = models.CharField(max_length=30, choices=Stream.choices, default=Stream.GENERAL)
+    board = models.CharField(max_length=120, blank=True, default="", help_text="Education board e.g. CBSE, ICSE, State Board, IB")
+    examination_scheme = models.CharField(max_length=150, blank=True, default="", help_text="Target exam scheme e.g. JEE, NEET, CUET, Board Exam")
     department = models.CharField(max_length=120)
     level = models.CharField(max_length=30, choices=Level.choices, default=Level.UNDERGRADUATE)
-    duration = models.CharField(max_length=60, help_text="e.g. 4 Years / 8 Semesters")
+    duration = models.CharField(max_length=60, help_text="e.g. 1 Year / 6 Months / 4 Semesters")
     description = models.TextField()
     eligibility = models.TextField(blank=True, help_text="Academic criteria and prerequisite requirements.")
     syllabus_overview = models.TextField(blank=True, help_text="Key learning modules and milestones.")
     fee_per_term = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    fee_period = models.CharField(max_length=40, default="Per Term", help_text="Billing cycle e.g. Full Course, Per Term, Monthly")
     image = models.ImageField(upload_to="courses/", blank=True, null=True)
     is_featured = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -40,6 +71,10 @@ class Course(models.Model):
         verbose_name = "Course / Program"
         verbose_name_plural = "Courses / Programs"
         ordering = ["code"]
+        indexes = [
+            models.Index(fields=["institution", "is_active"]),
+            models.Index(fields=["code"]),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -62,6 +97,14 @@ class Achievement(models.Model):
         ARTS = "arts", "Cultural, Debating & Arts"
         ACCREDITATION = "accreditation", "Institutional Accreditations"
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="achievements",
+        null=True,
+        blank=True,
+        help_text="Institution context for this honor.",
+    )
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=40, choices=Category.choices, default=Category.ACADEMIC)
     year = models.PositiveIntegerField(default=2026)
@@ -92,6 +135,14 @@ class GalleryItem(models.Model):
         SPORTS = "sports", "Sports Arenas & Gymnasium"
         EVENTS = "events", "Convocations & Annual Events"
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="gallery_items",
+        null=True,
+        blank=True,
+        help_text="Institution context for this photograph.",
+    )
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=40, choices=Category.choices, default=Category.CAMPUS)
     caption = models.TextField(blank=True)
@@ -125,6 +176,14 @@ class Announcement(models.Model):
         ADMISSIONS = "admissions", "Admissions"
         EVENTS = "events", "Campus Events"
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="core_announcements",
+        null=True,
+        blank=True,
+        help_text="Institution context for this circular.",
+    )
     title = models.CharField(max_length=255)
     category = models.CharField(max_length=30, choices=Category.choices, default=Category.GENERAL)
     priority = models.CharField(max_length=20, choices=Priority.choices, default=Priority.STANDARD)
@@ -147,6 +206,14 @@ class Facility(models.Model):
     Key campus infrastructure items highlighted on public pages.
     """
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="facilities",
+        null=True,
+        blank=True,
+        help_text="Institution context for this facility.",
+    )
     title = models.CharField(max_length=150)
     category = models.CharField(max_length=100)
     description = models.TextField()
@@ -167,6 +234,14 @@ class ContactInquiry(models.Model):
     Public inquiries submitted via the Contact Us page.
     """
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="contact_inquiries",
+        null=True,
+        blank=True,
+        help_text="Target institution for this inquiry.",
+    )
     name = models.CharField(max_length=150)
     email = models.EmailField()
     phone = models.CharField(max_length=30, blank=True)
@@ -197,6 +272,14 @@ class AdmissionInquiry(models.Model):
         WAITLISTED = "waitlisted", "Waitlisted"
         REJECTED = "rejected", "Not Accepted"
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="admission_inquiries",
+        null=True,
+        blank=True,
+        help_text="Target institution for this admissions enquiry.",
+    )
     applicant_name = models.CharField(max_length=150)
     email = models.EmailField()
     phone = models.CharField(max_length=30)

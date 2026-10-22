@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Alert Center</span>
+            </div>
+            <h2 class="fw-bold mb-1">In-App Notifications</h2>
+            <p class="text-secondary small mb-0">Stay informed about academic milestones, fee due dates, attendance alerts, timetable revisions, and support ticket replies.</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if unread_count > 0 %}
+            <form method="POST" action="{% url 'notifications:mark_all_read' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-check2-all me-1"></i> Mark All as Read
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'notifications:announcements_list' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-megaphone me-1"></i> Campus Notices
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="d-flex gap-2 mb-4">
+        <a href="{% url 'notifications:my_notifications' %}" class="btn btn-sm {% if not selected_filter %}btn-primary fw-bold{% else %}btn-outline-light{% endif %} rounded-pill px-3">
+            All Alerts
+        </a>
+        <a href="{% url 'notifications:my_notifications' %}?filter=unread" class="btn btn-sm {% if selected_filter == 'unread' %}btn-primary fw-bold{% else %}btn-outline-light{% endif %} rounded-pill px-3">
+            Unread ({{ unread_count }})
+        </a>
+    </div>
+
+    <!-- Notification List -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex flex-column gap-3">
+            {% for n in notifications %}
+            <div class="p-3 rounded-4 border {% if not n.is_read %}bg-primary bg-opacity-10 border-primary border-opacity-50{% else %}bg-dark border-secondary-subtle{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge {% if n.category == 'attendance' %}bg-danger{% elif n.category == 'fees' %}bg-warning text-dark{% elif n.category == 'academics' %}bg-info{% elif n.category == 'timetable' %}bg-primary{% else %}bg-secondary{% endif %}">
+                            {{ n.get_category_display }}
+                        </span>
+                        {% if not n.is_read %}
+                        <span class="badge bg-primary">New</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-secondary">{{ n.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+
+                <h5 class="fw-bold text-light mb-1 mt-2">{{ n.title }}</h5>
+                <p class="text-secondary small mb-3">{{ n.message }}</p>
+
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary-subtle">
+                    <div>
+                        {% if n.action_url %}
+                        <a href="{% url 'notifications:mark_read' n.id %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> View Details
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if not n.is_read %}
+                        <a href="{% url 'notifications:mark_read' n.id %}" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-check2 me-1"></i> Mark as Read
+                        </a>
+                        {% else %}
+                        <small class="text-secondary"><i class="bi bi-check2-circle me-1"></i> Read on {{ n.read_at|date:"M d, H:i" }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5 text-secondary">
+                <i class="bi bi-bell-slash fs-1 d-block mb-2 text-secondary"></i>
+                <p>No notifications to display at this time.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

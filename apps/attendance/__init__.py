@@ -1,0 +1,3 @@
+"""
+EduConnect Attendance Management App.
+"""

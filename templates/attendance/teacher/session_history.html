@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Session History: {{ assignment.subject_name }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'attendance:teacher_home' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to My Assignments
+            </a>
+            <h2 class="fw-bold mb-1">Attendance Sessions: {{ assignment.subject_name }}</h2>
+            <p class="text-secondary small mb-0">Class: <strong>{{ assignment.classroom.name }}</strong> (<code>{{ assignment.classroom.code }}</code>)</p>
+        </div>
+        <div>
+            <a href="{% url 'attendance:teacher_mark' assignment.id %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i> Mark New Session
+            </a>
+        </div>
+    </div>
+
+    <!-- History Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date</th>
+                        <th>Period</th>
+                        <th>Lesson Topic</th>
+                        <th class="text-center">Present</th>
+                        <th class="text-center">Absent</th>
+                        <th class="text-center">Late</th>
+                        <th class="text-center">Excused</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in page_obj %}
+                    <tr>
+                        <td class="fw-bold text-light">{{ s.session_date|date:"Y-m-d" }}</td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">{{ s.session_period }}</span></td>
+                        <td>{{ s.topic|default:"Curriculum Lecture" }}</td>
+                        <td class="text-center text-success fw-bold">
+                            {{ s.records.all|length }}
+                        </td>
+                        <td class="text-center text-danger fw-bold">-</td>
+                        <td class="text-center text-warning fw-bold">-</td>
+                        <td class="text-center text-info fw-bold">-</td>
+                        <td class="text-end">
+                            <a href="{% url 'attendance:teacher_edit_session' s.id %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-pencil me-1"></i> Review &amp; Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-5">
+                            <i class="bi bi-journal-x fs-2 mb-2 d-block"></i>
+                            No sessions recorded for this class yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary-subtle">
+            <span class="text-secondary small">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo; Prev</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next &raquo;</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

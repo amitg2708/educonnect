@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Fee Collections & Dues Report - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-warning"></span>
+                <span class="small fw-bold text-warning text-uppercase">Treasury &amp; Ledger Audit</span>
+            </div>
+            <h2 class="fw-bold mb-1">Fee Collection &amp; Outstanding Dues Report</h2>
+            <p class="text-secondary small mb-0">Track tuition billing, verified payments, waivers, and collection rates across fee structures.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="?{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_structure %}fee_structure={{ selected_structure }}&{% endif %}export=csv" class="btn btn-outline-success btn-sm fw-bold">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to CSV
+            </a>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Aggregates Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small fw-bold">TOTAL BILLED (NET)</span>
+                <h3 class="fw-bold my-1 text-light">${{ total_net }}</h3>
+                <span class="text-secondary small">After authorized adjustments</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small fw-bold">TOTAL COLLECTED</span>
+                <h3 class="fw-bold my-1 text-success">${{ total_collected }}</h3>
+                <span class="badge bg-success-subtle text-success small">Verified Payments</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small fw-bold">OUTSTANDING DUES</span>
+                <h3 class="fw-bold my-1 text-warning">${{ total_balance }}</h3>
+                <span class="badge bg-warning-subtle text-warning small">Pending Settlement</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select name="fee_structure" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="">All Fee Structures</option>
+                    {% for s in structures %}
+                    <option value="{{ s.id }}" {% if selected_structure == s.id|stringformat:"s" %}selected{% endif %}>{{ s.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="">All Payment Statuses</option>
+                    <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending Payment</option>
+                    <option value="partially_paid" {% if selected_status == 'partially_paid' %}selected{% endif %}>Partially Paid</option>
+                    <option value="paid" {% if selected_status == 'paid' %}selected{% endif %}>Fully Settled</option>
+                    <option value="overdue" {% if selected_status == 'overdue' %}selected{% endif %}>Overdue</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Filter</button>
+                <a href="{% url 'reports:fees_report' %}" class="btn btn-sm btn-outline-light">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">Student Allocations ({{ total_count }})</h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>STUDENT</th>
+                        <th>STRUCTURE</th>
+                        <th>GROSS</th>
+                        <th>DISCOUNT</th>
+                        <th>NET</th>
+                        <th>COLLECTED</th>
+                        <th>BALANCE</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in page_obj %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ a.student.get_full_name|default:a.student.username }}</strong>
+                            <div class="small text-secondary">{{ a.student.email }}</div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ a.fee_structure.name }}</span></td>
+                        <td>${{ a.gross_amount }}</td>
+                        <td><small class="text-info">${{ a.discount_amount }}</small></td>
+                        <td><strong class="text-light">${{ a.net_amount }}</strong></td>
+                        <td><strong class="text-success">${{ a.amount_paid }}</strong></td>
+                        <td><strong class="text-warning">${{ a.outstanding_balance }}</strong></td>
+                        <td>
+                            <span class="badge {% if a.status == 'paid' %}bg-success{% elif a.status == 'overdue' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                {{ a.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center py-4 text-secondary">No fee allocation records match criteria.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <small class="text-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</small>
+            <div class="btn-group btn-group-sm">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_structure %}&fee_structure={{ selected_structure }}{% endif %}" class="btn btn-outline-light">&larr; Prev</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_structure %}&fee_structure={{ selected_structure }}{% endif %}" class="btn btn-outline-light">Next &rarr;</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

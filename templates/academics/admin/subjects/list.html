@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Subjects Configuration - {{ institution.name|default:"EduConnect" }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Academic Curriculum</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-light">Subjects Configuration</h2>
+            <p class="text-secondary small mb-0">Define academic disciplines and subjects taught across coaching batches.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'academics:admin_batches' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-collection-play me-1"></i> Batches Desk
+            </a>
+            <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#newSubjectCard">
+                <i class="bi bi-plus-lg me-1"></i> Add Subject
+            </button>
+        </div>
+    </div>
+
+    <!-- Create Subject Collapsible Card -->
+    <div class="collapse mb-4 {% if form.errors %}show{% endif %}" id="newSubjectCard">
+        <div class="card p-4 border-0 rounded-4 feature-card border border-primary">
+            <h5 class="fw-bold mb-3 text-light"><i class="bi bi-plus-circle text-primary me-2"></i>Configure New Subject</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Subject Name *</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-secondary small fw-semibold">Subject Code *</label>
+                        {{ form.code }}
+                        {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="form-check form-switch mb-2">
+                            {{ form.is_active }}
+                            <label class="form-check-label text-light small fw-semibold ms-2">Active</label>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label text-secondary small fw-semibold">Syllabus Overview / Notes</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top border-secondary">
+                    <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="collapse" data-bs-target="#newSubjectCard">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-4"><i class="bi bi-check-lg me-1"></i>Save Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Subjects List Card -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <h5 class="fw-bold mb-0 text-light">Configured Subjects ({{ subjects.count }})</h5>
+            <form method="get" class="d-flex gap-2">
+                <input type="text" name="q" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="Search subjects..." value="{{ search_query }}">
+                <button type="submit" class="btn btn-sm btn-outline-info">Search</button>
+            </form>
+        </div>
+
+        {% if subjects %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Subject Name</th>
+                        <th>Subject Code</th>
+                        <th>Description / Syllabus Notes</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in subjects %}
+                    <tr>
+                        <td><strong class="text-light">{{ s.name }}</strong></td>
+                        <td><span class="badge bg-secondary-subtle text-light font-monospace">{{ s.code }}</span></td>
+                        <td><span class="text-secondary small">{{ s.description|default:"No syllabus description provided"|truncatechars:80 }}</span></td>
+                        <td>
+                            {% if s.is_active %}
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="text-secondary small">{{ s.created_at|date:"M d, Y" }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-tags text-secondary" style="font-size: 3rem;"></i>
+            <h5 class="text-secondary mt-3">No subjects configured yet</h5>
+            <p class="text-secondary small">Add subjects like Physics, Mathematics, Chemistry, Accountancy, or History.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

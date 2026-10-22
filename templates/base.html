@@ -18,18 +18,64 @@
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <!-- PWA Web App Manifest & Mobile App Configuration -->
+    <link rel="manifest" href="{% url 'core:pwa_manifest' %}">
+    <meta name="theme-color" content="{{ current_institution.primary_color|default:'#6366f1' }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ current_institution.name|default:'EduConnect' }}">
+    <link rel="apple-touch-icon" href="/static/img/icons/icon-192x192.png">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/main.css">
+
+    <!-- Dynamic Theme Styling per Institution -->
+    <style>
+        :root {
+            --inst-primary: {{ current_institution.primary_color|default:'#6366f1' }};
+            --inst-accent: {{ current_institution.accent_color|default:'#0dcaf0' }};
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, var(--inst-primary) 0%, var(--inst-accent) 100%) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        .btn-primary {
+            background-color: var(--inst-primary) !important;
+            border-color: var(--inst-primary) !important;
+        }
+        .btn-outline-primary {
+            color: var(--inst-primary) !important;
+            border-color: var(--inst-primary) !important;
+        }
+        .bg-primary {
+            background-color: var(--inst-primary) !important;
+        }
+        .text-primary {
+            color: var(--inst-primary) !important;
+        }
+        .badge-status-dot.bg-primary {
+            background-color: var(--inst-primary) !important;
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
+    <!-- Public Banner Notice (Configurable by Administrator) -->
+    {% if current_institution.public_notice %}
+    <div class="py-2 px-3 text-center small fw-semibold shadow-sm border-bottom border-primary-subtle" style="background: rgba(99, 102, 241, 0.15); color: #c7d2fe;">
+        <i class="bi bi-broadcast me-2 text-warning"></i> {{ current_institution.public_notice }}
+    </div>
+    {% endif %}
+
     <!-- Top Bar -->
     <div class="top-announcement-bar py-1 px-3 border-bottom border-secondary-subtle small text-secondary d-none d-md-block">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <span><i class="bi bi-geo-alt-fill text-primary me-1"></i> 100 University Avenue, Academic Valley</span>
-                <span><i class="bi bi-telephone-fill text-success me-1"></i> +1 (800) 555-EDU1</span>
-                <span><i class="bi bi-envelope-fill text-info me-1"></i> admissions@educonnect.edu</span>
+                <span><i class="bi bi-geo-alt-fill text-primary me-1"></i> {{ current_institution.address|default:"100 University Avenue, Academic Valley" }}</span>
+                <span><i class="bi bi-telephone-fill text-success me-1"></i> {{ current_institution.contact_phone|default:"+1 (800) 555-EDU1" }}</span>
+                <span><i class="bi bi-envelope-fill text-info me-1"></i> {{ current_institution.contact_email|default:"admissions@educonnect.edu" }}</span>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <a href="{% url 'core:health' %}" class="text-secondary text-decoration-none">
@@ -43,11 +89,15 @@
     <!-- Main Navigation Bar -->
     <nav class="navbar navbar-expand-xl border-bottom sticky-top glass-navbar py-2" id="main-nav">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-decoration-none" href="{% url 'core:index' %}">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-decoration-none" href="{% if current_institution.slug %}{% url 'core:institute_home' current_institution.slug %}{% else %}{% url 'core:index' %}{% endif %}">
+                {% if current_institution.logo %}
+                <img src="{{ current_institution.logo.url }}" alt="{{ current_institution.name }}" height="34" class="rounded object-fit-contain bg-white p-1">
+                {% else %}
                 <div class="brand-icon-box">
                     <i class="bi bi-mortarboard-fill text-primary"></i>
                 </div>
-                <span class="brand-text">Edu<span class="text-gradient">Connect</span></span>
+                {% endif %}
+                <span class="brand-text">{% if current_institution %}{{ current_institution.name }}{% else %}Edu<span class="text-gradient">Connect</span>{% endif %}</span>
             </a>
 
             <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,37 +107,47 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav me-auto mb-2 mb-xl-0 ms-xl-3">
                     <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'index' %}active{% endif %}" href="{% url 'core:index' %}">
+                        <a class="nav-link px-2 {% if request.resolver_match.url_name in 'index,institute_home' %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_home' current_institution.slug %}{% else %}{% url 'core:index' %}{% endif %}">
                             Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'core:about' %}">
+                        <a class="nav-link px-2 {% if 'about' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_about' current_institution.slug %}{% else %}{% url 'core:about' %}{% endif %}">
                             About Us
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-2 {% if 'courses' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:courses' %}">
+                        <a class="nav-link px-2 {% if 'courses' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_courses' current_institution.slug %}{% else %}{% url 'core:courses' %}{% endif %}">
                             Courses
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'admissions' %}active{% endif %}" href="{% url 'core:admissions' %}">
+                        <a class="nav-link px-2 {% if 'faculty' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_faculty' current_institution.slug %}{% else %}{% url 'core:faculty' %}{% endif %}">
+                            Faculty
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if 'batches' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_batches' current_institution.slug %}{% else %}{% url 'core:batches' %}{% endif %}">
+                            Batches
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-2 {% if 'admissions' in request.resolver_match.url_name or 'enquiry' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_admissions' current_institution.slug %}{% else %}{% url 'core:admissions' %}{% endif %}">
                             Admissions
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'achievements' %}active{% endif %}" href="{% url 'core:achievements' %}">
+                        <a class="nav-link px-2 {% if 'achievements' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_achievements' current_institution.slug %}{% else %}{% url 'core:achievements' %}{% endif %}">
                             Achievements
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% url 'core:gallery' %}">
+                        <a class="nav-link px-2 {% if 'gallery' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_gallery' current_institution.slug %}{% else %}{% url 'core:gallery' %}{% endif %}">
                             Gallery
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-2 {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" href="{% url 'core:contact' %}">
+                        <a class="nav-link px-2 {% if 'contact' in request.resolver_match.url_name %}active{% endif %}" href="{% if current_institution.slug %}{% url 'core:institute_contact' current_institution.slug %}{% else %}{% url 'core:contact' %}{% endif %}">
                             Contact
                         </a>
                     </li>
@@ -95,43 +155,248 @@
 
                 <div class="d-flex align-items-center gap-2">
                     {% if user.is_authenticated %}
+                    {% if current_institution %}
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 px-2 py-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Active Coaching Institute">
+                            <span class="rounded-1 d-inline-block" style="width: 10px; height: 10px; background: {{ current_institution.primary_color|default:'#0d6efd' }};"></span>
+                            <span class="fw-semibold text-truncate d-none d-sm-inline" style="max-width: 140px;">{{ current_institution.name }}</span>
+                            <span class="badge bg-secondary-subtle text-secondary small d-none d-md-inline">{{ current_institution.code }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-secondary shadow-lg py-2" style="min-width: 260px;">
+                            <li class="px-3 py-1">
+                                <span class="text-secondary small text-uppercase fw-semibold d-block">Current Workspace</span>
+                                <strong class="text-light d-block">{{ current_institution.name }}</strong>
+                                {% if current_branch %}
+                                <span class="badge bg-info-subtle text-info small mt-1"><i class="bi bi-geo-alt me-1"></i>{{ current_branch.name }}</span>
+                                {% endif %}
+                            </li>
+                            {% if has_multiple_institutions or user.is_superuser %}
+                            <li><hr class="dropdown-divider border-secondary"></li>
+                            <li class="px-3 py-1 text-secondary small text-uppercase fw-semibold">Switch Institute</li>
+                            {% for inst in user_institutions %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center justify-content-between py-2 {% if inst.id == current_institution.id %}active{% endif %}" href="{% url 'institutions:switch_institution' inst.id %}">
+                                    <span class="d-flex align-items-center gap-2 text-truncate me-2">
+                                        <span class="rounded-circle d-inline-block flex-shrink-0" style="width: 8px; height: 8px; background: {{ inst.primary_color|default:'#0d6efd' }};"></span>
+                                        <span class="text-truncate">{{ inst.name }}</span>
+                                    </span>
+                                    <span class="badge bg-secondary-subtle text-light small">{{ inst.code }}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider border-secondary"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'institutions:select_institution' %}">
+                                    <i class="bi bi-grid text-primary"></i> All Workspaces &amp; Roles
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <a href="{% url 'notifications:my_notifications' %}" class="btn btn-sm btn-outline-light px-2 py-2 position-relative" title="Notifications">
+                        <i class="bi bi-bell"></i>
+                    </a>
                     <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-sm btn-primary px-3 py-2 fw-semibold">
                         <i class="bi bi-speedometer2 me-1"></i> My Portal
                     </a>
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-light dropdown-toggle d-flex align-items-center gap-2 px-3 py-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="badge bg-primary-subtle text-primary text-uppercase">{{ user.get_role_display }}</span>
+                            <span class="badge bg-primary-subtle text-primary text-uppercase">{{ active_role|default:user.get_role_display }}</span>
                             <span class="fw-semibold">{{ user.username }}</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-secondary-subtle shadow-lg">
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-secondary-subtle shadow-lg" style="min-width: 250px;">
                             <li>
                                 <div class="px-3 py-1 text-secondary small">
                                     Signed in as <strong class="text-light d-block">{{ user.get_full_name|default:user.username }}</strong>
+                                    {% if current_institution %}
+                                    <span class="text-secondary d-block mt-1">@ {{ current_institution.name }}</span>
+                                    {% endif %}
                                 </div>
                             </li>
                             <li><hr class="dropdown-divider border-secondary-subtle"></li>
                             <li>
-                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:dashboard_redirect' %}">
-                                    <i class="bi bi-speedometer2 text-primary"></i> My Role Dashboard
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'institutions:select_institution' %}">
+                                    <i class="bi bi-arrow-left-right text-info"></i> Switch Institution
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}">
-                                    <i class="bi bi-person-gear text-info"></i> Edit Profile
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:dashboard_redirect' %}">
+                                    <i class="bi bi-speedometer2 text-primary"></i> Role Dashboard
                                 </a>
                             </li>
+
+                            {% if user.is_parent_role %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'notifications:parent_hub' %}">
+                                    <i class="bi bi-people-fill text-success"></i> Parent Portal Hub
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:parent_child_batches' %}">
+                                    <i class="bi bi-collection-play-fill text-info"></i> Child Coaching Batches
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:parent_child_academics' %}">
+                                    <i class="bi bi-award text-info"></i> Child Academics &amp; Grades
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'complaints:my_tickets_list' %}">
+                                    <i class="bi bi-chat-square-dots text-warning"></i> Support Tickets
+                                </a>
+                            </li>
+                            {% elif user.is_student_role %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:student_my_batches' %}">
+                                    <i class="bi bi-collection-play-fill text-primary"></i> My Coaching Batches
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:student_dashboard' %}">
+                                    <i class="bi bi-journal-bookmark text-info"></i> Academics &amp; Homework
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'fees:student_overview' %}">
+                                    <i class="bi bi-cash-stack text-warning"></i> My Fees &amp; Invoices
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'attendance:student_attendance' %}">
+                                    <i class="bi bi-calendar-check text-primary"></i> My Attendance
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'timetable:student_timetable' %}">
+                                    <i class="bi bi-clock-history text-info"></i> Class Timetable
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'complaints:my_tickets_list' %}">
+                                    <i class="bi bi-chat-square-dots text-warning"></i> Support &amp; Grievances
+                                </a>
+                            </li>
+                            {% elif user.is_teacher_role %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:teacher_dashboard' %}">
+                                    <i class="bi bi-journal-check text-primary"></i> Academic Management Hub
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'attendance:teacher_home' %}">
+                                    <i class="bi bi-person-check text-info"></i> Mark Class Attendance
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'timetable:teacher_timetable' %}">
+                                    <i class="bi bi-calendar3-week text-primary"></i> Teaching Routine
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'complaints:staff_desk' %}">
+                                    <i class="bi bi-chat-left-dots text-warning"></i> Helpdesk Queue
+                                </a>
+                            </li>
+                            {% elif user.is_accounts_role or user.is_admin_role %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'fees:dashboard' %}">
+                                    <i class="bi bi-cash-coin text-warning"></i> Treasury &amp; Fees Desk
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'complaints:staff_desk' %}">
+                                    <i class="bi bi-chat-left-dots text-warning"></i> Grievances Desk
+                                </a>
+                            </li>
+                            {% endif %}
+
                             {% if user.is_admin_role %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:admin_batches' %}">
+                                    <i class="bi bi-collection-play-fill text-warning"></i> Coaching Batches Desk
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:admin_courses' %}">
+                                    <i class="bi bi-book-half text-info"></i> Course Catalogue
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:admin_enrollments' %}">
+                                    <i class="bi bi-person-check-fill text-success"></i> Batch Enrolments &amp; Transfers
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:admin_subjects' %}">
+                                    <i class="bi bi-tags-fill text-primary"></i> Subjects Configuration
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'academics:admin_overview' %}">
+                                    <i class="bi bi-award text-success"></i> Academic Affairs Desk
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'attendance:admin_dashboard' %}">
+                                    <i class="bi bi-clipboard2-check text-primary"></i> Attendance Operations
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'timetable:admin_dashboard' %}">
+                                    <i class="bi bi-calendar3-range text-info"></i> Timetable Operations
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'notifications:admin_announcements' %}">
+                                    <i class="bi bi-megaphone text-info"></i> Broadcast Announcements
+                                </a>
+                            </li>
                             <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:admin_users' %}">
                                     <i class="bi bi-people-fill text-warning"></i> User Directory
                                 </a>
                             </li>
+                            <li><hr class="dropdown-divider border-secondary-subtle"></li>
+                            <li class="dropdown-header text-uppercase text-secondary small px-3">Institute Administration</li>
                             <li>
-                                <a class="dropdown-item d-flex align-items-center gap-2" href="/admin/" target="_blank">
-                                    <i class="bi bi-shield-lock text-danger"></i> Django Admin
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'institutions:manage_members' %}">
+                                    <i class="bi bi-people-fill text-primary"></i> Members &amp; Staff
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'institutions:manage_branches' %}">
+                                    <i class="bi bi-diagram-3-fill text-info"></i> Campuses &amp; Branches
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'institutions:branding' %}">
+                                    <i class="bi bi-palette-fill text-warning"></i> Branding &amp; Settings
                                 </a>
                             </li>
                             {% endif %}
+
+                            {% if user.is_superuser %}
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'institutions:platform_admin' %}">
+                                    <i class="bi bi-shield-lock-fill"></i> Platform Operator Hub
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <li><hr class="dropdown-divider border-secondary-subtle"></li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'notifications:announcements_list' %}">
+                                    <i class="bi bi-megaphone text-secondary"></i> Campus Bulletins
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'accounts:profile' %}">
+                                    <i class="bi bi-person-gear text-secondary"></i> Account Profile
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider border-secondary-subtle"></li>
                             <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{% url 'accounts:logout' %}">
@@ -141,7 +406,10 @@
                         </ul>
                     </div>
                     {% else %}
-                    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-light px-3 py-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary d-none pwa-install-trigger align-items-center gap-1 me-1" id="pwa-install-btn">
+                        <i class="bi bi-download"></i> Install App
+                    </button>
+                    <a href="{% if current_institution.slug %}{% url 'core:institute_login' current_institution.slug %}{% else %}{% url 'accounts:login' %}{% endif %}" class="btn btn-sm btn-outline-light px-3 py-2">
                         <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
                     </a>
                     <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-primary px-3 py-2 fw-semibold">

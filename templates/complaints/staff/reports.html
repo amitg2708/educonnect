@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Grievance SLA & Resolution Reports - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Institutional Analytics</span>
+            </div>
+            <h2 class="fw-bold mb-1">Grievance SLA &amp; Resolution Reports</h2>
+            <p class="text-secondary small mb-0">Monitor service level agreement compliance, escalation queues, and student/parent satisfaction metrics.</p>
+        </div>
+        <a href="{% url 'complaints:staff_desk' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Complaints Desk
+        </a>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small fw-bold">TOTAL LOGGED GRIEVANCES</span>
+                <h3 class="fw-bold mb-0 text-light">{{ total_tickets }}</h3>
+                <span class="text-secondary small">Campus-wide issues</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small fw-bold">AVERAGE SATISFACTION RATING</span>
+                <h3 class="fw-bold mb-0 text-warning">{{ avg_rating }} / 5.0</h3>
+                <span class="text-secondary small">Based on {{ rated_count }} verified ratings</span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small fw-bold">OVERDUE SLA TICKETS</span>
+                <h3 class="fw-bold mb-0 text-danger">{{ overdue_tickets|length }}</h3>
+                <span class="text-secondary small">Requiring urgent escalation</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category & Status Breakdown -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-pie-chart text-primary"></i> Complaints by Category
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>CATEGORY</th>
+                                <th class="text-end">TICKET COUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in category_breakdown %}
+                            <tr>
+                                <td>{{ c.category__name }}</td>
+                                <td class="text-end fw-bold text-light">{{ c.total }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center py-3 text-secondary">No data available.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-bar-chart text-info"></i> Status Distribution
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>STATUS</th>
+                                <th class="text-end">COUNT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in status_breakdown %}
+                            <tr>
+                                <td><span class="badge bg-secondary">{{ s.status }}</span></td>
+                                <td class="text-end fw-bold text-light">{{ s.total }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center py-3 text-secondary">No data available.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue SLA Escalation List -->
+    {% if overdue_tickets %}
+    <div class="card p-4 border-0 rounded-4 feature-card border border-danger">
+        <h5 class="fw-bold mb-3 text-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i> Escalated Tickets Past SLA Deadline ({{ overdue_tickets|length }})
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>TICKET #</th>
+                        <th>SUBJECT</th>
+                        <th>CATEGORY</th>
+                        <th>SUBMITTED</th>
+                        <th>ASSIGNED TO</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ot in overdue_tickets %}
+                    <tr>
+                        <td><code>{{ ot.ticket_number }}</code></td>
+                        <td><strong class="text-light">{{ ot.subject }}</strong></td>
+                        <td><span class="badge bg-secondary">{{ ot.category.name }}</span></td>
+                        <td><small class="text-danger fw-bold">{{ ot.created_at|date:"M d, Y" }}</small></td>
+                        <td>{{ ot.assigned_to.username|default:"Unassigned" }}</td>
+                        <td>
+                            <a href="{% url 'complaints:staff_ticket_detail' ot.id %}" class="btn btn-sm btn-danger">
+                                Escalate
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

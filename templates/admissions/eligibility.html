@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Courses & Admission Eligibility - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:admissions' %}" class="text-secondary text-decoration-none">Admissions</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Course Eligibility</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center max-w-2xl mx-auto mb-5">
+        <span class="text-primary text-uppercase fw-bold small">Academic Year 2026-27</span>
+        <h1 class="display-5 fw-extrabold text-light mb-2">Available Courses &amp; <span class="text-gradient">Eligibility</span></h1>
+        <p class="lead text-secondary">
+            Explore program prerequisites, academic credits, duration, and fee structures before submitting your official application.
+        </p>
+    </div>
+
+    <!-- Academic Level Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-5">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'admissions:eligibility' %}" class="btn btn-sm {% if not selected_level %}btn-primary{% else %}btn-outline-secondary text-light{% endif %} rounded-pill px-3">
+                    All Programs
+                </a>
+                {% for lvl_key, lvl_label in levels %}
+                <a href="{% url 'admissions:eligibility' %}?level={{ lvl_key }}" class="btn btn-sm {% if selected_level == lvl_key %}btn-primary{% else %}btn-outline-secondary text-light{% endif %} rounded-pill px-3">
+                    {{ lvl_label }}
+                </a>
+                {% endfor %}
+            </div>
+            <div>
+                <a href="{% url 'admissions:apply' %}" class="btn btn-sm btn-primary fw-semibold px-3">
+                    <i class="bi bi-file-earmark-plus me-1"></i> Start Application
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="row g-4 mb-5">
+        {% for course in courses %}
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ course.code }}</span>
+                        <span class="badge bg-secondary-subtle text-secondary">{{ course.get_level_display }}</span>
+                    </div>
+                    <h4 class="fw-bold text-light mb-2">{{ course.title }}</h4>
+                    <p class="text-secondary small mb-3">{{ course.description|truncatewords:30 }}</p>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-sm-6">
+                            <div class="p-2 rounded bg-dark border border-secondary-subtle small">
+                                <span class="text-secondary d-block">Department:</span>
+                                <strong class="text-light">{{ course.department }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-2 rounded bg-dark border border-secondary-subtle small">
+                                <span class="text-secondary d-block">Duration:</span>
+                                <strong class="text-light">{{ course.duration }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-2 rounded bg-dark border border-secondary-subtle small">
+                                <span class="text-secondary d-block">Tuition Fee:</span>
+                                <strong class="text-success">${{ course.fee_per_term }} / term</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-2 rounded bg-dark border border-secondary-subtle small">
+                                <span class="text-secondary d-block">Academic Year:</span>
+                                <strong class="text-light">2026-2027</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-dark-subtle border border-secondary-subtle mb-3">
+                        <h6 class="fw-bold text-primary mb-1"><i class="bi bi-check2-circle me-1"></i> Eligibility Requirements</h6>
+                        <p class="text-secondary small mb-0">
+                            {{ course.eligibility|default:"Standard secondary education certificate or equivalent accredited credential required with minimum passing percentile." }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between pt-3 border-top border-secondary-subtle">
+                    <a href="{% url 'core:course_detail' course.slug %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-info-circle me-1"></i> Syllabus &amp; Details
+                    </a>
+                    <a href="{% url 'admissions:apply' %}?course={{ course.slug }}" class="btn btn-primary btn-sm fw-semibold">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Apply for this Course
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card p-5 border-0 rounded-4 text-center feature-card">
+                <i class="bi bi-mortarboard text-secondary display-3 mb-3"></i>
+                <h4 class="fw-bold text-light mb-2">No Courses Found</h4>
+                <p class="text-secondary small max-w-md mx-auto mb-4">
+                    There are currently no active courses listed under the selected academic level.
+                </p>
+                <div>
+                    <a href="{% url 'admissions:eligibility' %}" class="btn btn-outline-light btn-sm">
+                        Clear Filters
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Quick Help CTA -->
+    <div class="card p-4 border-0 rounded-4 hero-card text-center text-md-start">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <h5 class="fw-bold text-light mb-1">Need Assistance or Have Questions About Your Eligibility?</h5>
+                <p class="text-secondary small mb-0">
+                    Our admissions advisors are here to guide you through credential evaluation and document requirements.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'core:admissions' %}" class="btn btn-outline-light btn-sm me-2">
+                    Submit Inquiry
+                </a>
+                <a href="{% url 'core:contact' %}" class="btn btn-primary btn-sm">
+                    Contact Admissions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

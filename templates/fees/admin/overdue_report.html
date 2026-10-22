@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Overdue Dues Report - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-danger"></span>
+                <span class="small fw-bold text-danger text-uppercase">Arrears &amp; Defaulters</span>
+            </div>
+            <h2 class="fw-bold mb-1">Overdue Accounts Report</h2>
+            <p class="text-secondary small mb-0">Institutions list of student accounts with past-due installments and unsettled balances.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'fees:dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Treasury Desk
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-printer me-1"></i> Print Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert / Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card p-3 border-0 rounded-4 feature-card">
+                <span class="text-secondary small">Total Overdue Accounts</span>
+                <h3 class="fw-bold text-danger my-1">{{ count }} Students</h3>
+                <span class="text-secondary small">Accounts requiring cashier or bursar follow-up</span>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card p-3 border-0 rounded-4 feature-card">
+                <span class="text-secondary small">Total Delinquent Balance</span>
+                <h3 class="fw-bold text-danger my-1">${{ total_overdue_amount|floatformat:2 }}</h3>
+                <span class="text-secondary small">Uncollected past-due receivables</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Student Name</th>
+                        <th>Student ID</th>
+                        <th>Fee Structure</th>
+                        <th>Contact / Phone</th>
+                        <th class="text-end">Paid So Far</th>
+                        <th class="text-end">Overdue Balance</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in overdue_allocations %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ o.student.get_full_name|default:o.student.username }}</strong>
+                            <span class="text-secondary d-block">{{ o.student.email }}</span>
+                        </td>
+                        <td><code>{{ o.student.student_id|default:o.student.username }}</code></td>
+                        <td>{{ o.fee_structure.title }}</td>
+                        <td>{{ o.student.phone_number|default:"Not on file" }}</td>
+                        <td class="text-end text-success">${{ o.amount_paid|floatformat:2 }}</td>
+                        <td class="text-end fw-bold text-danger fs-6">${{ o.outstanding_balance|floatformat:2 }}</td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{% url 'fees:allocation_detail' o.id %}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i> Ledger
+                                </a>
+                                <a href="{% url 'fees:record_payment' o.id %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-cash"></i> Collect
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-success py-5">
+                            <i class="bi bi-check-circle-fill fs-2 mb-2 d-block"></i>
+                            Excellent! There are currently zero overdue accounts.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

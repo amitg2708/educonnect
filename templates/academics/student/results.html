@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Examination Results - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-success"></span>
+                <span class="small fw-bold text-success text-uppercase">Academic Transcript</span>
+            </div>
+            <h2 class="fw-bold mb-1">Official Examination &amp; Test Results</h2>
+            <p class="text-secondary small mb-0">Review verified and published scores from midterms, quizzes, and end-of-term assessments.</p>
+        </div>
+        <a href="{% url 'academics:student_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-award text-success"></i> Published Scores ({{ scores.count }})
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>ASSESSMENT</th>
+                        <th>SUBJECT</th>
+                        <th>CLASS</th>
+                        <th>DATE</th>
+                        <th>MARKS OBTAINED</th>
+                        <th>GRADE</th>
+                        <th>FACULTY REMARKS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in scores %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ s.assessment.title }}</strong>
+                            <div class="small text-secondary">{{ s.assessment.get_assessment_type_display }}</div>
+                        </td>
+                        <td><span class="badge bg-primary-subtle text-primary">{{ s.assessment.subject_name }}</span></td>
+                        <td><span class="badge bg-secondary">{{ s.assessment.classroom.code }}</span></td>
+                        <td><small class="text-secondary">{{ s.assessment.date_conducted|date:"M d, Y" }}</small></td>
+                        <td>
+                            <strong class="text-primary fs-5">{{ s.marks_obtained }}</strong> / {{ s.assessment.max_marks }}
+                        </td>
+                        <td>
+                            <span class="badge {% if s.grade == 'F' %}bg-danger{% elif s.grade == 'A+' or s.grade == 'A' %}bg-success{% else %}bg-info{% endif %} fs-6 px-3 py-1">
+                                {{ s.grade }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if s.teacher_remarks %}
+                            <small class="text-light">{{ s.teacher_remarks }}</small>
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-secondary">No published assessment results available at this time.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

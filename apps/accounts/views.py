@@ -8,6 +8,8 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView
 from django.core.exceptions import PermissionDenied
+from django.db import models
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -111,9 +113,10 @@ class EduConnectRegisterView(View):
 @login_required
 def dashboard_redirect_view(request):
     """
-    Central dispatcher routing users to their specific role dashboard.
+    Central dispatcher routing users to their specific role dashboard for active institute.
     """
-    url_name = request.user.get_dashboard_url_name()
+    active_role = getattr(request, "user_role", None) or request.user.role
+    url_name = request.user.get_dashboard_url_name(role=active_role)
     return redirect(url_name)
 
 
@@ -124,41 +127,72 @@ def dashboard_redirect_view(request):
 @admin_required
 def admin_dashboard(request):
     """
-    Role 1: Admin Dashboard.
+    Role 1: Admin Dashboard with live database metrics scoped to active institution.
     """
-    total_users = User.objects.count()
-    teachers_count = User.objects.filter(role=Role.TEACHER).count()
-    students_count = User.objects.filter(role=Role.STUDENT).count()
-    parents_count = User.objects.filter(role=Role.PARENT).count()
-    accounts_count = User.objects.filter(role=Role.ACCOUNTS).count()
-    applicants_count = User.objects.filter(role=Role.APPLICANT).count()
-    recent_users = User.objects.order_by("-date_joined")[:8]
-    active_links = ParentStudentLink.objects.select_related("parent", "student").order_by("-created_at")[:6]
+    from apps.reports.services import get_admin_dashboard_metrics
+    from apps.reports.models import AdminAuditLog
+    from apps.institutions.models import InstitutionMembership
+    inst = getattr(request, "institution", None)
+    metrics = get_admin_dashboard_metrics(institution=inst)
+
+    if inst and not request.user.is_superuser:
+        recent_memberships = InstitutionMembership.objects.filter(
+            institution=inst,
+        ).select_related("user").order_by("-joined_at")[:8]
+        recent_users = [m.user for m in recent_memberships]
+        active_links = ParentStudentLink.objects.filter(
+            models.Q(institution=inst) | models.Q(institution__isnull=True)
+        ).select_related("parent", "student").order_by("-created_at")[:6]
+        recent_logs = AdminAuditLog.objects.filter(institution=inst).select_related("actor").order_by("-created_at")[:6]
+    else:
+        recent_users = User.objects.order_by("-date_joined")[:8]
+        active_links = ParentStudentLink.objects.select_related("parent", "student").order_by("-created_at")[:6]
+        recent_logs = AdminAuditLog.objects.select_related("actor").order_by("-created_at")[:6]
 
     context = {
-        "page_title": "Admin Console & Oversight",
-        "total_users": total_users,
-        "teachers_count": teachers_count,
-        "students_count": students_count,
-        "parents_count": parents_count,
-        "accounts_count": accounts_count,
-        "applicants_count": applicants_count,
+        **metrics,
+        "page_title": f"Admin Console - {inst.name if inst else 'EduConnect'}",
         "recent_users": recent_users,
         "active_links": active_links,
+        "recent_logs": recent_logs,
+        "institution": inst,
     }
-    return render(request, "accounts/dashboards/admin.html", context)
+    return render(request, "reports/admin/dashboard.html", context)
 
 
 @teacher_required
 def teacher_dashboard(request):
     """
-    Role 2: Subject Teacher Dashboard.
+    Role 2: Subject Teacher Dashboard scoped to active institution.
     """
-    students = User.objects.filter(role=Role.STUDENT).order_by("last_name", "first_name")[:12]
+    from apps.attendance.models import ClassRoom
+    inst = getattr(request, "institution", None)
+    students = User.objects.none()
+
+    if inst:
+        teacher_classrooms = ClassRoom.objects.filter(
+            institution=inst,
+            teacher_assignments__teacher=request.user,
+            teacher_assignments__is_active=True,
+        ).distinct()
+        students = User.objects.filter(
+            class_enrollments__classroom__in=teacher_classrooms,
+            class_enrollments__is_active=True,
+        ).distinct().order_by("last_name", "first_name")[:12]
+
+        if not students.exists():
+            students = User.objects.filter(
+                class_enrollments__classroom__institution=inst,
+                class_enrollments__is_active=True,
+            ).distinct().order_by("last_name", "first_name")[:12]
+    else:
+        students = User.objects.filter(role=Role.STUDENT).order_by("last_name", "first_name")[:12]
+
     context = {
-        "page_title": "Subject Teacher Portal",
+        "page_title": f"Teacher Portal - {inst.name if inst else 'EduConnect'}",
         "teacher": request.user,
         "students": students,
+        "institution": inst,
     }
     return render(request, "accounts/dashboards/teacher.html", context)
 
@@ -169,12 +203,17 @@ def student_dashboard(request):
     Role 3: Student Dashboard.
     Ensures student can only access their own educational profile and enrolled subjects.
     """
-    # Look up linked parents for this student
-    parent_links = ParentStudentLink.objects.filter(student=request.user, is_authorized=True).select_related("parent")
+    inst = getattr(request, "institution", None)
+    parent_links = ParentStudentLink.objects.filter(student=request.user, is_authorized=True)
+    if inst:
+        parent_links = parent_links.filter(models.Q(institution=inst) | models.Q(institution__isnull=True))
+    parent_links = parent_links.select_related("parent")
+
     context = {
         "page_title": "Student Academic Portal",
         "student": request.user,
         "parent_links": parent_links,
+        "institution": inst,
     }
     return render(request, "accounts/dashboards/student.html", context)
 
@@ -183,15 +222,19 @@ def student_dashboard(request):
 def parent_dashboard(request):
     """
     Role 4: Parent Dashboard.
-    Only shows authorized children linked to the requesting parent.
+    Only shows authorized children linked to the requesting parent within the active institute.
     """
-    # Strict server-side filter: Only return children authorized for THIS parent
-    child_links = ParentStudentLink.objects.filter(parent=request.user, is_authorized=True).select_related("student")
+    inst = getattr(request, "institution", None)
+    child_links = ParentStudentLink.objects.filter(parent=request.user, is_authorized=True)
+    if inst:
+        child_links = child_links.filter(models.Q(institution=inst) | models.Q(institution__isnull=True))
+    child_links = child_links.select_related("student")
 
     context = {
         "page_title": "Parent / Guardian Portal",
         "parent": request.user,
         "child_links": child_links,
+        "institution": inst,
     }
     return render(request, "accounts/dashboards/parent.html", context)
 
@@ -200,22 +243,27 @@ def parent_dashboard(request):
 def parent_child_detail(request, student_id):
     """
     View specific details for a linked student.
-    Enforces authorization: parent MUST have a verified link to the requested student.
+    Enforces authorization: parent MUST have a verified link to the requested student in this institution.
     """
-    # Security Check: Verify that this student is linked to the requesting parent
-    link = ParentStudentLink.objects.filter(
+    inst = getattr(request, "institution", None)
+    links = ParentStudentLink.objects.filter(
         parent=request.user,
         student__id=student_id,
         is_authorized=True,
-    ).select_related("student").first()
+    )
+    if inst:
+        links = links.filter(models.Q(institution=inst) | models.Q(institution__isnull=True))
+
+    link = links.select_related("student").first()
 
     if not link:
-        raise PermissionDenied("You are not authorized to access records for this student.")
+        raise PermissionDenied("You are not authorized to access records for this student at this institution.")
 
     context = {
         "page_title": f"Child Profile: {link.student.get_full_name() or link.student.username}",
         "student": link.student,
         "link": link,
+        "institution": inst,
     }
     return render(request, "accounts/dashboards/child_detail.html", context)
 
@@ -223,13 +271,22 @@ def parent_child_detail(request, student_id):
 @accounts_required
 def accounts_dashboard(request):
     """
-    Role 5: Accounts Staff Dashboard.
+    Role 5: Accounts Staff Dashboard scoped to active institution.
     """
-    students_count = User.objects.filter(role=Role.STUDENT).count()
+    inst = getattr(request, "institution", None)
+    if inst:
+        students_count = User.objects.filter(
+            class_enrollments__classroom__institution=inst,
+            class_enrollments__is_active=True,
+        ).distinct().count()
+    else:
+        students_count = User.objects.filter(role=Role.STUDENT).count()
+
     context = {
-        "page_title": "Accounts & Billing Portal",
+        "page_title": f"Accounts & Billing Portal - {inst.name if inst else 'EduConnect'}",
         "accounts_staff": request.user,
         "students_count": students_count,
+        "institution": inst,
     }
     return render(request, "accounts/dashboards/accounts.html", context)
 
@@ -237,11 +294,20 @@ def accounts_dashboard(request):
 @applicant_required
 def applicant_dashboard(request):
     """
-    Role 6: Applicant Dashboard.
+    Role 6: Applicant Dashboard with live admissions tracking.
     """
+    from apps.admissions.models import AdmissionApplication
+    inst = getattr(request, "institution", None)
+    applications = AdmissionApplication.objects.filter(applicant=request.user)
+    if inst:
+        applications = applications.filter(models.Q(institution=inst) | models.Q(institution__isnull=True))
+    applications = applications.order_by("-submitted_at")
+
     context = {
         "page_title": "Admissions & Applicant Portal",
         "applicant": request.user,
+        "applications": applications,
+        "institution": inst,
     }
     return render(request, "accounts/dashboards/applicant.html", context)
 
@@ -304,7 +370,11 @@ def admin_link_parent_child(request):
     if request.method == "POST":
         form = ParentChildLinkAdminForm(request.POST)
         if form.is_valid():
-            link = form.save()
+            link = form.save(commit=False)
+            inst = getattr(request, "institution", None)
+            if inst and not link.institution:
+                link.institution = inst
+            link.save()
             messages.success(
                 request,
                 f"Successfully linked Parent '{link.parent.get_full_name() or link.parent.username}' to Student '{link.student.get_full_name() or link.student.username}'.",

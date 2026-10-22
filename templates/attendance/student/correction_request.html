@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Request Attendance Correction - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'attendance:student_attendance' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                        &larr; Back to My Attendance
+                    </a>
+                    <h2 class="fw-bold mb-1">Attendance Correction Request</h2>
+                    <p class="text-secondary small mb-0">Submit documentation for an excused absence or attendance correction.</p>
+                </div>
+            </div>
+
+            <!-- Target Record Details -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom border-secondary-subtle pb-3 mb-3">
+                    <div>
+                        <span class="text-secondary small d-block">Class Subject:</span>
+                        <h5 class="fw-bold text-light mb-0">{{ record.session.subject_name }}</h5>
+                    </div>
+                    <div class="text-end">
+                        <span class="text-secondary small d-block">Current Status:</span>
+                        <span class="badge {% if record.status == 'absent' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %} fs-6">
+                            {{ record.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-2 small text-secondary">
+                    <div class="col-6">
+                        <span>Session Date:</span> <strong class="text-light">{{ record.session.session_date }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <span>Period / Slot:</span> <strong class="text-light">{{ record.session.session_period }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <span>Classroom:</span> <strong class="text-light">{{ record.session.classroom.name }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <span>Marked By:</span> <strong class="text-light">{{ record.marked_by.username|default:"Faculty" }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Requested Corrected Status <span class="text-danger">*</span></label>
+                        {{ form.requested_status }}
+                        {% if form.requested_status.errors %}<div class="text-danger small">{{ form.requested_status.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Official Reason / Justification <span class="text-danger">*</span></label>
+                        {{ form.reason }}
+                        {% if form.reason.errors %}<div class="text-danger small">{{ form.reason.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-light">Supporting Document (Doctor Note, Leave Letter, etc.)</label>
+                        {{ form.supporting_document }}
+                        {% if form.supporting_document.errors %}<div class="text-danger small">{{ form.supporting_document.errors }}</div>{% endif %}
+                        <div class="form-text small text-secondary">PDF, JPG, or PNG under 5MB.</div>
+                    </div>
+
+                    <div class="border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                        <a href="{% url 'attendance:student_attendance' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-send-fill me-1"></i> Submit for Review
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

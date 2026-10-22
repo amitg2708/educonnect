@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction Ledger - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-success"></span>
+                <span class="small fw-bold text-success text-uppercase">Payment Audit</span>
+            </div>
+            <h2 class="fw-bold mb-1">Financial Transaction Ledger</h2>
+            <p class="text-secondary small mb-0">Search, filter, and reconcile all counter deposits, wire transfers, and verified transactions.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'fees:dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Treasury Desk
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary-subtle text-secondary">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search reference, student, or depositor...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">-- All Statuses --</option>
+                    {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="method" class="form-select">
+                    <option value="">-- All Methods --</option>
+                    {% for code, label in method_choices %}
+                    <option value="{{ code }}" {% if method_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                {% if q or status_filter or method_filter %}
+                <a href="{% url 'fees:payment_list' %}" class="btn btn-outline-secondary">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Master Transactions Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Student</th>
+                        <th>Depositor</th>
+                        <th>Method</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Receipt</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in page_obj %}
+                    <tr>
+                        <td>{{ p.payment_date|date:"Y-m-d" }}</td>
+                        <td><code>{{ p.transaction_reference }}</code></td>
+                        <td>
+                            <strong class="text-light">{{ p.student.get_full_name|default:p.student.username }}</strong>
+                            <span class="text-secondary d-block">ID: <code>{{ p.student.student_id|default:p.student.username }}</code></span>
+                        </td>
+                        <td>{{ p.payer_name }}</td>
+                        <td>{{ p.get_payment_method_display }}</td>
+                        <td class="text-end fw-bold text-success">${{ p.amount|floatformat:2 }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if p.status == 'verified' %}bg-success-subtle text-success{% elif p.status == 'pending' %}bg-warning-subtle text-warning{% elif p.status == 'reversed' %}bg-danger-subtle text-danger{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                {{ p.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            {% if p.receipt and not p.receipt.is_cancelled %}
+                            <a href="{% url 'fees:download_receipt' p.receipt.id %}" class="btn btn-sm btn-outline-success py-0 px-2">
+                                <i class="bi bi-file-earmark-pdf"></i> PDF
+                            </a>
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{% url 'fees:allocation_detail' p.allocation.id %}" class="btn btn-sm btn-outline-info" title="Student Ledger">
+                                    <i class="bi bi-journal-text"></i>
+                                </a>
+                                {% if p.status == 'pending' %}
+                                <a href="{% url 'fees:verify_payment' p.id %}" class="btn btn-sm btn-warning" title="Verify Payment">
+                                    <i class="bi bi-check-circle"></i> Verify
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center text-secondary py-5">
+                            <i class="bi bi-receipt fs-2 mb-2 d-block"></i>
+                            No transactions match the selected filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary-subtle">
+            <span class="text-secondary small">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status_filter }}&method={{ method_filter }}">&laquo; Prev</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status_filter }}&method={{ method_filter }}">Next &raquo;</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

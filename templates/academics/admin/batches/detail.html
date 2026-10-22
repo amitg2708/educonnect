@@ -1,0 +1,571 @@
+{% extends "base.html" %}
+
+{% block title %}{{ batch.name }} - Coaching Batch Command Desk{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header & Navigation -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <a href="{% url 'academics:admin_batches' %}" class="btn btn-outline-light btn-sm py-0 px-2">
+                    <i class="bi bi-arrow-left me-1"></i> Batches Desk
+                </a>
+                <span class="badge {% if batch.status == 'ongoing' %}bg-success-subtle text-success{% elif batch.status == 'upcoming' %}bg-info-subtle text-info{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                    {{ batch.get_status_display }}
+                </span>
+                <span class="badge bg-secondary-subtle text-light font-monospace">{{ batch.code }}</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-light">{{ batch.name }}</h2>
+            <p class="text-secondary small mb-0">
+                {{ batch.course.title }} &bull; {% if batch.branch %}{{ batch.branch.name }}{% else %}Main Campus{% endif %} &bull; {{ batch.academic_session.name }}
+            </p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button class="btn btn-success btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#enrollStudentModal">
+                <i class="bi bi-person-plus-fill me-1"></i> Enrol Student
+            </button>
+            <button class="btn btn-primary btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                <i class="bi bi-clock-history me-1"></i> Add Timetable Slot
+            </button>
+            <button class="btn btn-info btn-sm fw-semibold text-dark" data-bs-toggle="modal" data-bs-target="#assignTeacherModal">
+                <i class="bi bi-person-badge-fill me-1"></i> Assign Faculty
+            </button>
+            <a href="{% url 'academics:admin_batch_edit' batch.id %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-pencil me-1"></i> Edit Batch
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Capacity Meter -->
+        <div class="col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card h-100">
+                <span class="text-secondary small fw-semibold text-uppercase">SEATS &amp; CAPACITY</span>
+                <div class="d-flex align-items-baseline gap-2 my-1">
+                    <h3 class="fw-bold mb-0 {% if batch.is_full %}text-danger{% else %}text-light{% endif %}">
+                        {{ batch.active_enrollments_count }}
+                    </h3>
+                    <span class="text-secondary">/ {{ batch.capacity }}</span>
+                </div>
+                <div class="progress mb-2" style="height: 6px;">
+                    <div class="progress-bar {% if batch.is_full %}bg-danger{% else %}bg-primary{% endif %}" style="width: {% widthratio batch.active_enrollments_count batch.capacity 100 %}%;"></div>
+                </div>
+                <div class="d-flex justify-content-between small text-secondary">
+                    <span>{{ batch.available_seats }} seats available</span>
+                    {% if batch.waitlisted_enrollments_count > 0 %}
+                    <span class="text-warning fw-semibold">{{ batch.waitlisted_enrollments_count }} waitlisted</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Setup -->
+        <div class="col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card h-100">
+                <span class="text-secondary small fw-semibold text-uppercase">CURRICULUM SPEC</span>
+                <h5 class="fw-bold text-light mb-1 mt-2">{{ batch.target_class|default:batch.course.target_class|default:"General Class" }}</h5>
+                <span class="text-secondary small d-block">{{ batch.stream|default:batch.course.get_stream_display }}</span>
+                <span class="badge bg-dark border border-secondary text-info small mt-1">{{ batch.board|default:batch.course.board|default:"Configurable Board" }}</span>
+            </div>
+        </div>
+
+        <!-- Location & Room -->
+        <div class="col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card h-100">
+                <span class="text-secondary small fw-semibold text-uppercase">CAMPUS LOCATION</span>
+                <h5 class="fw-bold text-light mb-1 mt-2">{% if batch.branch %}{{ batch.branch.name }}{% else %}Main Campus{% endif %}</h5>
+                <span class="text-secondary small d-block">Room: {% if batch.classroom %}{{ batch.classroom.name }}{% else %}General Hall{% endif %}</span>
+                <span class="text-secondary small d-block">{{ batch.schedules.count }} timetable slots scheduled</span>
+            </div>
+        </div>
+
+        <!-- Dates & Fee -->
+        <div class="col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card h-100">
+                <span class="text-secondary small fw-semibold text-uppercase">TIMEFRAME &amp; FEES</span>
+                <div class="mt-2 text-light small">
+                    <div><i class="bi bi-calendar-event me-1 text-primary"></i> {{ batch.start_date|date:"M d, Y" }} &rarr; {{ batch.end_date|date:"M d, Y" }}</div>
+                    <div class="mt-1">
+                        <i class="bi bi-cash-stack me-1 text-success"></i>
+                        <strong class="text-success">${{ batch.fee_override|default:batch.course.fee_per_term }}</strong>
+                        <span class="text-secondary">({{ batch.course.fee_period }})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content: Tabs for Roster, Timetable, Faculty -->
+    <div class="card border-0 rounded-4 feature-card p-4">
+        <ul class="nav nav-pills mb-4 gap-2" id="batchTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-4 py-2 rounded-pill fw-semibold" id="roster-tab" data-bs-toggle="pill" data-bs-target="#roster-pane" type="button" role="tab">
+                    <i class="bi bi-people-fill me-1"></i> Student Roster ({{ active_enrollments|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4 py-2 rounded-pill fw-semibold" id="timetable-tab" data-bs-toggle="pill" data-bs-target="#timetable-pane" type="button" role="tab">
+                    <i class="bi bi-calendar3-week me-1"></i> Weekly Timetable ({{ schedules.count }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4 py-2 rounded-pill fw-semibold" id="faculty-tab" data-bs-toggle="pill" data-bs-target="#faculty-pane" type="button" role="tab">
+                    <i class="bi bi-person-badge me-1"></i> Subject Teachers ({{ teacher_assignments.count }})
+                </button>
+            </li>
+            {% if waitlisted_enrollments %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4 py-2 rounded-pill fw-semibold text-warning" id="waitlist-tab" data-bs-toggle="pill" data-bs-target="#waitlist-pane" type="button" role="tab">
+                    <i class="bi bi-hourglass-split me-1"></i> Waitlist Queue ({{ waitlisted_enrollments|length }})
+                </button>
+            </li>
+            {% endif %}
+            {% if history_enrollments %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4 py-2 rounded-pill fw-semibold text-secondary" id="history-tab" data-bs-toggle="pill" data-bs-target="#history-pane" type="button" role="tab">
+                    <i class="bi bi-clock-history me-1"></i> Transfers &amp; Drops ({{ history_enrollments|length }})
+                </button>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content" id="batchTabContent">
+            <!-- Roster Pane -->
+            <div class="tab-pane fade show active" id="roster-pane" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light">Active Batch Students</h5>
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#enrollStudentModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Enrol Student
+                    </button>
+                </div>
+
+                {% if active_enrollments %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase">
+                                <th>Student Name</th>
+                                <th>Roll #</th>
+                                <th>Enrollment ID</th>
+                                <th>Start Date</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in active_enrollments %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light d-block">{{ e.student.get_full_name|default:e.student.username }}</strong>
+                                    <span class="text-secondary small">{{ e.student.email }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-light font-monospace">{{ e.roll_number|default:"-" }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-secondary font-monospace small">{{ e.enrollment_number }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-light small">{{ e.start_date|date:"M d, Y" }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#transferModal{{ e.id }}" title="Transfer to another batch">
+                                        <i class="bi bi-arrow-left-right me-1"></i> Transfer
+                                    </button>
+                                    <form method="post" action="{% url 'academics:admin_enrollment_status_update' e.id %}" class="d-inline" onsubmit="return confirm('Drop this student from batch? If there are waitlisted students, next in line will be promoted.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="dropped">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Drop Enrolment">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+
+                            <!-- Transfer Modal for this enrollment -->
+                            <div class="modal fade" id="transferModal{{ e.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content bg-dark border-secondary text-light">
+                                        <div class="modal-header border-secondary">
+                                            <h5 class="modal-title fw-bold">Transfer Student: {{ e.student.get_full_name }}</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <form method="post" action="{% url 'academics:admin_enrollment_transfer' e.id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <p class="text-secondary small mb-3">
+                                                    Transferring will set this enrollment to Transferred, free up a seat in <strong>{{ batch.name }}</strong> (promoting the waitlist if applicable), and enrol the student into the chosen target batch.
+                                                </p>
+                                                <div class="mb-3">
+                                                    <label class="form-label text-secondary small fw-semibold">Target Batch *</label>
+                                                    <select name="target_batch" class="form-select bg-dark border-secondary text-light" required>
+                                                        <option value="">-- Choose destination batch --</option>
+                                                        {% for ob in institution.coaching_batches.all %}
+                                                        {% if ob.id != batch.id and ob.status in "ongoing,upcoming" %}
+                                                        <option value="{{ ob.id }}">{{ ob.name }} [{{ ob.code }}] ({{ ob.available_seats }} seats left)</option>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label text-secondary small fw-semibold">Transfer Reason</label>
+                                                    <textarea name="reason" rows="2" class="form-control bg-dark border-secondary text-light" placeholder="e.g. Timing conflict, stream change..."></textarea>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-secondary">
+                                                <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-info btn-sm text-dark fw-bold px-3">Execute Transfer</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-person-x text-secondary" style="font-size: 2.5rem;"></i>
+                    <h6 class="text-secondary mt-3">No active students enrolled in this batch</h6>
+                    <p class="text-secondary small">Click "Enrol Student" to admit students into this cohort.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Weekly Timetable Pane -->
+            <div class="tab-pane fade" id="timetable-pane" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light">Weekly Timetable Slots</h5>
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                        <i class="bi bi-plus-lg me-1"></i> Add Timetable Slot
+                    </button>
+                </div>
+
+                {% if schedules %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase">
+                                <th>Day of Week</th>
+                                <th>Time Interval</th>
+                                <th>Subject</th>
+                                <th>Assigned Teacher</th>
+                                <th>Room / Hall</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in schedules %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ s.get_day_of_week_display }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark border border-secondary text-warning font-monospace">
+                                        {{ s.start_time|time:"H:i" }} &rarr; {{ s.end_time|time:"H:i" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-light fw-semibold">{{ s.subject.name|default:"General Session" }}</span>
+                                    {% if s.subject.code %}<span class="badge bg-secondary-subtle text-light small ms-1">{{ s.subject.code }}</span>{% endif %}
+                                </td>
+                                <td>
+                                    {% if s.teacher %}
+                                    <span class="text-light">{{ s.teacher.get_full_name|default:s.teacher.username }}</span>
+                                    {% else %}
+                                    <span class="text-secondary small">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-secondary small">{{ s.room_number|default:batch.classroom.name|default:"Main Hall" }}</span>
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" action="{% url 'academics:admin_batch_schedule_delete' batch.id s.id %}" class="d-inline" onsubmit="return confirm('Remove this timetable slot?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Slot">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x text-secondary" style="font-size: 2.5rem;"></i>
+                    <h6 class="text-secondary mt-3">No timetable schedule slots defined yet</h6>
+                    <p class="text-secondary small">Add weekly lecture and lab slots with subjects and faculty.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Faculty Assignments Pane -->
+            <div class="tab-pane fade" id="faculty-pane" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light">Authorized Subject Faculty</h5>
+                    <button class="btn btn-info btn-sm text-dark fw-bold" data-bs-toggle="modal" data-bs-target="#assignTeacherModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Assign Faculty
+                    </button>
+                </div>
+
+                {% if teacher_assignments %}
+                <div class="row g-3">
+                    {% for ta in teacher_assignments %}
+                    <div class="col-md-4">
+                        <div class="card p-3 border-0 rounded-4 bg-dark border border-secondary">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="fw-bold text-light mb-0">{{ ta.teacher.get_full_name|default:ta.teacher.username }}</h6>
+                                    <span class="text-secondary small">{{ ta.teacher.email }}</span>
+                                </div>
+                                {% if ta.is_primary %}
+                                <span class="badge bg-primary-subtle text-primary small">Lead Mentor</span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2 pt-2 border-top border-secondary d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="text-secondary small">Subject:</span>
+                                    <strong class="text-info d-block">{{ ta.subject.name }}</strong>
+                                </div>
+                                <form method="post" action="{% url 'academics:admin_batch_unassign_teacher' batch.id ta.id %}" onsubmit="return confirm('Unassign faculty?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Unassign Teacher">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-person-dash text-secondary" style="font-size: 2.5rem;"></i>
+                    <h6 class="text-secondary mt-3">No teachers assigned to this batch yet</h6>
+                    <p class="text-secondary small">Assign subject specialists and lead mentors to this cohort.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Waitlist Queue Pane -->
+            {% if waitlisted_enrollments %}
+            <div class="tab-pane fade" id="waitlist-pane" role="tabpanel">
+                <div class="alert alert-warning rounded-3 mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <div>Batch capacity of {{ batch.capacity }} seats is full. When a student transfers or drops, waitlisted students are automatically promoted.</div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase">
+                                <th>Waitlist Position</th>
+                                <th>Student Name</th>
+                                <th>Requested Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in waitlisted_enrollments %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-warning text-dark fw-bold">#{{ w.waitlist_position }}</span>
+                                </td>
+                                <td>
+                                    <strong class="text-light d-block">{{ w.student.get_full_name|default:w.student.username }}</strong>
+                                    <span class="text-secondary small">{{ w.student.email }}</span>
+                                </td>
+                                <td><span class="text-secondary small">{{ w.enrolled_at|date:"M d, Y" }}</span></td>
+                                <td>
+                                    <form method="post" action="{% url 'academics:admin_enrollment_status_update' w.id %}" class="d-inline" onsubmit="return confirm('Promote student directly to Active seat?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="active">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">Promote to Active</button>
+                                    </form>
+                                    <form method="post" action="{% url 'academics:admin_enrollment_status_update' w.id %}" class="d-inline" onsubmit="return confirm('Remove student from waitlist?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="dropped">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- History Pane -->
+            {% if history_enrollments %}
+            <div class="tab-pane fade" id="history-pane" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary small text-uppercase">
+                                <th>Student</th>
+                                <th>Status</th>
+                                <th>End Date</th>
+                                <th>Reason / Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for h in history_enrollments %}
+                            <tr>
+                                <td><strong class="text-light">{{ h.student.get_full_name|default:h.student.username }}</strong></td>
+                                <td><span class="badge bg-secondary-subtle text-secondary">{{ h.get_status_display }}</span></td>
+                                <td><span class="text-secondary small">{{ h.end_date|date:"M d, Y"|default:"-" }}</span></td>
+                                <td>
+                                    {% if h.transfer_reason %}<span class="text-light small">{{ h.transfer_reason }}</span>{% endif %}
+                                    {% if h.transferred_to %}
+                                    <span class="text-info small d-block">&rarr; Transferred to {{ h.transferred_to.batch.name }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODALS -->
+<!-- ========================================================================= -->
+
+<!-- 1. Enrol Student Modal -->
+<div class="modal fade" id="enrollStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold">Enrol Student in {{ batch.name }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'academics:admin_enrollment_create' %}">
+                {% csrf_token %}
+                <input type="hidden" name="batch" value="{{ batch.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Student *</label>
+                        {{ enrollment_form.student }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Roll Number</label>
+                        {{ enrollment_form.roll_number }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Start Date *</label>
+                        {{ enrollment_form.start_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Notes / Remarks</label>
+                        {{ enrollment_form.notes }}
+                    </div>
+                    {% if batch.is_full %}
+                    <div class="alert alert-warning small rounded-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Batch is currently at full capacity ({{ batch.capacity }} seats). This student will be queued onto the waitlist.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success btn-sm fw-bold px-3">Confirm Enrolment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Add Timetable Slot Modal -->
+<div class="modal fade" id="addScheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold">Add Timetable Slot</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'academics:admin_batch_schedule_add' batch.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Day of Week *</label>
+                        {{ schedule_form.day_of_week }}
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-semibold">Start Time *</label>
+                            {{ schedule_form.start_time }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-semibold">End Time *</label>
+                            {{ schedule_form.end_time }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Subject</label>
+                        {{ schedule_form.subject }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Teacher</label>
+                        {{ schedule_form.teacher }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Room / Lab Number</label>
+                        {{ schedule_form.room_number }}
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold px-3">Save Slot</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Assign Subject Teacher Modal -->
+<div class="modal fade" id="assignTeacherModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary text-light">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold">Assign Subject Faculty</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'academics:admin_batch_assign_teacher' batch.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Teacher *</label>
+                        {{ teacher_form.teacher }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-semibold">Subject *</label>
+                        {{ teacher_form.subject }}
+                    </div>
+                    <div class="form-check form-switch mt-3">
+                        {{ teacher_form.is_primary }}
+                        <label class="form-check-label text-light small fw-semibold ms-2">Lead / Primary Mentor for Subject</label>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info btn-sm text-dark fw-bold px-3">Assign Faculty</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

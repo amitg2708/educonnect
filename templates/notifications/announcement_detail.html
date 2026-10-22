@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ announcement.title }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a href="{% url 'notifications:announcements_list' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Announcements
+                </a>
+                <span class="badge bg-primary px-3 py-2">{{ announcement.get_target_role_display }}</span>
+            </div>
+
+            <div class="card p-5 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="text-secondary small d-block">Published on {{ announcement.publish_date|date:"F d, Y H:i" }}</span>
+                        {% if announcement.expiry_date %}
+                        <small class="text-warning">Valid until: {{ announcement.expiry_date|date:"F d, Y" }}</small>
+                        {% endif %}
+                    </div>
+                    {% if announcement.target_classroom %}
+                    <span class="badge bg-info-subtle text-info border border-info-subtle">
+                        Class: {{ announcement.target_classroom.name }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <h2 class="fw-bold text-light mb-4">{{ announcement.title }}</h2>
+
+                <div class="text-light mb-4" style="white-space: pre-wrap; font-size: 1.05rem; line-height: 1.7;">
+                    {{ announcement.content }}
+                </div>
+
+                {% if announcement.attachment %}
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-dark border border-secondary-subtle mt-4">
+                    <span class="text-secondary small">
+                        <i class="bi bi-paperclip me-1"></i> Attached Official Document
+                    </span>
+                    <a href="{{ announcement.attachment.url }}" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="bi bi-download me-1"></i> Download File
+                    </a>
+                </div>
+                {% endif %}
+
+                <div class="mt-4 pt-3 border-top border-secondary-subtle d-flex justify-content-between align-items-center text-secondary small">
+                    <span>Issued by Administration</span>
+                    <span>EduConnect Institutional Portal</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

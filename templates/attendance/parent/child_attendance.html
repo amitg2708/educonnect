@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Child Attendance: {{ child.username }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'accounts:parent_dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Children Overview
+            </a>
+            <h2 class="fw-bold mb-1">Attendance Record: {{ child.get_full_name|default:child.username }}</h2>
+            <p class="text-secondary small mb-0">Authorized Guardian Attendance File | Student ID: <code>{{ child.student_id|default:child.username }}</code></p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success-subtle text-success px-3 py-2 border border-success-subtle">
+                <i class="bi bi-shield-check me-1"></i> Authorized Guardian Monitoring
+            </span>
+        </div>
+    </div>
+
+    <!-- Attendance Defaulter Alert for Parents -->
+    {% if overall.is_below_minimum %}
+    <div class="alert alert-danger border border-danger-subtle rounded-4 p-4 mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-bell-fill fs-2 text-danger"></i>
+        <div>
+            <h5 class="fw-bold text-danger mb-1">Attendance Alert: Cumulative {{ overall.percentage }}%</h5>
+            <p class="small text-danger-subtle mb-0">
+                Notice: Your child's attendance has dropped below the institution's mandatory threshold of <strong>{{ policy.minimum_required_percentage }}%</strong>.
+                Absences require prompt justification to prevent academic penalties.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Overall Attendance</span>
+                <h2 class="fw-bold my-1 {% if overall.is_below_minimum %}text-danger{% else %}text-success{% endif %}">
+                    {{ overall.percentage }}%
+                </h2>
+                <span class="badge {% if overall.is_below_minimum %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %} small">
+                    Target: &ge;{{ policy.minimum_required_percentage }}%
+                </span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Classes Attended</span>
+                <h3 class="fw-bold my-1 text-success">{{ overall.present_count }}</h3>
+                <span class="badge bg-success-subtle text-success small">Present</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Late / Excused</span>
+                <h3 class="fw-bold my-1 text-warning">{{ overall.late_count }} / {{ overall.excused_count }}</h3>
+                <span class="badge bg-warning-subtle text-warning small">Adjusted Presence</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Unexcused Absences</span>
+                <h3 class="fw-bold my-1 {% if overall.absent_count > 0 %}text-danger{% else %}text-light{% endif %}">{{ overall.absent_count }}</h3>
+                <span class="badge {% if overall.absent_count > 0 %}bg-danger-subtle text-danger{% else %}bg-secondary-subtle text-secondary{% endif %} small">
+                    Missed Classes
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Breakdowns Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-book text-primary"></i> Attendance By Subject
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Subject Name</th>
+                        <th class="text-center">Total Classes</th>
+                        <th class="text-center">Present</th>
+                        <th class="text-center">Absent</th>
+                        <th class="text-center">Late</th>
+                        <th class="text-center">Excused</th>
+                        <th class="text-end">Percentage</th>
+                        <th class="text-center">Standing</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sb in subject_breakdowns %}
+                    <tr>
+                        <td class="fw-bold text-light">{{ sb.subject_name }}</td>
+                        <td class="text-center">{{ sb.total }}</td>
+                        <td class="text-center text-success fw-bold">{{ sb.present }}</td>
+                        <td class="text-center text-danger fw-bold">{{ sb.absent }}</td>
+                        <td class="text-center text-warning fw-bold">{{ sb.late }}</td>
+                        <td class="text-center text-info fw-bold">{{ sb.excused }}</td>
+                        <td class="text-end fw-bold {% if sb.is_below_minimum %}text-danger{% else %}text-success{% endif %}">
+                            {{ sb.percentage }}%
+                        </td>
+                        <td class="text-center">
+                            {% if sb.is_below_minimum %}
+                            <span class="badge bg-danger-subtle text-danger">Defaulter Alert</span>
+                            {% else %}
+                            <span class="badge bg-success-subtle text-success">Regular</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-4">No attendance sessions recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Absence History -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history text-danger"></i> Recent Absences &amp; Late Arrivals
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date</th>
+                        <th>Subject</th>
+                        <th>Time Slot</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in recent_absences %}
+                    <tr>
+                        <td>{{ rec.session.session_date|date:"Y-m-d" }}</td>
+                        <td><strong>{{ rec.session.subject_name }}</strong></td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">{{ rec.session.session_period }}</span></td>
+                        <td>
+                            <span class="badge {% if rec.status == 'absent' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
+                                {{ rec.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ rec.remarks|default:"None" }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'attendance:submit_correction' rec.id %}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-file-earmark-medical me-1"></i> Submit Excuse Note
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-success py-4">
+                            <i class="bi bi-check2-circle fs-3 mb-1 d-block"></i>
+                            Excellent record! No absences recorded.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

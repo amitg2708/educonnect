@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Source-wise Enquiry &amp; Conversion Reports - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container-fluid px-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard_redirect' %}" class="text-secondary text-decoration-none">Admin Portal</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admissions:admin_enquiry_list' %}" class="text-secondary text-decoration-none">CRM Enquiries</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Conversion Reports</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-info-subtle text-info border border-info-subtle fs-6">CRM Analytics</span>
+                <span class="text-secondary small">&bull; {{ request.institution.name|default:"Institute" }}</span>
+            </div>
+            <h2 class="fw-bold text-light mb-0">Source-wise Enquiry &amp; Conversion Reports</h2>
+            <p class="text-secondary small mb-0">Track prospect lead volume, pipeline health, and enrolment conversion rates across all intake channels.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'admissions:admin_enquiry_list' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Enquiries
+            </a>
+            <a href="{% url 'admissions:admin_enquiry_create' %}" class="btn btn-primary btn-sm fw-semibold">
+                <i class="bi bi-plus-circle me-1"></i> Log Enquiry
+            </a>
+        </div>
+    </div>
+
+    <!-- Executive KPI Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Total Leads Received</span>
+                <h2 class="fw-bold text-light mb-0 mt-1">{{ total_leads }}</h2>
+                <span class="text-secondary extra-small mt-1">Across all inquiry channels</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Total Students Enrolled</span>
+                <h2 class="fw-bold text-success mb-0 mt-1">{{ total_converted }}</h2>
+                <span class="text-success extra-small mt-1"><i class="bi bi-mortarboard me-1"></i>Official Converted Enrolments</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Institute Conversion Rate</span>
+                <h2 class="fw-bold text-primary mb-0 mt-1">{{ overall_conv_rate }}%</h2>
+                <span class="text-secondary extra-small mt-1">Lead-to-student conversion ratio</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Top Performing Channel</span>
+                <h3 class="fw-bold text-info mb-0 mt-1 text-truncate">{{ top_source }}</h3>
+                <span class="text-info extra-small mt-1">Highest Lead Volume</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Source-wise Performance Table -->
+    <div class="card p-4 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-light mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-table text-primary"></i> Intake Channel Breakdown &amp; Conversion Efficiency
+            </h5>
+            <span class="text-secondary small">Real-time metrics</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary border-bottom border-secondary-subtle">
+                        <th>Channel / Source</th>
+                        <th class="text-center">Total Inquiries</th>
+                        <th class="text-center">Share of Leads</th>
+                        <th class="text-center">Contacted</th>
+                        <th class="text-center">Trial Classes</th>
+                        <th class="text-center">Converted</th>
+                        <th class="text-center">Not Interested</th>
+                        <th>Conversion Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in source_stats %}
+                    <tr>
+                        <td class="fw-bold text-light">
+                            {% if item.code == 'website' %}
+                            <i class="bi bi-globe text-info me-2"></i>{{ item.label }}
+                            {% elif item.code == 'phone' %}
+                            <i class="bi bi-telephone text-primary me-2"></i>{{ item.label }}
+                            {% elif item.code == 'walk_in' %}
+                            <i class="bi bi-building text-warning me-2"></i>{{ item.label }}
+                            {% elif item.code == 'referral' %}
+                            <i class="bi bi-people text-success me-2"></i>{{ item.label }}
+                            {% else %}
+                            <i class="bi bi-folder text-secondary me-2"></i>{{ item.label }}
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-bold">{{ item.count }}</td>
+                        <td class="text-center text-secondary">{{ item.percentage_of_total }}%</td>
+                        <td class="text-center">{{ item.contacted }}</td>
+                        <td class="text-center text-warning fw-semibold">{{ item.trial }}</td>
+                        <td class="text-center text-success fw-bold">{{ item.converted }}</td>
+                        <td class="text-center text-secondary">{{ item.not_interested }}</td>
+                        <td style="min-width: 180px;">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1 bg-secondary bg-opacity-25" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" data-percent="{{ item.rate }}"></div>
+                                </div>
+                                <span class="fw-bold text-light" style="width: 48px;">{{ item.rate }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-secondary">No enquiry data recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pipeline Funnel & Status Distribution -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm h-100">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-funnel text-warning"></i> Lead Pipeline Status Breakdown
+                </h5>
+                <div class="d-flex flex-column gap-3">
+                    {% for st in status_distribution %}
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-1 small">
+                            <span class="text-light fw-semibold">{{ st.label }}</span>
+                            <span class="text-secondary"><strong class="text-light">{{ st.count }}</strong> ({{ st.percentage }}%)</span>
+                        </div>
+                        <div class="progress bg-secondary bg-opacity-25" style="height: 8px;">
+                            <div class="progress-bar bg-info" data-percent="{{ st.percentage }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm h-100">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-lightbulb text-info"></i> Admissions CRM Insights &amp; Recommendations
+                </h5>
+                <div class="d-flex flex-column gap-3 small text-secondary">
+                    <div class="p-3 bg-dark-subtle rounded-3 border border-secondary-subtle">
+                        <strong class="text-light d-block mb-1"><i class="bi bi-speedometer2 text-success me-1"></i> Response Time Optimization</strong>
+                        Prospects engaged within 2 hours of inquiry submission show an average 2.4x higher conversion into trial classes.
+                    </div>
+                    <div class="p-3 bg-dark-subtle rounded-3 border border-secondary-subtle">
+                        <strong class="text-light d-block mb-1"><i class="bi bi-people text-primary me-1"></i> Referral Power</strong>
+                        Word of mouth and student referrals traditionally have the highest course completion and fee payment rates. Ensure fast counselor follow-ups.
+                    </div>
+                    <div class="p-3 bg-dark-subtle rounded-3 border border-secondary-subtle">
+                        <strong class="text-light d-block mb-1"><i class="bi bi-calendar-check text-warning me-1"></i> Trial Class Conversion</strong>
+                        Trial class attendance is the single highest predictor of enrollment. Track student attendance and gather faculty feedback post-trial.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".progress-bar[data-percent]").forEach(function(el) {
+            var val = el.getAttribute("data-percent") || "0";
+            el.style.width = Math.min(Math.max(parseFloat(val) || 0, 0), 100) + "%";
+        });
+    });
+</script>
+{% endblock %}
+

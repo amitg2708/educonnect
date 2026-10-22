@@ -37,7 +37,7 @@
                     </div>
                     <div>
                         <strong class="text-light d-block mb-1">Campus Location</strong>
-                        <p class="text-secondary small mb-0">100 University Avenue, Academic Valley, Campus West, AC 98210</p>
+                        <p class="text-secondary small mb-0">{{ current_institution.address|default:"100 University Avenue, Academic Valley, Campus West, AC 98210" }}</p>
                     </div>
                 </div>
 
@@ -47,8 +47,7 @@
                     </div>
                     <div>
                         <strong class="text-light d-block mb-1">Telephone Contacts</strong>
-                        <p class="text-secondary small mb-1">Main Switchboard: <strong>+1 (800) 555-EDU1</strong></p>
-                        <p class="text-secondary small mb-0">Admissions Line: <strong>+1 (800) 555-EDU2</strong></p>
+                        <p class="text-secondary small mb-1">Main Switchboard: <strong>{{ current_institution.contact_phone|default:"+1 (800) 555-EDU1" }}</strong></p>
                     </div>
                 </div>
 
@@ -58,8 +57,7 @@
                     </div>
                     <div>
                         <strong class="text-light d-block mb-1">Electronic Mail</strong>
-                        <p class="text-secondary small mb-1">General: <strong>info@educonnect.edu</strong></p>
-                        <p class="text-secondary small mb-0">Admissions: <strong>admissions@educonnect.edu</strong></p>
+                        <p class="text-secondary small mb-1">General: <strong>{{ current_institution.contact_email|default:"info@educonnect.edu" }}</strong></p>
                     </div>
                 </div>
 
@@ -86,7 +84,7 @@
                     Please submit your inquiry below. Our team typically replies within one business day.
                 </p>
 
-                <form method="post" action="{% url 'core:contact' %}" novalidate>
+                <form method="post" action="" novalidate>
                     {% csrf_token %}
 
                     <div class="row g-3 mb-3">

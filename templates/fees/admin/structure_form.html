@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Fee Structure - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'fees:structure_list' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                        &larr; Back to Fee Structures
+                    </a>
+                    <h2 class="fw-bold mb-1">{{ action }} Fee Structure</h2>
+                    <p class="text-secondary small mb-0">Define tuition package, academic period, and target course.</p>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-light">Structure Title <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-light">Identifier Code <span class="text-danger">*</span></label>
+                            {{ form.code }}
+                            {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Academic Year <span class="text-danger">*</span></label>
+                            {{ form.academic_year }}
+                            {% if form.academic_year.errors %}<div class="text-danger small mt-1">{{ form.academic_year.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Associated Academic Course</label>
+                            {{ form.course }}
+                            {% if form.course.errors %}<div class="text-danger small mt-1">{{ form.course.errors }}</div>{% endif %}
+                            <div class="form-text small text-secondary">Leave blank if this structure applies institution-wide.</div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label small fw-bold text-light">Base Total Fee Amount ($) <span class="text-danger">*</span></label>
+                            {{ form.total_amount }}
+                            {% if form.total_amount.errors %}<div class="text-danger small mt-1">{{ form.total_amount.errors }}</div>{% endif %}
+                            <div class="form-text small text-secondary">Can also be auto-calculated from sub-components in the next step.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-light">Billing Notes &amp; Terms</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label text-light small fw-bold" for="{{ form.is_active.id_for_label }}">
+                                    Active for Institutional Assignment
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-12 border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                            <a href="{% url 'fees:structure_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">Save Fee Structure</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

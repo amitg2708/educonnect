@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Assign Fees to Students - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'fees:dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                        &larr; Back to Treasury Desk
+                    </a>
+                    <h2 class="fw-bold mb-1">Assign Fee Structures</h2>
+                    <p class="text-secondary small mb-0">Allocate fee schedules to individual students or bulk-assign to course cohorts.</p>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-light">Allocation Target Type <span class="text-danger">*</span></label>
+                            {{ form.target_type }}
+                            {% if form.target_type.errors %}<div class="text-danger small">{{ form.target_type.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12" id="student_field_wrapper">
+                            <label class="form-label small fw-bold text-light">Individual Student</label>
+                            {{ form.student }}
+                            {% if form.student.errors %}<div class="text-danger small">{{ form.student.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12" id="course_field_wrapper" style="display: none;">
+                            <label class="form-label small fw-bold text-light">Course Cohort (Bulk Allocation)</label>
+                            {{ form.course }}
+                            {% if form.course.errors %}<div class="text-danger small">{{ form.course.errors }}</div>{% endif %}
+                            <div class="form-text small text-secondary">Will allocate this fee structure to all enrolled students in the course.</div>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-light">Fee Structure <span class="text-danger">*</span></label>
+                            {{ form.fee_structure }}
+                            {% if form.fee_structure.errors %}<div class="text-danger small">{{ form.fee_structure.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-light">Academic Year <span class="text-danger">*</span></label>
+                            {{ form.academic_year }}
+                            {% if form.academic_year.errors %}<div class="text-danger small">{{ form.academic_year.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Discount / Scholarship Amount ($)</label>
+                            {{ form.discount_amount }}
+                            {% if form.discount_amount.errors %}<div class="text-danger small">{{ form.discount_amount.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Scholarship / Concession Reason</label>
+                            {{ form.discount_reason }}
+                            {% if form.discount_reason.errors %}<div class="text-danger small">{{ form.discount_reason.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-light">Installment Schedule Scheme <span class="text-danger">*</span></label>
+                            {{ form.installment_scheme }}
+                            {% if form.installment_scheme.errors %}<div class="text-danger small">{{ form.installment_scheme.errors }}</div>{% endif %}
+                            <div class="form-text small text-secondary">
+                                Configures due date milestones automatically (e.g. 2 semesters with 30-day and 150-day due dates).
+                            </div>
+                        </div>
+
+                        <div class="col-12 border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                            <a href="{% url 'fees:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-bold">
+                                <i class="bi bi-check-circle me-1"></i> Confirm &amp; Create Allocations
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const targetSelect = document.getElementById("target_type_select");
+        const studentWrapper = document.getElementById("student_field_wrapper");
+        const courseWrapper = document.getElementById("course_field_wrapper");
+
+        function updateVisibility() {
+            if (targetSelect.value === "course") {
+                studentWrapper.style.display = "none";
+                courseWrapper.style.display = "block";
+            } else {
+                studentWrapper.style.display = "block";
+                courseWrapper.style.display = "none";
+            }
+        }
+
+        if (targetSelect) {
+            targetSelect.addEventListener("change", updateVisibility);
+            updateVisibility();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Application {{ application.application_number }} - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admissions:my_applications' %}" class="text-secondary text-decoration-none">Admissions</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">{{ application.application_number }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header Block -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6">
+                    {{ application.application_number }}
+                </span>
+                <span class="text-secondary small">&bull; Submitted {{ application.submitted_at|date:"F d, Y - H:i" }}</span>
+            </div>
+            <h2 class="fw-bold text-light mb-0">{{ application.course.title }}</h2>
+            <p class="text-secondary small mb-0">{{ application.course.code }} &bull; Department of {{ application.course.department }}</p>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            {% if application.is_editable %}
+            <a href="{% url 'admissions:edit_application' application.application_number %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-pencil-square me-1"></i> Edit Application
+            </a>
+            <a href="{% url 'admissions:upload_document' application.application_number %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-upload me-1"></i> Upload Document
+            </a>
+            {% endif %}
+
+            {% if user.role == 'admin' or user.is_superuser %}
+            <a href="{% url 'admissions:admin_application_detail' application.application_number %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-shield-lock me-1"></i> Admin Desk Dossier
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Status Alert Banner -->
+    <div class="card p-4 border-0 rounded-4 mb-4 shadow-sm {% if application.status == 'approved' %}bg-success-subtle border-success-subtle{% elif application.status == 'action_required' %}bg-danger-subtle border-danger-subtle{% elif application.status == 'enrolled' %}bg-primary-subtle border-primary-subtle{% else %}feature-card{% endif %}">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="small text-uppercase fw-bold text-secondary">Current Application Status:</span>
+                    {% if application.status == 'submitted' %}
+                    <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1">Submitted &bull; Pending Review</span>
+                    {% elif application.status == 'under_review' %}
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1">Under Active Staff Review</span>
+                    {% elif application.status == 'action_required' %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1">Action Required (Missing Information)</span>
+                    {% elif application.status == 'approved' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">Admission Approved</span>
+                    {% elif application.status == 'enrolled' %}
+                    <span class="badge bg-primary text-light px-3 py-1">Officially Enrolled</span>
+                    {% elif application.status == 'rejected' %}
+                    <span class="badge bg-danger text-light px-3 py-1">Application Rejected</span>
+                    {% else %}
+                    <span class="badge bg-secondary px-3 py-1">{{ application.get_status_display }}</span>
+                    {% endif %}
+                </div>
+
+                {% if application.status == 'action_required' %}
+                <h5 class="fw-bold text-danger mb-1">
+                    <i class="bi bi-exclamation-octagon-fill me-1"></i> Missing Information or Documents Requested
+                </h5>
+                <p class="text-light small mb-2">{{ application.applicant_remarks }}</p>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a href="{% url 'admissions:upload_document' application.application_number %}" class="btn btn-danger btn-sm fw-semibold">
+                        <i class="bi bi-upload me-1"></i> Upload Requested Document
+                    </a>
+                    <a href="{% url 'admissions:edit_application' application.application_number %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-pencil me-1"></i> Update Information
+                    </a>
+                    <form method="post" action="{% url 'admissions:resubmit_application' application.application_number %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm fw-bold">
+                            <i class="bi bi-send-check me-1"></i> Resubmit Application for Review
+                        </button>
+                    </form>
+                </div>
+
+                {% elif application.status == 'approved' %}
+                <h5 class="fw-bold text-success mb-1">
+                    <i class="bi bi-check-circle-fill me-1"></i> Congratulations! Your Admission is Approved.
+                </h5>
+                <p class="text-light small mb-0">
+                    {{ application.applicant_remarks|default:"Your credentials have been verified by the admissions committee. Institutional staff will complete your formal enrollment and issue your Student ID." }}
+                </p>
+
+                {% elif application.status == 'enrolled' %}
+                <h5 class="fw-bold text-primary mb-1">
+                    <i class="bi bi-mortarboard-fill me-1"></i> You are Officially Enrolled!
+                </h5>
+                <p class="text-light small mb-2">
+                    Enrolled Student ID: <strong class="badge bg-primary fs-6">{{ application.student_id_assigned }}</strong>
+                </p>
+                <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-primary btn-sm fw-semibold">
+                    <i class="bi bi-speedometer2 me-1"></i> Access Student Dashboard
+                </a>
+
+                {% elif application.status == 'under_review' %}
+                <h5 class="fw-bold text-warning mb-1">
+                    <i class="bi bi-hourglass-split me-1"></i> Dossier Under Examination
+                </h5>
+                <p class="text-secondary small mb-0">
+                    An admissions officer is currently verifying your submitted transcripts and credentials. No action is required at this time.
+                </p>
+
+                {% elif application.status == 'rejected' %}
+                <h5 class="fw-bold text-danger mb-1">
+                    <i class="bi bi-x-circle-fill me-1"></i> Admission Application Not Accepted
+                </h5>
+                <p class="text-secondary small mb-0">
+                    {{ application.applicant_remarks|default:"We regret to inform you that we are unable to offer admission for the selected program at this time." }}
+                </p>
+
+                {% else %}
+                <h5 class="fw-bold text-info mb-1">
+                    <i class="bi bi-info-circle-fill me-1"></i> Application Received
+                </h5>
+                <p class="text-secondary small mb-0">
+                    Your application is queued for initial verification by the admissions team.
+                </p>
+                {% endif %}
+            </div>
+
+            {% if application.decision_date %}
+            <div class="text-md-end text-secondary small">
+                <span>Decision Finalized:</span>
+                <strong class="text-light d-block">{{ application.decision_date|date:"F d, Y" }}</strong>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Dossier Content -->
+    <div class="row g-4 mb-4">
+        <!-- Left Column: Personal & Guardian Details -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-badge text-primary"></i> Personal Details
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-borderless small mb-0">
+                        <tbody>
+                            <tr>
+                                <th class="text-secondary w-40">Full Name:</th>
+                                <td class="text-light fw-semibold">{{ application.full_name }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Email:</th>
+                                <td class="text-light">{{ application.email }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Phone:</th>
+                                <td class="text-light">{{ application.phone_number }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Date of Birth:</th>
+                                <td class="text-light">{{ application.date_of_birth|date:"F d, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Gender:</th>
+                                <td class="text-light text-capitalize">{{ application.get_gender_display }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Nationality:</th>
+                                <td class="text-light">{{ application.nationality }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Address:</th>
+                                <td class="text-light">
+                                    {{ application.address_line1 }}, {{ application.city }}, {{ application.state }} - {{ application.postal_code }}, {{ application.country }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-people text-info"></i> Guardian &amp; Emergency Contact
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-borderless small mb-0">
+                        <tbody>
+                            <tr>
+                                <th class="text-secondary w-40">Guardian Name:</th>
+                                <td class="text-light fw-semibold">{{ application.guardian_name }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Relationship:</th>
+                                <td class="text-light">{{ application.guardian_relationship }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Guardian Phone:</th>
+                                <td class="text-light">{{ application.guardian_phone }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Guardian Email:</th>
+                                <td class="text-light">{{ application.guardian_email|default:"Not Provided" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Academic Background & SOP -->
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-mortarboard text-success"></i> Prior Academic History
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-borderless small mb-0">
+                        <tbody>
+                            <tr>
+                                <th class="text-secondary w-40">Last Institution:</th>
+                                <td class="text-light fw-semibold">{{ application.previous_institution }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Highest Qualification:</th>
+                                <td class="text-light">{{ application.previous_qualification }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Grade / Score:</th>
+                                <td class="text-light fw-bold text-success">{{ application.previous_grade_or_percentage }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Graduation Year:</th>
+                                <td class="text-light">{{ application.year_of_passing }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-3 pt-3 border-top border-secondary-subtle">
+                    <span class="text-secondary small fw-semibold d-block mb-1">Statement of Purpose:</span>
+                    <p class="text-light small bg-dark p-3 rounded-3 border border-secondary-subtle mb-0">
+                        {{ application.statement_of_purpose|default:"No personal statement provided."|linebreaksbr }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Program Summary -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-bookmark text-warning"></i> Program Applied
+                </h5>
+                <div class="p-3 bg-dark rounded-3 border border-secondary-subtle">
+                    <h6 class="fw-bold text-light mb-1">{{ application.course.title }} ({{ application.course.code }})</h6>
+                    <p class="text-secondary small mb-2">{{ application.course.department }} &bull; {{ application.course.duration }}</p>
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span class="text-secondary">Tuition Fee:</span>
+                        <strong class="text-success">${{ application.course.fee_per_term }} / term</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Uploaded Verification Documents -->
+    <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <h5 class="fw-bold text-light mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-paperclip text-primary"></i> Uploaded Verification Documents
+            </h5>
+            {% if application.is_editable %}
+            <a href="{% url 'admissions:upload_document' application.application_number %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-upload me-1"></i> Add Another Document
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle small mb-0">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Document Type</th>
+                        <th>Document Title</th>
+                        <th>File Size</th>
+                        <th>Uploaded On</th>
+                        <th>Verification Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td class="fw-semibold text-light">{{ doc.get_document_type_display }}</td>
+                        <td>{{ doc.title }}</td>
+                        <td>{{ doc.file_size_bytes|filesizeformat }}</td>
+                        <td>{{ doc.uploaded_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if doc.is_verified %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle-fill me-1"></i> Verified
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                Pending Verification
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admissions:download_document' doc.id %}" target="_blank" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-download me-1"></i> View / Download
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-secondary">
+                            No documents have been uploaded for this application yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Application Status History / Audit Trail -->
+    <div class="card p-4 border-0 rounded-4 feature-card shadow-sm">
+        <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history text-info"></i> Application Progress Timeline &amp; Audit Trail
+        </h5>
+        <div class="timeline ps-3">
+            {% for item in history %}
+            <div class="border-start border-secondary ps-3 pb-3 position-relative">
+                <div class="badge-status-dot bg-primary position-absolute" style="left: -5px; top: 5px;"></div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-1">
+                    <strong class="text-light small">
+                        {% if item.from_status %}{{ item.from_status|upper }} &rarr; {% endif %}{{ item.to_status|upper }}
+                    </strong>
+                    <span class="text-secondary small">{{ item.created_at|date:"M d, Y - H:i" }}</span>
+                </div>
+                <p class="text-secondary small mb-1">{{ item.notes|linebreaksbr }}</p>
+                {% if item.changed_by %}
+                <span class="text-secondary small fst-italic">Recorded by: {{ item.changed_by.get_full_name|default:item.changed_by.username }}</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-secondary small mb-0">No history transitions recorded yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

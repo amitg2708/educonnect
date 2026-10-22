@@ -32,10 +32,28 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Official MongoDB backend
     "django_mongodb_backend",
+    # Multi-tenant Institutions module
+    "apps.institutions.apps.InstitutionsConfig",
     # Accounts and Authentication app
     "apps.accounts.apps.AccountsConfig",
     # Project core module
     "apps.core",
+    # Admissions management module
+    "apps.admissions.apps.AdmissionsConfig",
+    # Fees management module
+    "apps.fees.apps.FeesConfig",
+    # Attendance management module
+    "apps.attendance.apps.AttendanceConfig",
+    # Timetable management module
+    "apps.timetable.apps.TimetableConfig",
+    # Academics & Subject Teacher module
+    "apps.academics.apps.AcademicsConfig",
+    # Complaints & Request management module
+    "apps.complaints.apps.ComplaintsConfig",
+    # Notifications & Parent Portal module
+    "apps.notifications.apps.NotificationsConfig",
+    # Administration & Reporting module
+    "apps.reports.apps.ReportsConfig",
 ]
 
 # Custom User Model
@@ -51,10 +69,12 @@ SESSION_COOKIE_AGE = 86400  # 24 hours
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.institutions.middleware.InstitutionMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -73,6 +93,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.core.context_processors.app_context",
+                "apps.institutions.context_processors.institution_context",
             ],
         },
     },
@@ -133,7 +154,18 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT.mkdir(parents=True, exist_ok=True)
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Uploaded Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)

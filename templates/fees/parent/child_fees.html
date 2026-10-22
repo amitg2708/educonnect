@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Child Financial Ledger - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'accounts:parent_dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Children Overview
+            </a>
+            <h2 class="fw-bold mb-1">Fees &amp; Dues for {{ child.get_full_name|default:child.username }}</h2>
+            <p class="text-secondary small mb-0">Authorized Guardian Financial Ledger | Student ID: <code>{{ child.student_id|default:"STU-ENROLLED" }}</code></p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success-subtle text-success px-3 py-2 border border-success-subtle">
+                <i class="bi bi-shield-check me-1"></i> Authorized Guardian Access
+            </span>
+        </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Net Allocated Dues</span>
+                <h3 class="fw-bold my-1 text-light">${{ total_net|floatformat:2 }}</h3>
+                <span class="badge bg-secondary-subtle text-secondary small">Assigned Fee Schedules</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Total Paid to Date</span>
+                <h3 class="fw-bold my-1 text-success">${{ total_paid|floatformat:2 }}</h3>
+                <span class="badge bg-success-subtle text-success small">Verified</span>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Outstanding Dues</span>
+                <h3 class="fw-bold my-1 {% if total_outstanding > 0 %}text-danger{% else %}text-success{% endif %}">
+                    ${{ total_outstanding|floatformat:2 }}
+                </h3>
+                <span class="badge {% if total_outstanding > 0 %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %} small">
+                    {% if total_outstanding > 0 %}Unpaid Balance{% else %}Account Cleared{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fee Schedules and Installments -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar3-range text-primary"></i> Applicable Fee Structures &amp; Installments
+        </h5>
+
+        {% for alloc in allocations %}
+        <div class="card border border-secondary-subtle rounded-4 p-4 mb-4 bg-dark">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 border-bottom border-secondary-subtle pb-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1 text-light">{{ alloc.fee_structure.title }}</h5>
+                    <p class="text-secondary small mb-0">
+                        Code: <code>{{ alloc.fee_structure.code }}</code> | Academic Year: <strong>{{ alloc.academic_year }}</strong>
+                    </p>
+                </div>
+                <div class="text-md-end">
+                    <span class="badge {% if alloc.status == 'paid' %}bg-success-subtle text-success border border-success-subtle{% elif alloc.status == 'partially_paid' %}bg-info-subtle text-info border border-info-subtle{% elif alloc.status == 'overdue' %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-warning-subtle text-warning border border-warning-subtle{% endif %} px-3 py-2">
+                        {{ alloc.get_status_display }}
+                    </span>
+                    <div class="mt-2 text-secondary small">
+                        Outstanding: <strong class="text-light">${{ alloc.outstanding_balance|floatformat:2 }}</strong> / ${{ alloc.net_amount|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Installment Timeline Table -->
+            <h6 class="fw-bold mb-2 text-secondary small text-uppercase">Scheduled Installment Milestones</h6>
+            <div class="table-responsive mb-3">
+                <table class="table table-dark table-sm align-middle mb-0">
+                    <thead>
+                        <tr class="text-secondary small">
+                            <th>#</th>
+                            <th>Installment Title</th>
+                            <th>Due Date</th>
+                            <th class="text-end">Amount Due</th>
+                            <th class="text-end">Amount Paid</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inst in alloc.installments.all %}
+                        <tr>
+                            <td>{{ inst.installment_number }}</td>
+                            <td class="fw-semibold text-light">{{ inst.title }}</td>
+                            <td>
+                                {{ inst.due_date|date:"M d, Y" }}
+                                {% if inst.is_past_due %}
+                                <span class="badge bg-danger ms-1 small">Past Due</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">${{ inst.amount|floatformat:2 }}</td>
+                            <td class="text-end text-success">${{ inst.amount_paid|floatformat:2 }}</td>
+                            <td class="text-center">
+                                <span class="badge {% if inst.status == 'paid' %}bg-success-subtle text-success{% elif inst.status == 'partially_paid' %}bg-info-subtle text-info{% elif inst.status == 'overdue' %}bg-danger-subtle text-danger{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                    {{ inst.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-secondary py-2 small">No milestone installments configured.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-secondary small my-3">No active fee schedules allocated for this student.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Official Receipts Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-check-fill text-success"></i> Downloadable Payment Receipts
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date</th>
+                        <th>Txn Reference</th>
+                        <th>Method</th>
+                        <th>Amount Paid</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td>{{ p.payment_date|date:"Y-m-d" }}</td>
+                        <td><code>{{ p.transaction_reference }}</code></td>
+                        <td>{{ p.get_payment_method_display }}</td>
+                        <td class="fw-bold text-success">${{ p.amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge {% if p.status == 'verified' %}bg-success-subtle text-success{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                {{ p.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if p.receipt and not p.receipt.is_cancelled %}
+                            <a href="{% url 'fees:download_receipt' p.receipt.id %}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Receipt #{{ p.receipt.receipt_number }}
+                            </a>
+                            {% else %}
+                            <span class="text-secondary small">Unavailable</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-3">No payment records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+# Git and VCS
+.git/
+.gitignore
+
+# Python virtual environment and cache
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment secrets and local files
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+
+# Django static and media builds
+staticfiles/
+media/*
+!media/.gitkeep
+
+# Testing and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+
+# Editor and OS clutter
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs and scratch scripts
+*.log
+logs/
+scratch/

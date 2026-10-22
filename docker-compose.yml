@@ -1,0 +1,43 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: educonnect_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: educonnect_db
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - educonnect_network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: educonnect_web
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_ENV: development
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-educonnect-dev-key-change-in-production}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,web}
+      MONGODB_URI: mongodb://mongodb:27017/
+      MONGODB_NAME: educonnect_db
+    depends_on:
+      - mongodb
+    volumes:
+      - media_data:/app/media
+    networks:
+      - educonnect_network
+
+volumes:
+  mongodb_data:
+  media_data:
+
+networks:
+  educonnect_network:
+    driver: bridge

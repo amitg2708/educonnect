@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Document - {{ application.application_number }} - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admissions:my_applications' %}" class="text-secondary text-decoration-none">Admissions</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admissions:application_detail' application.application_number %}" class="text-secondary text-decoration-none">{{ application.application_number }}</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Upload Document</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="max-w-xl mx-auto">
+        <div class="text-center mb-4">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-2">Document Repository</span>
+            <h2 class="fw-bold text-light mb-1">Upload Supplementary Document</h2>
+            <p class="text-secondary small mb-0">Application Reference: <code>{{ application.application_number }}</code></p>
+        </div>
+
+        {% if application.status == 'action_required' and application.applicant_remarks %}
+        <div class="alert alert-danger border-0 rounded-4 p-4 mb-4 shadow-sm">
+            <h6 class="fw-bold text-danger mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-octagon-fill"></i> Requested by Admissions Staff:
+            </h6>
+            <p class="mb-0 text-light small">{{ application.applicant_remarks }}</p>
+        </div>
+        {% endif %}
+
+        <div class="card p-4 p-md-5 border-0 rounded-4 feature-card shadow-lg">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger border-0 rounded-3 mb-3">
+                    {% for err in form.non_field_errors %}
+                    <p class="mb-0 small">{{ err }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Document Classification <span class="text-danger">*</span></label>
+                    {{ form.document_type }}
+                    {% if form.document_type.errors %}<div class="text-danger small mt-1">{{ form.document_type.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Document Title / Label <span class="text-danger">*</span></label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+                    <div class="form-text text-secondary small">Provide a clear title (e.g. "Senior Secondary Stamped Marksheet").</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-semibold">Select File <span class="text-danger">*</span></label>
+                    {{ form.file }}
+                    {% if form.file.errors %}<div class="text-danger small mt-1">{{ form.file.errors.0 }}</div>{% endif %}
+                    <div class="form-text text-secondary small">Permitted formats: <strong>PDF, JPG, JPEG, PNG</strong>. Maximum size: <strong>5 MB</strong>.</div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between pt-2">
+                    <a href="{% url 'admissions:application_detail' application.application_number %}" class="btn btn-outline-secondary text-light">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">
+                        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

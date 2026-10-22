@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Billing Ledger: {{ allocation.student.username }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'fees:allocation_list' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Allocations
+            </a>
+            <h2 class="fw-bold mb-1">Billing Ledger: {{ allocation.student.get_full_name|default:allocation.student.username }}</h2>
+            <p class="text-secondary small mb-0">Student ID: <code>{{ allocation.student.student_id|default:allocation.student.username }}</code> | Program: <strong>{{ allocation.fee_structure.title }}</strong></p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            {% if allocation.outstanding_balance > 0 %}
+            <a href="{% url 'fees:record_payment' allocation.id %}" class="btn btn-success btn-sm">
+                <i class="bi bi-cash-stack me-1"></i> Record Offline Payment
+            </a>
+            {% endif %}
+            <a href="{% url 'fees:apply_adjustment' allocation.id %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil-square me-1"></i> Apply Adjustment / Waiver
+            </a>
+        </div>
+    </div>
+
+    <!-- Financial Ledger Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Gross Billing</span>
+                <h4 class="fw-bold my-1 text-light">${{ allocation.gross_amount|floatformat:2 }}</h4>
+                <span class="badge bg-secondary-subtle text-secondary small">Base Schedule</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Approved Discounts</span>
+                <h4 class="fw-bold my-1 text-info">-${{ allocation.discount_amount|floatformat:2 }}</h4>
+                <span class="badge bg-info-subtle text-info small">{{ allocation.discount_reason|default:"Scholarship" }}</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Verified Collections</span>
+                <h4 class="fw-bold my-1 text-success">${{ allocation.amount_paid|floatformat:2 }}</h4>
+                <span class="badge bg-success-subtle text-success small">Cleared</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">Outstanding Dues</span>
+                <h4 class="fw-bold my-1 {% if allocation.outstanding_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                    ${{ allocation.outstanding_balance|floatformat:2 }}
+                </h4>
+                <span class="badge {% if allocation.status == 'paid' %}bg-success-subtle text-success{% elif allocation.status == 'overdue' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %} small">
+                    {{ allocation.get_status_display }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scheduled Installments -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-calendar3-range text-primary"></i> Installment Schedule
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>#</th>
+                        <th>Milestone Title</th>
+                        <th>Due Date</th>
+                        <th class="text-end">Target Amount</th>
+                        <th class="text-end">Amount Paid</th>
+                        <th class="text-end">Remaining Due</th>
+                        <th class="text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inst in installments %}
+                    <tr>
+                        <td>{{ inst.installment_number }}</td>
+                        <td class="fw-bold text-light">{{ inst.title }}</td>
+                        <td>
+                            {{ inst.due_date|date:"M d, Y" }}
+                            {% if inst.is_past_due %}<span class="badge bg-danger ms-1">Overdue</span>{% endif %}
+                        </td>
+                        <td class="text-end">${{ inst.amount|floatformat:2 }}</td>
+                        <td class="text-end text-success">${{ inst.amount_paid|floatformat:2 }}</td>
+                        <td class="text-end {% if inst.remaining_due > 0 %}text-danger fw-bold{% else %}text-secondary{% endif %}">
+                            ${{ inst.remaining_due|floatformat:2 }}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if inst.status == 'paid' %}bg-success-subtle text-success{% elif inst.status == 'partially_paid' %}bg-info-subtle text-info{% elif inst.status == 'overdue' %}bg-danger-subtle text-danger{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                {{ inst.get_status_display }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary py-3">No installments configured.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Verified Transactions & Official Receipts -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-receipt-cutoff text-success"></i> Payment Transactions &amp; Receipts
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Method</th>
+                        <th>Payer Name</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-center">Status</th>
+                        <th>Recorded By</th>
+                        <th class="text-end">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                    <tr>
+                        <td>{{ p.payment_date|date:"Y-m-d" }}</td>
+                        <td><code>{{ p.transaction_reference }}</code></td>
+                        <td>{{ p.get_payment_method_display }}</td>
+                        <td>{{ p.payer_name }} <span class="text-secondary">({{ p.payer_relationship }})</span></td>
+                        <td class="text-end fw-bold text-success">${{ p.amount|floatformat:2 }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if p.status == 'verified' %}bg-success-subtle text-success{% elif p.status == 'pending' %}bg-warning-subtle text-warning{% elif p.status == 'reversed' %}bg-danger-subtle text-danger{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                {{ p.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ p.recorded_by.username|default:"System" }}</td>
+                        <td class="text-end">
+                            {% if p.receipt and not p.receipt.is_cancelled %}
+                            <a href="{% url 'fees:download_receipt' p.receipt.id %}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-file-earmark-pdf"></i> #{{ p.receipt.receipt_number }}
+                            </a>
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-4">No payments recorded for this account.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Accounting Adjustments & Corrections -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-sliders text-warning"></i> Authorized Adjustments &amp; Corrections
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th class="text-end">Amount</th>
+                        <th>Reason / Rationale</th>
+                        <th>Ref Document</th>
+                        <th>Authorized By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adj in adjustments %}
+                    <tr>
+                        <td>{{ adj.created_at|date:"Y-m-d" }}</td>
+                        <td><span class="badge bg-warning-subtle text-warning">{{ adj.get_adjustment_type_display }}</span></td>
+                        <td class="text-end fw-bold text-light">${{ adj.amount|floatformat:2 }}</td>
+                        <td>{{ adj.reason }}</td>
+                        <td><code>{{ adj.reference_document|default:"N/A" }}</code></td>
+                        <td>{{ adj.authorized_by.get_full_name|default:adj.authorized_by.username }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-secondary py-3">No adjustments or waivers applied.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-shield-check text-info"></i> Immutable Financial Audit Trail
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small font-monospace" style="font-size: 0.82rem;">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Actor</th>
+                        <th>Audit Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in audit_logs %}
+                    <tr>
+                        <td>{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td><span class="badge bg-secondary">{{ log.action }}</span></td>
+                        <td>{{ log.actor.username|default:"System" }}</td>
+                        <td>{{ log.details }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-secondary py-2">No audit entries.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Enter Assessment Marks - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-warning"></span>
+                <span class="small fw-bold text-warning text-uppercase">Score Entry Desk</span>
+            </div>
+            <h2 class="fw-bold mb-1">{{ assessment.title }}</h2>
+            <p class="text-secondary small mb-0">
+                Class: <strong class="text-light">{{ assessment.classroom.name }} ({{ assessment.classroom.code }})</strong> |
+                Subject: <strong class="text-light">{{ assessment.subject_name }}</strong> |
+                Max Marks: <strong class="text-primary">{{ assessment.max_marks }}</strong>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'academics:teacher_assessments' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Assessments List
+            </a>
+            {% if not assessment.is_published %}
+            <form method="POST" action="{% url 'academics:teacher_publish_assessment' assessment.id %}" onsubmit="return confirm('Publish results now? Students and parents will be able to view their scores.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-sm fw-bold">
+                    <i class="bi bi-broadcast me-1"></i> Publish All Results
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Confidentiality Banner -->
+    {% if not assessment.is_published %}
+    <div class="alert alert-warning border-0 rounded-4 d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-shield-lock fs-3"></i>
+        <div>
+            <strong>Confidential Mode Active:</strong> Entered marks are strictly kept hidden from students and parents until you explicitly click "Publish All Results".
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success border-0 rounded-4 d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-check-circle fs-3"></i>
+        <div>
+            <strong>Published:</strong> These results are live and viewable by students and their authorized parents.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Student Roster Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-people text-info"></i> Enrolled Student Scores ({{ student_roster|length }})
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th style="width: 10%;">ROLL</th>
+                        <th style="width: 25%;">STUDENT NAME</th>
+                        <th style="width: 20%;">MARKS OBTAINED (Max {{ assessment.max_marks }})</th>
+                        <th style="width: 10%;">GRADE</th>
+                        <th style="width: 25%;">REMARKS</th>
+                        <th style="width: 10%;">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in student_roster %}
+                    <tr>
+                        <td><code>{{ item.roll_number|default:"-" }}</code></td>
+                        <td>
+                            <strong class="text-light">{{ item.student.get_full_name|default:item.student.username }}</strong>
+                            <div class="small text-secondary">{{ item.student.email }}</div>
+                        </td>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="student_id" value="{{ item.student.id }}">
+                            <td>
+                                <input type="number" name="marks_obtained" step="0.5" min="0" max="{{ assessment.max_marks }}"
+                                       value="{% if item.score %}{{ item.score.marks_obtained }}{% endif %}"
+                                       class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="0.0">
+                            </td>
+                            <td>
+                                {% if item.score %}
+                                <span class="badge {% if item.score.grade == 'F' %}bg-danger{% else %}bg-primary{% endif %} fs-6">
+                                    {{ item.score.grade }}
+                                </span>
+                                {% else %}
+                                <span class="text-secondary">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="text" name="teacher_remarks"
+                                       value="{% if item.score %}{{ item.score.teacher_remarks }}{% endif %}"
+                                       class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Remarks...">
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-save me-1"></i> Save
+                                </button>
+                            </td>
+                        </form>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-secondary">No enrolled students found in this classroom cohort.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

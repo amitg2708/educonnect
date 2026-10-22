@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Complaints & SLA Resolution Report - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Support Resolution Audit</span>
+            </div>
+            <h2 class="fw-bold mb-1">Grievance &amp; Complaint SLA Report</h2>
+            <p class="text-secondary small mb-0">Evaluate case turnaround time, escalation compliance, and user satisfaction ratings.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="?{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}export=csv" class="btn btn-outline-success btn-sm fw-bold">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to CSV
+            </a>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select name="category" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="">All Categories</option>
+                    {% for c in categories %}
+                    <option value="{{ c.code }}" {% if selected_category == c.code %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="">All Statuses</option>
+                    <option value="open" {% if selected_status == 'open' %}selected{% endif %}>Open</option>
+                    <option value="under_review" {% if selected_status == 'under_review' %}selected{% endif %}>Under Review</option>
+                    <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="resolved" {% if selected_status == 'resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="closed" {% if selected_status == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Filter</button>
+                <a href="{% url 'reports:complaints_report' %}" class="btn btn-sm btn-outline-light">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tickets Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">Tickets Roster ({{ total_count }})</h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>TICKET #</th>
+                        <th>SUBMITTER</th>
+                        <th>CATEGORY</th>
+                        <th>SUBJECT</th>
+                        <th>PRIORITY</th>
+                        <th>STATUS</th>
+                        <th>OVERDUE</th>
+                        <th>RATING</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in page_obj %}
+                    <tr>
+                        <td><code>{{ t.ticket_number }}</code></td>
+                        <td>
+                            <strong class="text-light">{{ t.submitter.get_full_name|default:t.submitter.username }}</strong>
+                            <div class="small text-secondary">{{ t.submitter.get_role_display }}</div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ t.category.name }}</span></td>
+                        <td>{{ t.subject|truncatechars:40 }}</td>
+                        <td>
+                            <span class="badge {% if t.priority == 'urgent' or t.priority == 'high' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ t.get_priority_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if t.status == 'resolved' %}
+                            <span class="badge bg-success">Resolved</span>
+                            {% elif t.status == 'in_progress' %}
+                            <span class="badge bg-info">In Progress</span>
+                            {% elif t.status == 'closed' %}
+                            <span class="badge bg-secondary">Closed</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">{{ t.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if t.is_overdue %}
+                            <span class="badge bg-danger">SLA Overdue</span>
+                            {% else %}
+                            <span class="badge bg-success-subtle text-success">Compliant</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if t.satisfaction_rating %}
+                            <span class="text-warning fw-bold">{{ t.satisfaction_rating }} / 5</span>
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center py-4 text-secondary">No complaint tickets match criteria.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <small class="text-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</small>
+            <div class="btn-group btn-group-sm">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="btn btn-outline-light">&larr; Prev</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}" class="btn btn-outline-light">Next &rarr;</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

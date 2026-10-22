@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Members - {{ institution.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom border-secondary-subtle">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary text-uppercase px-2 py-1">Institute Administration</span>
+                <span class="badge bg-secondary-subtle text-secondary">{{ institution.code }}</span>
+            </div>
+            <h1 class="h2 fw-bold text-light mb-1">Member Directory &amp; Staff</h1>
+            <p class="text-secondary mb-0">Manage roles, teachers, students, parents, and pending invitations for <strong>{{ institution.name }}</strong>.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'institutions:send_invitation' %}" class="btn btn-primary d-flex align-items-center gap-2 fw-semibold">
+                <i class="bi bi-person-plus-fill"></i> Invite Member
+            </a>
+            <a href="{% url 'institutions:manage_branches' %}" class="btn btn-outline-light d-flex align-items-center gap-2">
+                <i class="bi bi-diagram-3"></i> Branches
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-secondary bg-dark p-3 text-center">
+                <span class="text-secondary small text-uppercase">Total Members</span>
+                <span class="h3 fw-bold text-primary mb-0">{{ memberships.count }}</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-secondary bg-dark p-3 text-center">
+                <span class="text-secondary small text-uppercase">Pending Invites</span>
+                <span class="h3 fw-bold text-warning mb-0">{{ invitations.count }}</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-secondary bg-dark p-3 text-center">
+                <span class="text-secondary small text-uppercase">Campuses</span>
+                <span class="h3 fw-bold text-info mb-0">{{ institution.branches.count }}</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-secondary bg-dark p-3 text-center">
+                <span class="text-secondary small text-uppercase">Status</span>
+                <span class="h3 fw-bold text-success mb-0">Active</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Members Table -->
+    <div class="card border-secondary bg-dark shadow-sm mb-4">
+        <div class="card-header border-secondary bg-dark py-3 d-flex justify-content-between align-items-center">
+            <h5 class="h6 fw-bold text-light mb-0">
+                <i class="bi bi-people-fill text-primary me-2"></i>Active Members &amp; Roles
+            </h5>
+            <span class="badge bg-secondary-subtle text-secondary">{{ memberships.count }} records</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase border-secondary">
+                        <th>User</th>
+                        <th>Role in {{ institution.code }}</th>
+                        <th>Branch</th>
+                        <th>Email</th>
+                        <th>Joined Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in memberships %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-light fw-bold" style="width: 36px; height: 36px;">
+                                    {{ m.user.username|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-light">{{ m.user.get_full_name|default:m.user.username }}</div>
+                                    <small class="text-secondary">@{{ m.user.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if m.role == 'ADMIN' %}
+                            <span class="badge bg-danger-subtle text-danger px-2 py-1"><i class="bi bi-shield-lock me-1"></i>Admin</span>
+                            {% elif m.role == 'TEACHER' %}
+                            <span class="badge bg-primary-subtle text-primary px-2 py-1"><i class="bi bi-mortarboard me-1"></i>Subject Teacher</span>
+                            {% elif m.role == 'STUDENT' %}
+                            <span class="badge bg-success-subtle text-success px-2 py-1"><i class="bi bi-backpack me-1"></i>Student</span>
+                            {% elif m.role == 'PARENT' %}
+                            <span class="badge bg-info-subtle text-info px-2 py-1"><i class="bi bi-heart me-1"></i>Parent</span>
+                            {% elif m.role == 'ACCOUNTS' %}
+                            <span class="badge bg-warning-subtle text-warning px-2 py-1"><i class="bi bi-cash-stack me-1"></i>Accounts Staff</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary px-2 py-1">{{ m.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if m.branch %}
+                            <span class="badge bg-info-subtle text-info"><i class="bi bi-geo-alt me-1"></i>{{ m.branch.name }}</span>
+                            {% else %}
+                            <span class="text-secondary small">All Branches</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-secondary small">{{ m.user.email|default:"—" }}</td>
+                        <td class="text-secondary small">{{ m.joined_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if m.is_active %}
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger">Suspended</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-secondary">No members found in this institution.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pending Invitations -->
+    {% if invitations %}
+    <div class="card border-secondary bg-dark shadow-sm">
+        <div class="card-header border-secondary bg-dark py-3 d-flex justify-content-between align-items-center">
+            <h5 class="h6 fw-bold text-light mb-0">
+                <i class="bi bi-envelope-paper-fill text-warning me-2"></i>Pending Invitations
+            </h5>
+            <span class="badge bg-warning-subtle text-warning">{{ invitations.count }} pending</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase border-secondary">
+                        <th>Target Email</th>
+                        <th>Invited Role</th>
+                        <th>Assigned Branch</th>
+                        <th>Created</th>
+                        <th>Expires</th>
+                        <th>Direct Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invitations %}
+                    <tr>
+                        <td class="fw-semibold text-light">{{ inv.email }}</td>
+                        <td><span class="badge bg-primary-subtle text-primary">{{ inv.get_role_display }}</span></td>
+                        <td>{{ inv.branch.name|default:"Main Campus" }}</td>
+                        <td class="text-secondary small">{{ inv.created_at|date:"M d, Y" }}</td>
+                        <td class="text-secondary small">{{ inv.expires_at|date:"M d, Y" }}</td>
+                        <td>
+                            <a href="{% url 'institutions:accept_invitation' inv.token %}" class="btn btn-xs btn-outline-info py-0 px-2 small" target="_blank">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Claim Link
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

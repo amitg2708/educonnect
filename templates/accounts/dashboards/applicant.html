@@ -11,62 +11,132 @@
                 <span class="small fw-bold text-danger text-uppercase">Role 6: Applicant</span>
             </div>
             <h2 class="fw-bold mb-1">Admissions &amp; Application Status</h2>
-            <p class="text-secondary small mb-0">Prospective student admission tracking and onboarding checklist</p>
+            <p class="text-secondary small mb-0">Track active program applications, document audits, and admission decisions</p>
         </div>
         <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'admissions:apply' %}" class="btn btn-primary btn-sm fw-semibold">
+                <i class="bi bi-file-earmark-plus me-1"></i> Start New Application
+            </a>
             <a href="{% url 'accounts:profile' %}" class="btn btn-outline-light btn-sm">
                 <i class="bi bi-person-circle me-1"></i> My Profile
             </a>
         </div>
     </div>
 
-    <!-- Application Status Banner -->
-    <div class="card p-4 border-0 rounded-4 hero-card mb-4">
-        <div class="row align-items-center g-3">
-            <div class="col-md-8">
-                <h4 class="fw-bold text-light mb-1">Application for {{ applicant.get_full_name|default:applicant.username }}</h4>
-                <p class="text-secondary small mb-2">
-                    Registered Email: <strong class="text-light">{{ applicant.email }}</strong>
-                </p>
-                <p class="text-secondary small mb-0">
-                    Application ID: <code>APP-{{ applicant.id|stringformat:"s"|slice:":8" }}</code>
-                </p>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <span class="badge bg-warning-subtle text-warning px-3 py-2 border border-warning-subtle">
-                    <i class="bi bi-hourglass-split me-1"></i> Under Review
-                </span>
+    <!-- Active Applications List -->
+    {% if applications %}
+        {% for app in applications %}
+        <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge bg-primary fs-6">{{ app.application_number }}</span>
+                        <span class="text-secondary small">&bull; Submitted {{ app.submitted_at|date:"M d, Y" }}</span>
+                    </div>
+                    <h4 class="fw-bold text-light mb-1">{{ app.course.title }}</h4>
+                    <p class="text-secondary small mb-2">
+                        Department: <strong class="text-light">{{ app.course.department }}</strong> &bull; Level: <strong class="text-light">{{ app.course.get_level_display }}</strong>
+                    </p>
+
+                    {% if app.status == 'action_required' %}
+                    <div class="alert alert-danger border-0 rounded-3 p-3 mb-2 small">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <strong>Action Required:</strong> {{ app.applicant_remarks }}
+                    </div>
+                    {% elif app.status == 'approved' %}
+                    <div class="alert alert-success border-0 rounded-3 p-3 mb-2 small">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        <strong>Admission Approved!</strong> Your application was formally accepted.
+                    </div>
+                    {% elif app.status == 'enrolled' %}
+                    <div class="alert alert-primary border-0 rounded-3 p-3 mb-2 small">
+                        <i class="bi bi-mortarboard-fill me-1"></i>
+                        <strong>Enrolled Student:</strong> Assigned Student ID <code>{{ app.student_id_assigned }}</code>.
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="col-lg-4 text-lg-end">
+                    <div class="mb-3">
+                        {% if app.status == 'submitted' %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2">Submitted &bull; Pending Review</span>
+                        {% elif app.status == 'under_review' %}
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">Under Review</span>
+                        {% elif app.status == 'action_required' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2">Action Required</span>
+                        {% elif app.status == 'approved' %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">Approved</span>
+                        {% elif app.status == 'enrolled' %}
+                        <span class="badge bg-primary text-light px-3 py-2">Enrolled</span>
+                        {% elif app.status == 'rejected' %}
+                        <span class="badge bg-danger text-light px-3 py-2">Rejected</span>
+                        {% else %}
+                        <span class="badge bg-secondary px-3 py-2">{{ app.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-lg-end gap-2">
+                        {% if app.is_editable %}
+                        <a href="{% url 'admissions:edit_application' app.application_number %}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil-square me-1"></i> Edit Details
+                        </a>
+                        <a href="{% url 'admissions:upload_document' app.application_number %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-upload me-1"></i> Upload Docs
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'admissions:application_detail' app.application_number %}" class="btn btn-outline-light btn-sm">
+                            View Dossier <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+        {% endfor %}
+    {% else %}
+        <!-- Empty State Card -->
+        <div class="card p-5 border-0 rounded-4 feature-card shadow-sm text-center mb-4">
+            <i class="bi bi-journal-plus text-primary display-3 mb-3"></i>
+            <h4 class="fw-bold text-light mb-2">No Applications Submitted Yet</h4>
+            <p class="text-secondary small max-w-md mx-auto mb-4">
+                You have not submitted an admission application to EduConnect. Check out our academic program prerequisites and start your online application today.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{% url 'admissions:eligibility' %}" class="btn btn-outline-light btn-sm px-3">
+                    <i class="bi bi-search me-1"></i> Browse Course Eligibility
+                </a>
+                <a href="{% url 'admissions:apply' %}" class="btn btn-primary btn-sm px-3 fw-semibold">
+                    <i class="bi bi-file-earmark-plus me-1"></i> Apply for Admission
+                </a>
+            </div>
+        </div>
+    {% endif %}
 
-    <!-- Application Steps -->
-    <div class="row g-4 mb-4">
+    <!-- 3-Step Admissions Roadmap Checklist -->
+    <div class="row g-4">
         <div class="col-md-4">
             <div class="card p-4 border-0 rounded-4 feature-card h-100">
                 <div class="d-flex align-items-center gap-2 text-success mb-2">
                     <i class="bi bi-check-circle-fill fs-4"></i>
-                    <h6 class="fw-bold text-light mb-0">Step 1: Profile Creation</h6>
+                    <h6 class="fw-bold text-light mb-0">Step 1: Application Submission</h6>
                 </div>
-                <p class="text-secondary small mb-0">Online user account registered and email registered.</p>
+                <p class="text-secondary small mb-0">Select your program, provide personal &amp; guardian credentials, and upload transcripts.</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card p-4 border-0 rounded-4 feature-card h-100">
                 <div class="d-flex align-items-center gap-2 text-warning mb-2">
                     <i class="bi bi-clock-fill fs-4"></i>
-                    <h6 class="fw-bold text-light mb-0">Step 2: Document Review</h6>
+                    <h6 class="fw-bold text-light mb-0">Step 2: Staff Audit &amp; Review</h6>
                 </div>
-                <p class="text-secondary small mb-0">Transcripts and identification papers being audited by Admissions staff.</p>
+                <p class="text-secondary small mb-0">Admissions officers audit transcripts. If items are missing, an Action Required alert will appear.</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card p-4 border-0 rounded-4 feature-card h-100">
-                <div class="d-flex align-items-center gap-2 text-secondary mb-2">
-                    <i class="bi bi-circle fs-4"></i>
-                    <h6 class="fw-bold text-light mb-0">Step 3: Enrollment Offer</h6>
+                <div class="d-flex align-items-center gap-2 text-primary mb-2">
+                    <i class="bi bi-mortarboard-fill fs-4"></i>
+                    <h6 class="fw-bold text-light mb-0">Step 3: Enrollment &amp; Student ID</h6>
                 </div>
-                <p class="text-secondary small mb-0">Upon acceptance, role updates to Student with enrolled Student ID.</p>
+                <p class="text-secondary small mb-0">Upon approval, staff converts your account to an active Student with assigned Student ID.</p>
             </div>
         </div>
     </div>

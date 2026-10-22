@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Course Catalogue - {{ institution.name|default:"EduConnect" }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Academic Curriculum</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-light">Course Catalogue &amp; Programs</h2>
+            <p class="text-secondary small mb-0">Manage school tuition, junior college streams, competitive exam coaching, and board preparation courses.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'academics:admin_batches' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-collection-play me-1"></i> Batches Desk
+            </a>
+            <a href="{% url 'academics:admin_course_create' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i> Add Course Offering
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Card -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control bg-dark border-secondary text-light" placeholder="Search by title, code, board, exam..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Categories</option>
+                    {% for code, label in category_choices %}
+                    <option value="{{ code }}" {% if selected_category == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="stream" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Streams</option>
+                    {% for code, label in stream_choices %}
+                    <option value="{{ code }}" {% if selected_stream == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active Only</option>
+                    <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-1 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-info w-100">Filter</button>
+                {% if search_query or selected_category or selected_stream or selected_status %}
+                <a href="{% url 'academics:admin_courses' %}" class="btn btn-sm btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Course Cards / Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">All Catalogue Offerings ({{ total_courses }})</h5>
+            <span class="text-secondary small">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </div>
+
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Course / Code</th>
+                        <th>Category</th>
+                        <th>Target Class &amp; Stream</th>
+                        <th>Board / Exam Scheme</th>
+                        <th>Fee &amp; Billing</th>
+                        <th>Batches</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in page_obj %}
+                    <tr>
+                        <td>
+                            <strong class="text-light d-block">{{ c.title }}</strong>
+                            <span class="badge bg-secondary-subtle text-light small font-monospace">{{ c.code }}</span>
+                            <span class="text-secondary small ms-1">{{ c.duration }}</span>
+                        </td>
+                        <td>
+                            <span class="badge {% if c.category == 'school_tuition' %}bg-primary-subtle text-primary{% elif c.category == 'junior_college' %}bg-info-subtle text-info{% elif c.category == 'competitive_exam' %}bg-warning-subtle text-warning{% elif c.category == 'board_prep' %}bg-danger-subtle text-danger{% else %}bg-secondary-subtle text-light{% endif %}">
+                                {{ c.get_category_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="d-block text-light">{{ c.target_class|default:"All Classes" }}</span>
+                            <span class="text-secondary small">{{ c.get_stream_display }}</span>
+                        </td>
+                        <td>
+                            <span class="d-block text-light">{{ c.board|default:"Any Board" }}</span>
+                            {% if c.examination_scheme %}
+                            <span class="badge bg-dark border border-secondary text-info small">{{ c.examination_scheme }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong class="text-success">${{ c.fee_per_term }}</strong>
+                            <span class="text-secondary small d-block">{{ c.fee_period }}</span>
+                        </td>
+                        <td>
+                            <a href="{% url 'academics:admin_batches' %}?course={{ c.id }}" class="badge bg-dark border border-secondary text-light text-decoration-none">
+                                {{ c.coaching_batches.count }} Batches
+                            </a>
+                        </td>
+                        <td>
+                            {% if c.is_active %}
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'academics:admin_course_edit' c.id %}" class="btn btn-sm btn-outline-light" title="Edit Course">
+                                <i class="bi bi-pencil me-1"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4" aria-label="Course list pagination">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link bg-dark border-secondary text-light" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_stream %}&stream={{ selected_stream }}{% endif %}">&laquo;</a>
+                </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link {% if page_obj.number == num %}bg-primary border-primary text-white{% else %}bg-dark border-secondary text-light{% endif %}" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_stream %}&stream={{ selected_stream }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark border-secondary text-light" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_stream %}&stream={{ selected_stream }}{% endif %}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-book text-secondary" style="font-size: 3rem;"></i>
+            <h5 class="text-secondary mt-3">No course offerings found</h5>
+            <p class="text-secondary small">Start by defining tuition programs, junior college streams, or competitive exams.</p>
+            <a href="{% url 'academics:admin_course_create' %}" class="btn btn-sm btn-primary mt-2">
+                <i class="bi bi-plus-lg me-1"></i> Add First Course
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

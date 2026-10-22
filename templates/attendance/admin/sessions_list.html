@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Sessions - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'attendance:admin_dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Attendance Desk
+            </a>
+            <h2 class="fw-bold mb-1">Academic Sessions &amp; Terms</h2>
+            <p class="text-secondary small mb-0">Define academic terms, semester calendars, and session date boundaries.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sessions Table -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar3 text-primary"></i> Academic Sessions
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Term / Session Name</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in sessions %}
+                            <tr>
+                                <td class="fw-bold text-light">{{ s.name }}</td>
+                                <td>{{ s.start_date }}</td>
+                                <td>{{ s.end_date }}</td>
+                                <td class="text-center">
+                                    {% if s.is_current %}
+                                    <span class="badge bg-success-subtle text-success">Current Term</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">Archived</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-4">No academic sessions defined.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Session Form -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-plus-circle text-success"></i> Create Academic Session
+                </h5>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Session Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Start Date <span class="text-danger">*</span></label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">End Date <span class="text-danger">*</span></label>
+                        {{ form.end_date }}
+                    </div>
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.is_current }}
+                            <label class="form-check-label text-light small fw-bold" for="{{ form.is_current.id_for_label }}">
+                                Set as Current Active Term
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Save Academic Session</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

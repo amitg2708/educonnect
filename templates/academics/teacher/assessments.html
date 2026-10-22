@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Assessments & Examinations - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-success"></span>
+                <span class="small fw-bold text-success text-uppercase">Examinations &amp; Tests</span>
+            </div>
+            <h2 class="fw-bold mb-1">Academic Assessments &amp; Results</h2>
+            <p class="text-secondary small mb-0">Create exams, input marks confidentially, and publish official results to students and parents.</p>
+        </div>
+        <a href="{% url 'academics:teacher_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Academic Hub
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Create Assessment Form -->
+        <div class="col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-card-checklist text-primary"></i> Create Assessment
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Classroom Cohort *</label>
+                        {{ form.classroom }}
+                        {% if form.classroom.errors %}<div class="text-danger small">{{ form.classroom.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Subject Name *</label>
+                        {{ form.subject_name }}
+                        {% if form.subject_name.errors %}<div class="text-danger small">{{ form.subject_name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Assessment Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Assessment Type *</label>
+                        {{ form.assessment_type }}
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-bold">Max Marks *</label>
+                            {{ form.max_marks }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-bold">Weightage (%) *</label>
+                            {{ form.weightage_percent }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Date Conducted *</label>
+                        {{ form.date_conducted }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-check-circle me-1"></i> Save Assessment
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assessments List -->
+        <div class="col-lg-8">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-award text-success"></i> Configured Assessments ({{ assessments.count }})
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TITLE &amp; TYPE</th>
+                                <th>CLASS</th>
+                                <th>MARKS / WEIGHT</th>
+                                <th>STATUS</th>
+                                <th>ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asm in assessments %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ asm.title }}</strong>
+                                    <div class="small text-secondary">{{ asm.subject_name }} | {{ asm.get_assessment_type_display }}</div>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ asm.classroom.code }}</span></td>
+                                <td>
+                                    <span class="text-light fw-bold">{{ asm.max_marks }} pts</span>
+                                    <div class="small text-secondary">{{ asm.weightage_percent }}% weight</div>
+                                </td>
+                                <td>
+                                    {% if asm.is_published %}
+                                    <span class="badge bg-success">Published</span>
+                                    <div class="small text-secondary">{{ asm.published_at|date:"M d, H:i" }}</div>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Confidential Draft</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        <a href="{% url 'academics:teacher_enter_marks' asm.id %}" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-pencil me-1"></i> Enter Marks
+                                        </a>
+                                        {% if not asm.is_published %}
+                                        <form method="POST" action="{% url 'academics:teacher_publish_assessment' asm.id %}" onsubmit="return confirm('Publish results? Once published, marks will be immediately visible to students and parents.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success w-100">
+                                                <i class="bi bi-broadcast me-1"></i> Publish
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-secondary">No assessments created yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

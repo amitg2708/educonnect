@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Announcements - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Campus Broadcast</span>
+            </div>
+            <h2 class="fw-bold mb-1">Campus Announcements &amp; Circulars</h2>
+            <p class="text-secondary small mb-0">Publish official notices, target cohorts or roles, and specify expiration dates.</p>
+        </div>
+        <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Admin Portal
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Publish Form -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-megaphone text-primary"></i> Publish New Notice
+                </h5>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Notice Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Content &amp; Body *</label>
+                        {{ form.content }}
+                        {% if form.content.errors %}<div class="text-danger small">{{ form.content.errors }}</div>{% endif %}
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-12">
+                            <label class="form-label text-secondary small fw-bold">Target Role *</label>
+                            {{ form.target_role }}
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-bold">Classroom Cohort (Optional)</label>
+                            {{ form.target_classroom }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-bold">Coaching Batch (Optional)</label>
+                            {{ form.target_batch }}
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-bold">Publish Date *</label>
+                            {{ form.publish_date }}
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-secondary small fw-bold">Expiry Date (Optional)</label>
+                            {{ form.expiry_date }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Attachment (PDF, DOC, Images up to 10MB)</label>
+                        {{ form.attachment }}
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        {{ form.is_published }}
+                        <label class="form-check-label text-light small fw-bold" for="{{ form.is_published.id_for_label }}">
+                            Publish Notice
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-broadcast me-1"></i> Broadcast Announcement
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Announcements Roster -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-text text-info"></i> Broadcast History ({{ announcements.count }})
+                </h5>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TITLE</th>
+                                <th>TARGET</th>
+                                <th>PUBLISHED</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in announcements %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ a.title }}</strong>
+                                    {% if a.attachment %}
+                                    <span class="badge bg-secondary ms-1"><i class="bi bi-paperclip"></i></span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary">{{ a.get_target_role_display }}</span>
+                                    {% if a.target_classroom %}
+                                    <div class="small text-secondary">{{ a.target_classroom.code }}</div>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-secondary">{{ a.publish_date|date:"M d, Y" }}</small></td>
+                                <td>
+                                    {% if a.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Expired / Draft</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-secondary">No announcements published yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

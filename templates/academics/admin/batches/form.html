@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_create %}Create Coaching Batch{% else %}Edit {{ batch.name }}{% endif %} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'academics:admin_batches' %}" class="btn btn-outline-light btn-sm mb-2">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Batches
+                    </a>
+                    <h2 class="fw-bold mb-0 text-light">{% if is_create %}Create Coaching Batch{% else %}Edit Batch: {{ batch.name }}{% endif %}</h2>
+                    <p class="text-secondary small mb-0">Configure curriculum cohort, branch location, start/end dates, capacity, and waitlist limits.</p>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-lg">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-3 mb-4">
+                        {% for err in form.non_field_errors %}
+                        <div><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <!-- Batch Identification -->
+                        <div class="col-md-8">
+                            <label class="form-label text-secondary small fw-semibold">Batch Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Batch Code *</label>
+                            {{ form.code }}
+                            {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Core Curriculum & Session -->
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Course / Program *</label>
+                            {{ form.course }}
+                            {% if form.course.errors %}<div class="text-danger small mt-1">{{ form.course.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Academic Session *</label>
+                            {{ form.academic_session }}
+                            {% if form.academic_session.errors %}<div class="text-danger small mt-1">{{ form.academic_session.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Branch & Classroom -->
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Campus Branch</label>
+                            {{ form.branch }}
+                            {% if form.branch.errors %}<div class="text-danger small mt-1">{{ form.branch.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Classroom / Hall</label>
+                            {{ form.classroom }}
+                            {% if form.classroom.errors %}<div class="text-danger small mt-1">{{ form.classroom.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Class, Stream, Board Configuration -->
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Target Class</label>
+                            {{ form.target_class }}
+                            <div class="form-text text-secondary small">e.g. Class 10, Class 11, Class 12</div>
+                            {% if form.target_class.errors %}<div class="text-danger small mt-1">{{ form.target_class.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Stream</label>
+                            {{ form.stream }}
+                            <div class="form-text text-secondary small">e.g. Science, Commerce, Arts</div>
+                            {% if form.stream.errors %}<div class="text-danger small mt-1">{{ form.stream.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Education Board</label>
+                            {{ form.board }}
+                            <div class="form-text text-secondary small">e.g. CBSE, ICSE, State Board</div>
+                            {% if form.board.errors %}<div class="text-danger small mt-1">{{ form.board.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Dates & Status -->
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Start Date *</label>
+                            {{ form.start_date }}
+                            {% if form.start_date.errors %}<div class="text-danger small mt-1">{{ form.start_date.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">End Date *</label>
+                            {{ form.end_date }}
+                            {% if form.end_date.errors %}<div class="text-danger small mt-1">{{ form.end_date.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Batch Status *</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}<div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Capacity & Waitlist Constraints -->
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Max Student Capacity *</label>
+                            {{ form.capacity }}
+                            <div class="form-text text-secondary small">Seat limit before waitlisting triggers</div>
+                            {% if form.capacity.errors %}<div class="text-danger small mt-1">{{ form.capacity.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Max Waitlist Capacity</label>
+                            {{ form.max_waitlist_capacity }}
+                            <div class="form-text text-secondary small">Buffer seats for waitlist queue</div>
+                            {% if form.max_waitlist_capacity.errors %}<div class="text-danger small mt-1">{{ form.max_waitlist_capacity.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center">
+                            <div class="form-check form-switch mt-3">
+                                {{ form.enable_waitlist }}
+                                <label class="form-check-label text-light small fw-semibold ms-2">Enable Waitlisting when Full</label>
+                            </div>
+                        </div>
+
+                        <!-- Fee Override & Notes -->
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Batch Fee Override ($)</label>
+                            {{ form.fee_override }}
+                            <div class="form-text text-secondary small">Leave blank to inherit standard Course fee</div>
+                            {% if form.fee_override.errors %}<div class="text-danger small mt-1">{{ form.fee_override.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Notes / Operational Instructions</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
+                        <a href="{% url 'academics:admin_batches' %}" class="btn btn-outline-light">Cancel</a>
+                        <button type="submit" class="btn btn-warning text-dark fw-bold px-4">
+                            <i class="bi bi-check-lg me-1"></i> {% if is_create %}Create Batch{% else %}Save Batch Changes{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Student Batch - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'academics:admin_enrollments' %}" class="btn btn-outline-light btn-sm mb-2">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Enrolments
+                    </a>
+                    <h2 class="fw-bold mb-0 text-light">Transfer Student Between Batches</h2>
+                    <p class="text-secondary small mb-0">Seamlessly move student between cohorts, verifying compatibility and opening freed seats.</p>
+                </div>
+            </div>
+
+            <!-- Current Enrollment Info Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-lg mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small text-uppercase fw-semibold">CURRENT ENROLMENT</span>
+                        <h4 class="fw-bold text-light mb-1 mt-1">{{ enrollment.student.get_full_name|default:enrollment.student.username }}</h4>
+                        <div class="text-secondary small">
+                            Batch: <strong class="text-warning">{{ enrollment.batch.name }}</strong> [{{ enrollment.batch.code }}]
+                        </div>
+                        <div class="text-secondary small">
+                            Course: {{ enrollment.batch.course.title }} &bull; Branch: {{ enrollment.batch.branch.name|default:"Main Campus" }}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-success-subtle text-success fs-6">{{ enrollment.get_status_display }}</span>
+                        <div class="text-secondary small font-monospace mt-1">{{ enrollment.enrollment_number }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transfer Form -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-lg">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label text-secondary small fw-semibold">Destination Batch *</label>
+                        {{ form.target_batch }}
+                        <div class="form-text text-secondary small">Batches in {{ institution.name }} available for transfer.</div>
+                        {% if form.target_batch.errors %}<div class="text-danger small mt-1">{{ form.target_batch.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-secondary small fw-semibold">Reason for Transfer</label>
+                        {{ form.reason }}
+                        <div class="form-text text-secondary small">e.g. Schedule clashes with school, stream transfer, or branch relocation.</div>
+                        {% if form.reason.errors %}<div class="text-danger small mt-1">{{ form.reason.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="alert alert-info rounded-3 small mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Upon transfer, this student's current enrollment will be marked as <strong>Transferred</strong> with today's end date, and they will be enrolled in the target batch. A seat will immediately free up in <strong>{{ enrollment.batch.name }}</strong> and promote any waitlisted student automatically.
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top border-secondary">
+                        <a href="{% url 'academics:admin_enrollments' %}" class="btn btn-outline-light">Cancel</a>
+                        <button type="submit" class="btn btn-info text-dark fw-bold px-4">
+                            <i class="bi bi-arrow-left-right me-1"></i> Execute Batch Transfer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

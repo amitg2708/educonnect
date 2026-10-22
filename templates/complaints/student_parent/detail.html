@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket {{ ticket.ticket_number }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                <div>
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                        <code>{{ ticket.ticket_number }}</code>
+                        <span class="small fw-bold text-secondary text-uppercase">{{ ticket.category.name }}</span>
+                    </div>
+                    <h3 class="fw-bold mb-1">{{ ticket.subject }}</h3>
+                    <small class="text-secondary">Submitted on {{ ticket.created_at|date:"M d, Y H:i" }}</small>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge {% if ticket.status == 'resolved' %}bg-success{% elif ticket.status == 'in_progress' %}bg-info{% elif ticket.status == 'closed' %}bg-secondary{% else %}bg-warning text-dark{% endif %} fs-6 px-3 py-2">
+                        {{ ticket.get_status_display }}
+                    </span>
+                    <a href="{% url 'complaints:my_tickets_list' %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Tickets List
+                    </a>
+                </div>
+            </div>
+
+            <!-- Original Issue Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <h6 class="text-secondary small fw-bold mb-2">Original Request Details:</h6>
+                <p class="text-light mb-3" style="white-space: pre-wrap;">{{ ticket.description }}</p>
+
+                {% if ticket.attachment %}
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-dark border border-secondary-subtle">
+                    <span class="small text-secondary">
+                        <i class="bi bi-paperclip me-1"></i> Attached Documentation
+                    </span>
+                    <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-download me-1"></i> View / Download
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Official Resolution Notice (if resolved or closed) -->
+            {% if ticket.resolution_details %}
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4 border border-success-subtle">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold text-success mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill"></i> Official Resolution
+                    </h5>
+                    {% if ticket.resolved_at %}
+                    <small class="text-secondary">{{ ticket.resolved_at|date:"M d, Y H:i" }}</small>
+                    {% endif %}
+                </div>
+                <p class="text-light mb-3" style="white-space: pre-wrap;">{{ ticket.resolution_details }}</p>
+
+                <!-- Feedback Form if not yet submitted -->
+                {% if not ticket.satisfaction_rating %}
+                <div class="p-3 rounded-3 bg-dark border border-secondary-subtle mt-2">
+                    <h6 class="fw-bold text-warning mb-2">Rate Your Resolution Experience:</h6>
+                    <form method="POST" action="{% url 'complaints:submit_feedback' ticket.id %}">
+                        {% csrf_token %}
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-5">
+                                {{ feedback_form.satisfaction_rating }}
+                            </div>
+                            <div class="col-md-7">
+                                {{ feedback_form.feedback_comment }}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-warning fw-bold">
+                            <i class="bi bi-star-fill me-1"></i> Submit Satisfaction Rating
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="small text-secondary mt-2">
+                    <i class="bi bi-star-fill text-warning me-1"></i>
+                    You rated this resolution: <strong class="text-light">{{ ticket.get_satisfaction_rating_display }}</strong>
+                    {% if ticket.feedback_comment %}<em>"{{ ticket.feedback_comment }}"</em>{% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Reopen Ticket Option -->
+                {% if ticket.status == 'resolved' %}
+                <div class="mt-3 pt-3 border-top border-secondary-subtle d-flex justify-content-between align-items-center">
+                    <span class="text-secondary small">Issue not completely resolved?</span>
+                    <button class="btn btn-outline-warning btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#reopenCollapse">
+                        <i class="bi bi-arrow-repeat me-1"></i> Reopen Ticket
+                    </button>
+                </div>
+                <div class="collapse mt-3" id="reopenCollapse">
+                    <div class="p-3 rounded-3 bg-dark border border-warning">
+                        <h6 class="text-warning fw-bold mb-2">Reason for Reopening:</h6>
+                        <form method="POST" action="{% url 'complaints:reopen_ticket' ticket.id %}">
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                {{ reopen_form.reason }}
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-warning fw-bold">
+                                Confirm Reopen Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Communication Timeline -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-left-dots text-info"></i> Ticket Updates &amp; Communications
+                </h5>
+
+                <div class="d-flex flex-column gap-3 mb-4">
+                    {% for c in comments %}
+                    <div class="p-3 rounded-3 {% if c.author == ticket.submitter %}bg-dark border border-secondary-subtle ms-4{% else %}bg-secondary bg-opacity-10 border border-info border-opacity-25 me-4{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="{% if c.author == ticket.submitter %}text-light{% else %}text-info{% endif %}">
+                                {{ c.author.get_full_name|default:c.author.username }}
+                                {% if c.author != ticket.submitter %}<span class="badge bg-info-subtle text-info ms-1">Staff Response</span>{% endif %}
+                            </strong>
+                            <small class="text-secondary">{{ c.created_at|date:"M d, H:i" }}</small>
+                        </div>
+                        <p class="text-light small mb-0" style="white-space: pre-wrap;">{{ c.message }}</p>
+                        {% if c.attachment %}
+                        <div class="mt-2 pt-2 border-top border-secondary-subtle">
+                            <a href="{{ c.attachment.url }}" target="_blank" class="small text-info text-decoration-none">
+                                <i class="bi bi-paperclip me-1"></i> Download Attachment
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-secondary text-center py-3">No additional messages yet.</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Add Comment Form -->
+                {% if ticket.status != 'closed' %}
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="post_comment" value="1">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Send a Message or Additional Details</label>
+                        {{ comment_form.message }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Add Document / Photo (Optional)</label>
+                        {{ comment_form.attachment }}
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold">
+                        <i class="bi bi-send me-1"></i> Post Message
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

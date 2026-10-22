@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Attendance Desk - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Faculty Attendance Desk</span>
+            </div>
+            <h2 class="fw-bold mb-1">Assigned Classes &amp; Daily Registers</h2>
+            <p class="text-secondary small mb-0">Select an authorized class assignment to mark daily student rosters or review past sessions.</p>
+        </div>
+        <div>
+            <a href="{% url 'accounts:teacher_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Faculty Portal
+            </a>
+        </div>
+    </div>
+
+    <!-- Assigned Classes Cards Grid -->
+    <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+        <i class="bi bi-person-video3 text-primary"></i> Your Authorized Teaching Assignments ({{ total_assignments }})
+    </h5>
+
+    <div class="row g-4 mb-5">
+        {% for a in assignments %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                        <code>{{ a.classroom.code }}</code>
+                    </span>
+                    <span class="badge bg-success-subtle text-success">Authorized</span>
+                </div>
+
+                <h4 class="fw-bold mb-1 text-light">{{ a.subject_name }}</h4>
+                <p class="text-secondary small mb-2">Class: <strong class="text-light">{{ a.classroom.name }}</strong></p>
+                <p class="text-secondary small mb-3">
+                    <i class="bi bi-geo-alt me-1 text-info"></i> {{ a.classroom.room_number|default:"Room TBA" }} |
+                    <i class="bi bi-people me-1 text-success"></i> {{ a.classroom.enrollments.count }} Enrolled Students
+                </p>
+
+                <div class="border-top border-secondary-subtle pt-3 mt-auto d-flex gap-2">
+                    <a href="{% url 'attendance:teacher_mark' a.id %}" class="btn btn-primary btn-sm w-100 fw-bold">
+                        <i class="bi bi-check2-circle me-1"></i> Mark Today
+                    </a>
+                    <a href="{% url 'attendance:teacher_session_history' a.id %}" class="btn btn-outline-light btn-sm w-100">
+                        <i class="bi bi-clock-history me-1"></i> History
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card p-5 border-0 rounded-4 feature-card text-center text-secondary">
+                <i class="bi bi-calendar-x fs-1 mb-2 d-block text-secondary"></i>
+                <h5>No Teaching Assignments Configured</h5>
+                <p class="small mb-0">Contact administration to assign your courses and classroom sections.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Attendance Sessions Conducted -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-journal-check text-success"></i> Recent Sessions Marked By You
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date</th>
+                        <th>Classroom</th>
+                        <th>Subject</th>
+                        <th>Period</th>
+                        <th>Lesson Topic</th>
+                        <th class="text-end">Roster Count</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in recent_sessions %}
+                    <tr>
+                        <td>{{ s.session_date|date:"Y-m-d" }}</td>
+                        <td><strong>{{ s.classroom.name }}</strong></td>
+                        <td>{{ s.subject_name }}</td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">{{ s.session_period }}</span></td>
+                        <td>{{ s.topic|default:"Standard Curriculum Lecture" }}</td>
+                        <td class="text-end fw-bold text-light">{{ s.records.count }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'attendance:teacher_edit_session' s.id %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-pencil me-1"></i> Review / Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary py-4">No sessions marked yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ structure.title }} - Component Breakdown{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'fees:structure_list' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Structures
+            </a>
+            <h2 class="fw-bold mb-1">{{ structure.title }}</h2>
+            <p class="text-secondary small mb-0">Code: <code>{{ structure.code }}</code> | Year: <strong>{{ structure.academic_year }}</strong> | Course: <strong>{{ structure.course.title|default:"All Courses" }}</strong></p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'fees:assign_fees' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-people-fill me-1"></i> Assign to Students
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Components List -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-list-check text-info"></i> Fee Component Line Items
+                    </h5>
+                    <span class="badge bg-success-subtle text-success fs-6 fw-bold">
+                        Total: ${{ structure.total_amount|floatformat:2 }}
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Category Component</th>
+                                <th>Code</th>
+                                <th class="text-end">Amount ($)</th>
+                                <th class="text-center">Optional</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td class="fw-bold text-light">{{ item.category.name }}</td>
+                                <td><code>{{ item.category.code }}</code></td>
+                                <td class="text-end fw-bold text-success">${{ item.amount|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    {% if item.is_optional %}
+                                    <span class="badge bg-warning-subtle text-warning">Optional</span>
+                                    {% else %}
+                                    <span class="badge bg-primary-subtle text-primary">Mandatory</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-4">
+                                    No component line items added yet. Use the form on the right to add components.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Component Form -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-plus-circle text-primary"></i> Add Fee Component Item
+                </h5>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Fee Category</label>
+                        {{ item_form.category }}
+                        {% if item_form.category.errors %}<div class="text-danger small">{{ item_form.category.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Component Amount ($)</label>
+                        {{ item_form.amount }}
+                        {% if item_form.amount.errors %}<div class="text-danger small">{{ item_form.amount.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ item_form.is_optional }}
+                            <label class="form-check-label text-light small fw-bold" for="{{ item_form.is_optional.id_for_label }}">
+                                Optional Add-on (Transport, Lab, etc.)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                        <i class="bi bi-plus-lg me-1"></i> Add to Structure &amp; Recalculate Total
+                    </button>
+                </form>
+
+                <div class="border-top border-secondary-subtle pt-3 mt-4 small text-secondary">
+                    <i class="bi bi-info-circle me-1 text-info"></i> Total fee structure amount automatically updates when components are added.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

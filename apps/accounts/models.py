@@ -41,6 +41,14 @@ class User(AbstractUser):
     Primary User model for EduConnect with role-based attributes and MongoDB compatibility.
     """
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="direct_users",
+        help_text="Primary or initial institution affiliation.",
+    )
     role = models.CharField(
         max_length=20,
         choices=Role.choices,
@@ -121,10 +129,22 @@ class User(AbstractUser):
     def is_applicant_role(self):
         return self.role == Role.APPLICANT
 
-    def get_dashboard_url_name(self):
+    def get_membership_for_institution(self, institution):
+        """Returns the active membership of this user for a given institution."""
+        if not institution:
+            return None
+        return self.institution_memberships.filter(institution=institution, is_active=True).first()
+
+    def get_role_for_institution(self, institution):
+        """Returns the specific role held by the user at the given institution."""
+        membership = self.get_membership_for_institution(institution)
+        return membership.role if membership else self.role
+
+    def get_dashboard_url_name(self, role=None):
         """
-        Return the designated dashboard url name based on the role.
+        Return the designated dashboard url name based on the specified or active role.
         """
+        target_role = role or self.role
         role_dashboard_map = {
             Role.ADMIN: "accounts:admin_dashboard",
             Role.TEACHER: "accounts:teacher_dashboard",
@@ -133,15 +153,41 @@ class User(AbstractUser):
             Role.ACCOUNTS: "accounts:accounts_dashboard",
             Role.APPLICANT: "accounts:applicant_dashboard",
         }
-        return role_dashboard_map.get(self.role, "core:index")
+        return role_dashboard_map.get(target_role, "core:index")
+
+    @property
+    def memberships(self):
+        return self.institution_memberships
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.institution_id:
+            from apps.institutions.models import InstitutionMembership
+            InstitutionMembership.objects.get_or_create(
+                user=self,
+                institution_id=self.institution_id,
+                defaults={
+                    "role": self.role,
+                    "is_default": True,
+                    "is_active": True,
+                },
+            )
 
 
 class ParentStudentLink(models.Model):
     """
     Explicit authorization link between a Parent and their child/student.
-    Enforces that parents only access permitted children's data.
+    Scoped per-institution so parents only access authorized child records within that institute.
     """
 
+    institution = models.ForeignKey(
+        "institutions.Institution",
+        on_delete=models.CASCADE,
+        related_name="parent_student_links",
+        null=True,
+        blank=True,
+        help_text="Institution context for this parental authorization.",
+    )
     parent = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -175,7 +221,14 @@ class ParentStudentLink(models.Model):
     class Meta:
         verbose_name = "Parent-Student Link"
         verbose_name_plural = "Parent-Student Links"
-        unique_together = ("parent", "student")
+        unique_together = ("institution", "parent", "student")
+        indexes = [
+            models.Index(fields=["institution", "parent"]),
+            models.Index(fields=["institution", "student"]),
+        ]
 
     def __str__(self):
-        return f"{self.parent.get_full_name() or self.parent.username} -> {self.student.get_full_name() or self.student.username} ({self.get_relationship_type_display()})"
+        inst_label = f" [{self.institution.code}]" if self.institution else ""
+        parent_name = self.parent.get_full_name() or self.parent.username
+        student_name = self.student.get_full_name() or self.student.username
+        return f"{parent_name} -> {student_name} ({self.get_relationship_type_display()}){inst_label}"

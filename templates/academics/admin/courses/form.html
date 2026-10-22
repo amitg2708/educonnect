@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_create %}Create Course Offering{% else %}Edit {{ course.title }}{% endif %} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'academics:admin_courses' %}" class="btn btn-outline-light btn-sm mb-2">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Catalogue
+                    </a>
+                    <h2 class="fw-bold mb-0 text-light">{% if is_create %}Add Course Offering{% else %}Edit Course: {{ course.title }}{% endif %}</h2>
+                    <p class="text-secondary small mb-0">Configure curriculum, eligibility, board, fees, and examination scheme.</p>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-lg">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-3 mb-4">
+                        {% for err in form.non_field_errors %}
+                        <div><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ err }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <!-- Basic Info -->
+                        <div class="col-md-8">
+                            <label class="form-label text-secondary small fw-semibold">Course Title *</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Course Code *</label>
+                            {{ form.code }}
+                            {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Category & Target Class -->
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Course Category *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Target Class / Grade</label>
+                            {{ form.target_class }}
+                            <div class="form-text text-secondary small">e.g. Class 10, Class 11, Class 12, Class 8</div>
+                            {% if form.target_class.errors %}<div class="text-danger small mt-1">{{ form.target_class.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Academic Stream</label>
+                            {{ form.stream }}
+                            {% if form.stream.errors %}<div class="text-danger small mt-1">{{ form.stream.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Board & Examination Scheme -->
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Education Board / Syllabus</label>
+                            {{ form.board }}
+                            <div class="form-text text-secondary small">e.g. CBSE, ICSE, State Board, IB (configurable)</div>
+                            {% if form.board.errors %}<div class="text-danger small mt-1">{{ form.board.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Target Examination Scheme</label>
+                            {{ form.examination_scheme }}
+                            <div class="form-text text-secondary small">e.g. JEE Main/Advanced, NEET-UG, CUET, Board Exam</div>
+                            {% if form.examination_scheme.errors %}<div class="text-danger small mt-1">{{ form.examination_scheme.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Department, Level, Duration -->
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Department *</label>
+                            {{ form.department }}
+                            {% if form.department.errors %}<div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Academic Level</label>
+                            {{ form.level }}
+                            {% if form.level.errors %}<div class="text-danger small mt-1">{{ form.level.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-semibold">Course Duration *</label>
+                            {{ form.duration }}
+                            {% if form.duration.errors %}<div class="text-danger small mt-1">{{ form.duration.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Fees & Billing Period -->
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Standard Fee ($)</label>
+                            {{ form.fee_per_term }}
+                            {% if form.fee_per_term.errors %}<div class="text-danger small mt-1">{{ form.fee_per_term.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Billing Frequency / Period</label>
+                            {{ form.fee_period }}
+                            {% if form.fee_period.errors %}<div class="text-danger small mt-1">{{ form.fee_period.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Description & Milestones -->
+                        <div class="col-md-12">
+                            <label class="form-label text-secondary small fw-semibold">Course Description *</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Eligibility &amp; Prerequisites</label>
+                            {{ form.eligibility }}
+                            {% if form.eligibility.errors %}<div class="text-danger small mt-1">{{ form.eligibility.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Syllabus Overview</label>
+                            {{ form.syllabus_overview }}
+                            {% if form.syllabus_overview.errors %}<div class="text-danger small mt-1">{{ form.syllabus_overview.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <!-- Flags -->
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-2">
+                                {{ form.is_active }}
+                                <label class="form-check-label text-light small fw-semibold ms-2">Active in Catalogue</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mt-2">
+                                {{ form.is_featured }}
+                                <label class="form-check-label text-light small fw-semibold ms-2">Feature on Public Website</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-secondary">
+                        <a href="{% url 'academics:admin_courses' %}" class="btn btn-outline-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-1"></i> {% if is_create %}Create Course{% else %}Save Changes{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

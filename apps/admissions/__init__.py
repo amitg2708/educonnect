@@ -1,0 +1,3 @@
+"""
+EduConnect Admissions Management Application.
+"""

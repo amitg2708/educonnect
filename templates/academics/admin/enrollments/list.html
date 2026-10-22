@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Student Enrolments &amp; Transfers - {{ institution.name|default:"EduConnect" }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-success"></span>
+                <span class="small fw-bold text-success text-uppercase">Admissions &amp; Roster</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-light">Student Batch Enrolments &amp; Transfers</h2>
+            <p class="text-secondary small mb-0">Manage active cohort placements, waitlists, multi-course student accounts, and batch transfers.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'academics:admin_batches' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-collection-play me-1"></i> Batches Desk
+            </a>
+            <a href="{% url 'academics:admin_enrollment_create' %}" class="btn btn-success btn-sm fw-semibold">
+                <i class="bi bi-person-plus-fill me-1"></i> New Enrolment
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control bg-dark border-secondary text-light" placeholder="Search student name, roll #, enr #..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="batch" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Batches</option>
+                    {% for b in batches %}
+                    <option value="{{ b.id }}" {% if selected_batch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }} ({{ b.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select form-select-sm bg-dark border-secondary text-light">
+                    <option value="">All Statuses</option>
+                    {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-success w-100 fw-semibold">Filter</button>
+                {% if search_query or selected_batch or selected_status %}
+                <a href="{% url 'academics:admin_enrollments' %}" class="btn btn-sm btn-outline-secondary" title="Clear Filters"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Enrolments Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">Enrolment Records ({{ total_enrollments }})</h5>
+            <span class="text-secondary small">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        </div>
+
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small text-uppercase">
+                        <th>Student Account</th>
+                        <th>Enrolment ID / Roll #</th>
+                        <th>Coaching Batch</th>
+                        <th>Start / End Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in page_obj %}
+                    <tr>
+                        <td>
+                            <strong class="text-light d-block">{{ e.student.get_full_name|default:e.student.username }}</strong>
+                            <span class="text-secondary small font-monospace">{{ e.student.username }} &bull; {{ e.student.email }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-light font-monospace d-block mb-1">{{ e.enrollment_number }}</span>
+                            {% if e.roll_number %}
+                            <span class="text-secondary small">Roll: {{ e.roll_number }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'academics:admin_batch_detail' e.batch.id %}" class="text-light fw-bold text-decoration-none d-block">
+                                {{ e.batch.name }}
+                            </a>
+                            <span class="text-secondary small">{{ e.batch.course.title }} ({{ e.batch.branch.name|default:"Main" }})</span>
+                        </td>
+                        <td>
+                            <span class="text-light small d-block">{{ e.start_date|date:"M d, Y" }}</span>
+                            {% if e.end_date %}
+                            <span class="text-secondary small">Ended: {{ e.end_date|date:"M d, Y" }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if e.status == 'active' %}
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                            {% elif e.status == 'waitlisted' %}
+                            <span class="badge bg-warning-subtle text-warning">Waitlisted #{{ e.waitlist_position }}</span>
+                            {% elif e.status == 'transferred' %}
+                            <span class="badge bg-info-subtle text-info">Transferred</span>
+                            {% elif e.status == 'completed' %}
+                            <span class="badge bg-secondary-subtle text-secondary">Completed</span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger">{{ e.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if e.status == 'active' %}
+                            <a href="{% url 'academics:admin_enrollment_transfer' e.id %}" class="btn btn-sm btn-outline-info" title="Transfer Batch">
+                                <i class="bi bi-arrow-left-right me-1"></i> Transfer
+                            </a>
+                            <form method="post" action="{% url 'academics:admin_enrollment_status_update' e.id %}" class="d-inline" onsubmit="return confirm('Withdraw/Drop this student enrolment?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="dropped">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Drop">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
+                            {% elif e.status == 'waitlisted' %}
+                            <form method="post" action="{% url 'academics:admin_enrollment_status_update' e.id %}" class="d-inline" onsubmit="return confirm('Promote student directly to Active?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="active">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Promote</button>
+                            </form>
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4" aria-label="Enrollment pagination">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link bg-dark border-secondary text-light" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">&laquo;</a>
+                </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link {% if page_obj.number == num %}bg-success border-success text-white fw-bold{% else %}bg-dark border-secondary text-light{% endif %}" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link bg-dark border-secondary text-light" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_batch %}&batch={{ selected_batch }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}">&raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-person-x text-secondary" style="font-size: 3rem;"></i>
+            <h5 class="text-secondary mt-3">No student enrolments found</h5>
+            <p class="text-secondary small">Admit students into coaching batches to populate rosters.</p>
+            <a href="{% url 'academics:admin_enrollment_create' %}" class="btn btn-sm btn-success fw-semibold mt-2">
+                <i class="bi bi-person-plus-fill me-1"></i> Create First Enrolment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

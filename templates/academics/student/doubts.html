@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Ask Faculty - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-warning"></span>
+                <span class="small fw-bold text-warning text-uppercase">Academic Help Desk</span>
+            </div>
+            <h2 class="fw-bold mb-1">Ask Your Faculty</h2>
+            <p class="text-secondary small mb-0">Submit subject-related questions directly to your assigned teachers and get personalized explanations.</p>
+        </div>
+        <a href="{% url 'academics:student_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Question Submission Form -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-question-circle text-warning"></i> Submit a Question
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Classroom Cohort *</label>
+                        {{ form.classroom }}
+                        {% if form.classroom.errors %}<div class="text-danger small">{{ form.classroom.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Subject Name *</label>
+                        {{ form.subject_name }}
+                        {% if form.subject_name.errors %}<div class="text-danger small">{{ form.subject_name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Select Teacher *</label>
+                        {{ form.assigned_teacher }}
+                        {% if form.assigned_teacher.errors %}<div class="text-danger small">{{ form.assigned_teacher.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Question Summary / Title *</label>
+                        {{ form.question_title }}
+                        {% if form.question_title.errors %}<div class="text-danger small">{{ form.question_title.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Detailed Question *</label>
+                        {{ form.question_text }}
+                        {% if form.question_text.errors %}<div class="text-danger small">{{ form.question_text.errors }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold">
+                        <i class="bi bi-send me-1"></i> Submit Question to Teacher
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Prior Questions & Answers -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-left-quote text-info"></i> Your Questions &amp; Answers ({{ doubts.count }})
+                </h5>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for d in doubts %}
+                    <div class="p-4 rounded-4 bg-dark border border-secondary-subtle">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-2">
+                                    {{ d.subject_name }}
+                                </span>
+                                <small class="text-secondary">Teacher: {{ d.assigned_teacher.get_full_name|default:d.assigned_teacher.username }}</small>
+                            </div>
+                            {% if d.is_resolved %}
+                            <span class="badge bg-success">Answered</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Pending Review</span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-bold text-light mb-2">{{ d.question_title }}</h5>
+                        <p class="text-secondary small mb-3" style="white-space: pre-wrap;">{{ d.question_text }}</p>
+
+                        {% if d.is_resolved %}
+                        <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-success border-opacity-25 mt-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small text-success fw-bold">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Faculty Answer:
+                                </span>
+                                <small class="text-secondary">{{ d.answered_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                            <p class="text-light small mb-0" style="white-space: pre-wrap;">{{ d.answer_text }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 text-secondary">
+                        <i class="bi bi-chat-square-dots fs-1 d-block mb-2 text-secondary"></i>
+                        <p>No questions submitted yet. Feel free to ask your teacher anytime!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

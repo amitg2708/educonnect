@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Student Cohort Enrollments - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Cohort Registry</span>
+            </div>
+            <h2 class="fw-bold mb-1">Student Cohort Enrolments</h2>
+            <p class="text-secondary small mb-0">Enrol registered students into classroom cohorts and assign official roll numbers.</p>
+        </div>
+        <div>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Return to Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Enrol Student Form Column -->
+        <div class="col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2 border-bottom border-secondary-subtle pb-2">
+                    <i class="bi bi-person-plus text-primary"></i> Enrol Student into Cohort
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">SELECT STUDENT</label>
+                        {{ form.student }}
+                        {% if form.student.errors %}<div class="text-danger small mt-1">{{ form.student.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">TARGET CLASSROOM</label>
+                        {{ form.classroom }}
+                        {% if form.classroom.errors %}<div class="text-danger small mt-1">{{ form.classroom.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">ROLL NUMBER</label>
+                        {{ form.roll_number }}
+                        {% if form.roll_number.errors %}<div class="text-danger small mt-1">{{ form.roll_number.errors }}</div>{% endif %}
+                    </div>
+                    <div class="form-check form-switch mb-4">
+                        {{ form.is_active }}
+                        <label class="form-check-label text-light small" for="{{ form.is_active.id_for_label }}">Active enrollment status</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-check2-circle me-1"></i> Confirm Enrolment
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Enrolled Students Table Column -->
+        <div class="col-lg-8">
+            <div class="card border-0 rounded-4 feature-card overflow-hidden">
+                <div class="card-header bg-transparent border-secondary-subtle p-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard text-info"></i> Active Cohort Enrolments
+                    </h5>
+                    <a href="{% url 'reports:attendance_report' %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-calendar-check me-1"></i> Attendance Roster
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>STUDENT</th>
+                                <th>CLASSROOM</th>
+                                <th>ROLL NO</th>
+                                <th>DATE ENROLLED</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in page_obj %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ e.student.get_full_name|default:e.student.username }}</strong>
+                                    <div class="small text-secondary">{{ e.student.email }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary font-monospace">{{ e.classroom.code }}</span>
+                                    <div class="small text-secondary">{{ e.classroom.name }}</div>
+                                </td>
+                                <td class="small text-light font-monospace">
+                                    {{ e.roll_number|default:"&mdash;" }}
+                                </td>
+                                <td class="small text-secondary text-nowrap">
+                                    {{ e.enrolled_date|date:"M d, Y" }}
+                                </td>
+                                <td>
+                                    {% if e.is_active %}
+                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">Withdrawn</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-person-x fs-1 d-block mb-2 text-muted"></i>
+                                    No students enrolled yet. Use the form to enroll your first student.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                <div class="card-footer bg-transparent border-secondary-subtle p-3 d-flex justify-content-between align-items-center">
+                    <small class="text-secondary">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </small>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link bg-dark text-light border-secondary" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item active">
+                            <span class="page-link bg-primary border-primary">{{ page_obj.number }}</span>
+                        </li>
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link bg-dark text-light border-secondary" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

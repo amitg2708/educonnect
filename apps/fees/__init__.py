@@ -1,0 +1,3 @@
+"""
+EduConnect Fees Management App.
+"""

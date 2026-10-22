@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Institution Settings - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Institutional Configuration</span>
+            </div>
+            <h2 class="fw-bold mb-1">Global Institution Settings</h2>
+            <p class="text-secondary small mb-0">Configure institution profile, attendance thresholds, and grievance SLA rules. All changes are recorded in the audit trail.</p>
+        </div>
+        <div>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Return to Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2 border-bottom border-secondary-subtle pb-2">
+                        <i class="bi bi-building text-primary"></i> Organization Profile
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label text-secondary small fw-bold">INSTITUTION NAME</label>
+                            {{ form.institution_name }}
+                            {% if form.institution_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.institution_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-secondary small fw-bold">INSTITUTION CODE</label>
+                            {{ form.institution_code }}
+                            {% if form.institution_code.errors %}
+                            <div class="text-danger small mt-1">{{ form.institution_code.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">ACADEMIC YEAR</label>
+                            {{ form.academic_year }}
+                            {% if form.academic_year.errors %}
+                            <div class="text-danger small mt-1">{{ form.academic_year.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">CONTACT EMAIL</label>
+                            {{ form.contact_email }}
+                            {% if form.contact_email.errors %}
+                            <div class="text-danger small mt-1">{{ form.contact_email.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">CONTACT PHONE</label>
+                            {{ form.contact_phone }}
+                            {% if form.contact_phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.contact_phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-secondary small fw-bold">CAMPUS POSTAL ADDRESS</label>
+                            {{ form.campus_address }}
+                            {% if form.campus_address.errors %}
+                            <div class="text-danger small mt-1">{{ form.campus_address.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2 border-bottom border-secondary-subtle pb-2">
+                        <i class="bi bi-sliders text-warning"></i> Operational Governance &amp; Thresholds
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">MINIMUM ATTENDANCE THRESHOLD (%)</label>
+                            {{ form.attendance_minimum_percent }}
+                            <div class="form-text text-secondary small">Students falling below this attendance threshold will trigger defaulter alerts.</div>
+                            {% if form.attendance_minimum_percent.errors %}
+                            <div class="text-danger small mt-1">{{ form.attendance_minimum_percent.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">DEFAULT COMPLAINT SLA (DAYS)</label>
+                            {{ form.default_complaint_sla_days }}
+                            <div class="form-text text-secondary small">Maximum allowable resolution turnaround before complaints are flagged overdue.</div>
+                            {% if form.default_complaint_sla_days.errors %}
+                            <div class="text-danger small mt-1">{{ form.default_complaint_sla_days.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 border-top border-secondary-subtle pt-3">
+                        <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary fw-bold px-4">
+                            <i class="bi bi-save me-1"></i> Save Institution Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

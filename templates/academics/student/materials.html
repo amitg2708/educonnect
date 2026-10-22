@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Study Materials - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Learning Materials</span>
+            </div>
+            <h2 class="fw-bold mb-1">Study Materials &amp; Lecture Notes</h2>
+            <p class="text-secondary small mb-0">Browse and download study notes, lecture slides, and reference materials shared by your faculty.</p>
+        </div>
+        <a href="{% url 'academics:student_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-folder2-open text-primary"></i> Available Study Files ({{ materials.count }})
+        </h5>
+
+        <div class="row g-4">
+            {% for m in materials %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card p-4 border-0 rounded-4 bg-dark border border-secondary-subtle h-100 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-primary-subtle text-primary">{{ m.subject_name }}</span>
+                        <small class="text-secondary">{{ m.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <h5 class="fw-bold text-light mb-1">{{ m.title }}</h5>
+                    <p class="text-secondary small mb-3 flex-grow-1">{{ m.description|default:"Lecture notes and study resource." }}</p>
+                    <div class="small text-secondary mb-3">
+                        <i class="bi bi-person me-1"></i> Faculty: {{ m.teacher.get_full_name|default:m.teacher.username }}
+                    </div>
+                    <div class="border-top border-secondary-subtle pt-3 mt-auto">
+                        {% if m.file %}
+                        <a href="{{ m.file.url }}" target="_blank" class="btn btn-outline-primary btn-sm w-100 fw-bold">
+                            <i class="bi bi-cloud-arrow-down me-1"></i> Download File
+                        </a>
+                        {% else %}
+                        <span class="btn btn-outline-secondary btn-sm w-100 disabled">
+                            <i class="bi bi-file-earmark me-1"></i> Notes & Reference
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5 text-secondary">
+                <i class="bi bi-folder-x fs-1 text-secondary d-block mb-2"></i>
+                <p>No study materials have been uploaded for your enrolled subjects yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

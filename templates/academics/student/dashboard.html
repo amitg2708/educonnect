@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Student Academics - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Academic Learning</span>
+            </div>
+            <h2 class="fw-bold mb-1">Student Academic Dashboard</h2>
+            <p class="text-secondary small mb-0">Access course lecture notes, submit coursework, track published grades, and ask questions to your teachers.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'academics:student_materials' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-folder2-open me-1"></i> Study Materials
+            </a>
+            <a href="{% url 'academics:student_assignments' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-journal-check me-1"></i> Assignments
+            </a>
+            <a href="{% url 'academics:student_results' %}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-award me-1"></i> Exam Results
+            </a>
+            <a href="{% url 'academics:student_doubts' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-question-circle me-1"></i> Ask Faculty
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Upcoming Assignments -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-journal-text text-primary"></i> Coursework &amp; Assignments
+                    </h5>
+                    <a href="{% url 'academics:student_assignments' %}" class="small text-info text-decoration-none">View All</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TITLE &amp; SUBJECT</th>
+                                <th>DUE DATE</th>
+                                <th>YOUR STATUS</th>
+                                <th>ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in assignment_list %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ item.assignment.title }}</strong>
+                                    <div class="small text-secondary">{{ item.assignment.subject_name }}</div>
+                                </td>
+                                <td>
+                                    <small class="{% if item.assignment.is_past_due %}text-danger fw-bold{% else %}text-light{% endif %}">
+                                        {{ item.assignment.due_datetime|date:"M d, H:i" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if item.submission %}
+                                        {% if item.submission.score is not None %}
+                                        <span class="badge bg-success">Score: {{ item.submission.score }}/{{ item.assignment.max_score }}</span>
+                                        {% else %}
+                                        <span class="badge bg-info">Submitted</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if item.assignment.is_past_due %}
+                                        <span class="badge bg-danger">Past Due</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'academics:student_submit_assignment' item.assignment.id %}" class="btn btn-sm btn-outline-primary">
+                                        {% if item.submission %}View / Resubmit{% else %}Submit{% endif %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-secondary">No active assignments.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Published Results -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-award text-success"></i> Official Exam Results
+                    </h5>
+                    <a href="{% url 'academics:student_results' %}" class="small text-info text-decoration-none">Full Transcript</a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TEST</th>
+                                <th>SCORE</th>
+                                <th>GRADE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in scores %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ s.assessment.title }}</strong>
+                                    <div class="small text-secondary">{{ s.assessment.subject_name }}</div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-primary">{{ s.marks_obtained }}</span> / {{ s.assessment.max_marks }}
+                                </td>
+                                <td>
+                                    <span class="badge {% if s.grade == 'F' %}bg-danger{% else %}bg-success{% endif %}">
+                                        {{ s.grade }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-secondary">No published test results yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Materials & Doubts Row -->
+    <div class="row g-4">
+        <!-- Recent Materials -->
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-file-earmark-pdf text-info"></i> Recent Lecture Materials
+                    </h5>
+                    <a href="{% url 'academics:student_materials' %}" class="small text-info text-decoration-none">Browse All</a>
+                </div>
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for m in materials %}
+                    <div class="list-group-item bg-transparent text-light border-secondary-subtle px-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-light">{{ m.title }}</strong>
+                            <div class="small text-secondary">{{ m.subject_name }} &bull; {{ m.created_at|date:"M d" }}</div>
+                        </div>
+                        {% if m.file %}
+                        <a href="{{ m.file.url }}" target="_blank" class="btn btn-sm btn-outline-info" title="Download">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3 text-secondary">No study materials available yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Doubts Asked -->
+        <div class="col-md-6">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-chat-dots text-warning"></i> Your Questions to Faculty
+                    </h5>
+                    <a href="{% url 'academics:student_doubts' %}" class="small text-info text-decoration-none">Ask New</a>
+                </div>
+                {% for d in doubts %}
+                <div class="p-3 mb-2 rounded-3 bg-dark border border-secondary-subtle">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge bg-secondary">{{ d.subject_name }}</span>
+                        {% if d.is_resolved %}
+                        <span class="badge bg-success">Answered</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                        {% endif %}
+                    </div>
+                    <strong class="text-light d-block">{{ d.question_title }}</strong>
+                    {% if d.is_resolved %}
+                    <p class="small text-info mb-0 mt-1"><i class="bi bi-reply me-1"></i> {{ d.answer_text|truncatechars:80 }}</p>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="text-center py-3 text-secondary">You haven't asked any doubts yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

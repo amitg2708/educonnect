@@ -1,0 +1,3 @@
+"""
+EduConnect Timetable Management App.
+"""

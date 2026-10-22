@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Child Academic Performance - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Parent Academic Portal</span>
+            </div>
+            <h2 class="fw-bold mb-1">Academic Progress &amp; Examination Records</h2>
+            <p class="text-secondary small mb-0">Track official published assessment results, course materials, and homework submission history for your child.</p>
+        </div>
+        <a href="{% url 'accounts:parent_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Parent Dashboard
+        </a>
+    </div>
+
+    <!-- Children Selector Tabs -->
+    {% if children_links|length > 1 %}
+    <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+        {% for link in children_links %}
+        <a href="{% url 'academics:parent_child_academics_detail' link.student.id %}"
+           class="btn btn-sm {% if selected_student.id == link.student.id %}btn-primary fw-bold{% else %}btn-outline-light{% endif %} rounded-pill px-3">
+            <i class="bi bi-person me-1"></i> {{ link.student.get_full_name|default:link.student.username }}
+            ({{ link.get_relationship_type_display }})
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if selected_student %}
+    <!-- Active Child Banner -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="text-secondary small d-block">STUDENT PROFILE</span>
+                <h4 class="fw-bold text-light mb-0">{{ selected_student.get_full_name|default:selected_student.username }}</h4>
+                <small class="text-secondary">{{ selected_student.email }}</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'attendance:parent_child_attendance' selected_student.id %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-calendar-check me-1"></i> View Attendance
+                </a>
+                <a href="{% url 'fees:parent_child_fees' selected_student.id %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-cash-stack me-1"></i> Fee Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Official Published Examination Scores -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-award text-success"></i> Official Published Results ({{ scores.count }})
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>ASSESSMENT</th>
+                        <th>SUBJECT</th>
+                        <th>CLASS</th>
+                        <th>DATE</th>
+                        <th>MARKS OBTAINED</th>
+                        <th>GRADE</th>
+                        <th>FACULTY REMARKS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in scores %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ s.assessment.title }}</strong>
+                            <div class="small text-secondary">{{ s.assessment.get_assessment_type_display }}</div>
+                        </td>
+                        <td><span class="badge bg-primary-subtle text-primary">{{ s.assessment.subject_name }}</span></td>
+                        <td><span class="badge bg-secondary">{{ s.assessment.classroom.code }}</span></td>
+                        <td><small class="text-secondary">{{ s.assessment.date_conducted|date:"M d, Y" }}</small></td>
+                        <td>
+                            <strong class="text-primary fs-5">{{ s.marks_obtained }}</strong> / {{ s.assessment.max_marks }}
+                        </td>
+                        <td>
+                            <span class="badge {% if s.grade == 'F' %}bg-danger{% elif s.grade == 'A+' or s.grade == 'A' %}bg-success{% else %}bg-info{% endif %} fs-6 px-3 py-1">
+                                {{ s.grade }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if s.teacher_remarks %}
+                            <small class="text-light">{{ s.teacher_remarks }}</small>
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-secondary">
+                            No published assessment results available for this child yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Coursework & Homework Grid -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-check text-info"></i> Coursework &amp; Assignments
+                </h5>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TITLE &amp; SUBJECT</th>
+                                <th>DUE DATE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in assignments %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ a.title }}</strong>
+                                    <div class="small text-secondary">{{ a.subject_name }}</div>
+                                </td>
+                                <td><small class="text-secondary">{{ a.due_datetime|date:"M d, H:i" }}</small></td>
+                                <td>
+                                    {% if a.id in submissions %}
+                                    <span class="badge bg-success">Submitted</span>
+                                    {% else %}
+                                        {% if a.is_past_due %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-secondary">No coursework assigned.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-folder2-open text-primary"></i> Recommended Study Resources
+                </h5>
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for m in materials %}
+                    <div class="list-group-item bg-transparent text-light border-secondary-subtle px-0 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-light">{{ m.title }}</strong>
+                            <div class="small text-secondary">{{ m.subject_name }} &bull; {{ m.classroom.code }}</div>
+                        </div>
+                        {% if m.file %}
+                        <a href="{{ m.file.url }}" target="_blank" class="btn btn-sm btn-outline-info" title="Download">
+                            <i class="bi bi-download"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-secondary">No study materials uploaded for child's classes.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

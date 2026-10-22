@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Performance Report - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-success"></span>
+                <span class="small fw-bold text-success text-uppercase">Curriculum &amp; Exam Audit</span>
+            </div>
+            <h2 class="fw-bold mb-1">Academic Performance &amp; Assessment Report</h2>
+            <p class="text-secondary small mb-0">Examination results, marks distribution, and grade statistics across departments.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="?{% if selected_class %}classroom={{ selected_class }}&{% endif %}{% if selected_type %}type={{ selected_type }}&{% endif %}export=csv" class="btn btn-outline-success btn-sm fw-bold">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to CSV
+            </a>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <select name="classroom" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="">All Classrooms</option>
+                    {% for c in classrooms %}
+                    <option value="{{ c.id }}" {% if selected_class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }} ({{ c.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="type" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="">All Assessment Types</option>
+                    <option value="midterm" {% if selected_type == 'midterm' %}selected{% endif %}>Midterm Exam</option>
+                    <option value="final" {% if selected_type == 'final' %}selected{% endif %}>Final Exam</option>
+                    <option value="quiz" {% if selected_type == 'quiz' %}selected{% endif %}>Quiz / Test</option>
+                    <option value="practical" {% if selected_type == 'practical' %}selected{% endif %}>Lab Assessment</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Filter</button>
+                <a href="{% url 'reports:academics_report' %}" class="btn btn-sm btn-outline-light">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Performance Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">Assessment Score Records ({{ total_count }})</h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>ASSESSMENT</th>
+                        <th>SUBJECT</th>
+                        <th>CLASS</th>
+                        <th>STUDENT</th>
+                        <th>MAX MARKS</th>
+                        <th>MARKS OBTAINED</th>
+                        <th>GRADE</th>
+                        <th>STATUS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in page_obj %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ s.assessment.title }}</strong>
+                            <div class="small text-secondary">{{ s.assessment.get_assessment_type_display }}</div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ s.assessment.subject_name }}</span></td>
+                        <td><span class="badge bg-primary-subtle text-primary">{{ s.assessment.classroom.code }}</span></td>
+                        <td>
+                            <strong class="text-light">{{ s.student.get_full_name|default:s.student.username }}</strong>
+                        </td>
+                        <td>{{ s.assessment.max_marks }}</td>
+                        <td><strong class="text-primary">{{ s.marks_obtained }}</strong></td>
+                        <td>
+                            <span class="badge {% if s.grade == 'F' %}bg-danger{% elif s.grade == 'A+' or s.grade == 'A' %}bg-success{% else %}bg-info{% endif %}">
+                                {{ s.grade }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if s.assessment.is_published %}
+                            <span class="badge bg-success">Published</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Confidential Draft</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="text-center py-4 text-secondary">No assessment scores match criteria.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <small class="text-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</small>
+            <div class="btn-group btn-group-sm">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_class %}&classroom={{ selected_class }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}" class="btn btn-outline-light">&larr; Prev</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_class %}&classroom={{ selected_class }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}" class="btn btn-outline-light">Next &rarr;</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

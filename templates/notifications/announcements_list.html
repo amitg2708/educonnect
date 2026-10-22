@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Announcements - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Campus Bulletin</span>
+            </div>
+            <h2 class="fw-bold mb-1">Official Announcements &amp; Notices</h2>
+            <p class="text-secondary small mb-0">Institutional circulars, academic calendar alerts, holiday schedules, and cohort notices.</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if user.role == 'admin' %}
+            <a href="{% url 'notifications:admin_announcements' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil-square me-1"></i> Announcements Desk
+            </a>
+            {% endif %}
+            <a href="{% url 'notifications:my_notifications' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-bell me-1"></i> Notifications
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for a in announcements %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-primary-subtle text-primary">{{ a.get_target_role_display }}</span>
+                    <small class="text-secondary">{{ a.publish_date|date:"M d, Y" }}</small>
+                </div>
+                <h4 class="fw-bold text-light mb-2">{{ a.title }}</h4>
+                <p class="text-secondary small mb-3 flex-grow-1">{{ a.content|truncatechars:120 }}</p>
+                {% if a.target_classroom %}
+                <div class="small text-info mb-3">
+                    <i class="bi bi-building me-1"></i> Cohort: {{ a.target_classroom.name }}
+                </div>
+                {% endif %}
+                <div class="border-top border-secondary-subtle pt-3 mt-auto d-flex justify-content-between align-items-center">
+                    <a href="{% url 'notifications:announcement_detail' a.id %}" class="btn btn-sm btn-outline-primary">
+                        Read Full Notice &rarr;
+                    </a>
+                    {% if a.attachment %}
+                    <span class="badge bg-secondary"><i class="bi bi-paperclip me-1"></i> Attachment</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 text-secondary">
+            <i class="bi bi-megaphone-fill fs-1 d-block mb-2 text-secondary"></i>
+            <p>No active campus announcements at this time.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

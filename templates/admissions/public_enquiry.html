@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Admissions Enquiry - {{ target_institution.name|default:"EduConnect" }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+            <!-- Branding Banner -->
+            <div class="card border-0 rounded-4 shadow-lg overflow-hidden mb-4 bg-dark border-secondary-subtle">
+                <div class="p-4 p-md-5 text-center position-relative" style="background: linear-gradient(135deg, rgba(13,110,253,0.18) 0%, rgba(102,16,242,0.12) 100%);">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle mb-3 shadow" style="width: 68px; height: 68px; font-size: 1.8rem;">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <h2 class="fw-bold text-light mb-1">{{ target_institution.name|default:"EduConnect Coaching Institute" }}</h2>
+                    <p class="text-secondary mb-0">Admissions &amp; Academic Course Enquiry</p>
+                    {% if target_institution.tagline %}
+                    <p class="text-info small mb-0 mt-1 fst-italic">"{{ target_institution.tagline }}"</p>
+                    {% endif %}
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    {% if submitted_enquiry %}
+                    <!-- Submission Confirmation -->
+                    <div class="text-center py-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-25 text-success rounded-circle mb-3" style="width: 72px; height: 72px; font-size: 2rem;">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <h3 class="fw-bold text-light mb-2">Enquiry Received!</h3>
+                        <p class="text-secondary mb-4">
+                            Thank you, <strong class="text-light">{{ submitted_enquiry.name }}</strong>. Your enquiry has been registered with reference:
+                        </p>
+                        <div class="bg-dark-subtle border border-success border-opacity-50 rounded-3 p-3 mb-4 d-inline-block px-4">
+                            <span class="text-secondary small d-block">Enquiry Reference Number:</span>
+                            <span class="text-success fs-4 fw-bold letter-spacing-1">{{ submitted_enquiry.enquiry_number }}</span>
+                        </div>
+                        <p class="text-secondary small mb-4">
+                            Our academic counselor will contact you via phone (<strong class="text-light">{{ submitted_enquiry.phone }}</strong>) or email (<strong class="text-light">{{ submitted_enquiry.email }}</strong>) to answer your queries and arrange a trial class.
+                        </p>
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{% url 'admissions:public_enquiry' %}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i> Submit Another Enquiry
+                            </a>
+                            <a href="{% url 'core:index' %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-house me-1"></i> Return Home
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Form Header & Guidance -->
+                    <div class="mb-4">
+                        <h4 class="fw-bold text-light mb-1">Begin Your Learning Journey</h4>
+                        <p class="text-secondary small mb-0">
+                            Fill out the enquiry form below. Our academic team will assist you with batch timings, syllabus, course fees, and schedule a complimentary trial session.
+                        </p>
+                    </div>
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger rounded-3 small mb-4">
+                            {% for error in form.non_field_errors %}
+                            <div><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Personal & Contact Details -->
+                        <h6 class="text-uppercase text-secondary small fw-bold mb-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-person text-primary"></i> Contact Information
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label text-secondary small fw-semibold">Student / Parent Full Name <span class="text-danger">*</span></label>
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">Email Address <span class="text-danger">*</span></label>
+                                {{ form.email }}
+                                {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">Mobile / Phone Number <span class="text-danger">*</span></label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">Alternate WhatsApp / Phone</label>
+                                {{ form.alternate_phone }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">City / Location</label>
+                                {{ form.city }}
+                            </div>
+                        </div>
+
+                        <!-- Academic & Course Interest -->
+                        <h6 class="text-uppercase text-secondary small fw-bold mb-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-book text-info"></i> Course &amp; Batch Interest
+                        </h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">Target Class / Grade</label>
+                                {{ form.target_class }}
+                                <div class="form-text text-secondary small">e.g. Class 10, Class 11, Class 12, Repeater</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">Stream / Field</label>
+                                {{ form.stream }}
+                                <div class="form-text text-secondary small">e.g. Science, Commerce, Arts / Humanities</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">Course of Interest</label>
+                                {{ form.course }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-secondary small fw-semibold">Preferred Batch / Timing</label>
+                                {{ form.batch_interest }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-secondary small fw-semibold">Questions or Requirements</label>
+                                {{ form.notes }}
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary fw-bold py-3 fs-6 rounded-3 shadow">
+                                <i class="bi bi-send-fill me-2"></i> Submit Admissions Enquiry
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Trust / Highlights Footer -->
+            <div class="row g-3 text-center text-secondary small">
+                <div class="col-md-4">
+                    <div class="p-3 bg-dark rounded-3 border border-secondary-subtle">
+                        <i class="bi bi-shield-check text-success fs-5 d-block mb-1"></i>
+                        <span class="text-light fw-semibold">Confidential &amp; Secure</span>
+                        <p class="mb-0 text-muted extra-small">Your personal contact details are kept strictly private.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-dark rounded-3 border border-secondary-subtle">
+                        <i class="bi bi-person-video3 text-info fs-5 d-block mb-1"></i>
+                        <span class="text-light fw-semibold">Free Trial Session</span>
+                        <p class="mb-0 text-muted extra-small">Attend a demo class before making any enrolment decision.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-dark rounded-3 border border-secondary-subtle">
+                        <i class="bi bi-chat-dots-fill text-warning fs-5 d-block mb-1"></i>
+                        <span class="text-light fw-semibold">Expert Counseling</span>
+                        <p class="mb-0 text-muted extra-small">Personalized academic guidance tailored to student goals.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

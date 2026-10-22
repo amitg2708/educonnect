@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Student Fee Allocations - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Student Accounts</span>
+            </div>
+            <h2 class="fw-bold mb-1">Student Billing Ledgers</h2>
+            <p class="text-secondary small mb-0">Search, filter, and review active student fee accounts and dues.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'fees:dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Treasury Desk
+            </a>
+            <a href="{% url 'fees:assign_fees' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-person-plus-fill me-1"></i> New Allocation
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary-subtle text-secondary">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search by student name, ID, or structure...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">-- All Payment Statuses --</option>
+                    {% for code, label in status_choices %}
+                    <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="year" value="{{ year_filter }}" class="form-control" placeholder="Year e.g. 2026-2027">
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                {% if q or status_filter or year_filter %}
+                <a href="{% url 'fees:allocation_list' %}" class="btn btn-outline-secondary">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Allocations Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Student</th>
+                        <th>Fee Structure</th>
+                        <th>Academic Year</th>
+                        <th class="text-end">Net Dues</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Outstanding</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in page_obj %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ a.student.get_full_name|default:a.student.username }}</strong>
+                            <span class="text-secondary d-block">ID: <code>{{ a.student.student_id|default:a.student.username }}</code></span>
+                        </td>
+                        <td>
+                            <span class="text-light">{{ a.fee_structure.title }}</span>
+                            <span class="text-secondary d-block small"><code>{{ a.fee_structure.code }}</code></span>
+                        </td>
+                        <td>{{ a.academic_year }}</td>
+                        <td class="text-end fw-semibold">${{ a.net_amount|floatformat:2 }}</td>
+                        <td class="text-end text-success fw-semibold">${{ a.amount_paid|floatformat:2 }}</td>
+                        <td class="text-end fw-bold {% if a.outstanding_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                            ${{ a.outstanding_balance|floatformat:2 }}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if a.status == 'paid' %}bg-success-subtle text-success{% elif a.status == 'partially_paid' %}bg-info-subtle text-info{% elif a.status == 'overdue' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
+                                {{ a.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <a href="{% url 'fees:allocation_detail' a.id %}" class="btn btn-sm btn-outline-info" title="View Ledger">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if a.outstanding_balance > 0 %}
+                                <a href="{% url 'fees:record_payment' a.id %}" class="btn btn-sm btn-success" title="Record Payment">
+                                    <i class="bi bi-cash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-5">
+                            <i class="bi bi-inbox fs-2 mb-2 d-block"></i>
+                            No student allocations match your search criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top border-secondary-subtle">
+            <span class="text-secondary small">
+                Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status_filter }}&year={{ year_filter }}">&laquo; Prev</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status_filter }}&year={{ year_filter }}">Next &raquo;</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

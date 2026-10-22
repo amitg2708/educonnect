@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Student Academic Doubts - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-warning"></span>
+                <span class="small fw-bold text-warning text-uppercase">Direct Faculty Q&amp;A</span>
+            </div>
+            <h2 class="fw-bold mb-1">Student Academic Doubts Inbox</h2>
+            <p class="text-secondary small mb-0">Review and provide personalized explanations for questions submitted by enrolled students.</p>
+        </div>
+        <a href="{% url 'academics:teacher_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Academic Hub
+        </a>
+    </div>
+
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-chat-square-text text-warning"></i> Questions Assigned to You ({{ doubts.count }})
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>QUESTION TITLE &amp; SUBJECT</th>
+                        <th>STUDENT</th>
+                        <th>CLASS</th>
+                        <th>DATE</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in doubts %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ d.question_title }}</strong>
+                            <div class="small text-secondary">{{ d.question_text|truncatechars:70 }}</div>
+                        </td>
+                        <td>
+                            <strong class="text-light">{{ d.student.get_full_name|default:d.student.username }}</strong>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ d.classroom.code }}</span></td>
+                        <td><small class="text-secondary">{{ d.created_at|date:"M d, H:i" }}</small></td>
+                        <td>
+                            {% if d.is_resolved %}
+                            <span class="badge bg-success">Answered</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Pending Answer</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'academics:teacher_answer_doubt' d.id %}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-reply me-1"></i> {% if d.is_resolved %}Edit Answer{% else %}Reply{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-secondary">
+                            <i class="bi bi-check2-circle fs-1 text-success d-block mb-2"></i>
+                            No unanswered doubts from students at this time.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

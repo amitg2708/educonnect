@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Cancel Lecture - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'timetable:admin_dashboard' %}?classroom={{ slot.classroom.id }}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                        &larr; Back to Timetable
+                    </a>
+                    <h2 class="fw-bold mb-1 text-danger">Cancel Lecture Session</h2>
+                    <p class="text-secondary small mb-0">Broadcasts an urgent cancellation notification to all enrolled students and parents.</p>
+                </div>
+            </div>
+
+            <!-- Target Slot Summary -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4 border border-danger-subtle">
+                <h5 class="fw-bold text-light mb-1">{{ slot.subject_name }}</h5>
+                <p class="text-secondary small mb-2">Class: <strong>{{ slot.classroom.name }}</strong></p>
+                <div class="small text-secondary">
+                    <span class="text-light fw-bold">{{ slot.get_day_of_week_display }}</span> from {{ slot.start_time|time:"H:i" }} to {{ slot.end_time|time:"H:i" }} | Room: {{ slot.room_number }} | Faculty: {{ slot.teacher.get_full_name|default:slot.teacher.username }}
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-light">Cancellation Reason <span class="text-danger">*</span></label>
+                        {{ form.cancellation_reason }}
+                        {% if form.cancellation_reason.errors %}<div class="text-danger small">{{ form.cancellation_reason.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                        <a href="{% url 'timetable:admin_dashboard' %}?classroom={{ slot.classroom.id }}" class="btn btn-outline-secondary">Abort</a>
+                        <button type="submit" class="btn btn-danger px-4 fw-bold">
+                            <i class="bi bi-x-circle me-1"></i> Confirm Cancellation &amp; Broadcast Notice
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

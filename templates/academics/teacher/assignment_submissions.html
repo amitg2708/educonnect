@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Assignment Submissions - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Submission Roster</span>
+            </div>
+            <h2 class="fw-bold mb-1">{{ assignment.title }}</h2>
+            <p class="text-secondary small mb-0">
+                Subject: <strong class="text-light">{{ assignment.subject_name }}</strong> |
+                Class: <strong class="text-light">{{ assignment.classroom.name }}</strong> |
+                Max Score: <strong class="text-light">{{ assignment.max_score }}</strong> |
+                Due: <strong class="text-light">{{ assignment.due_datetime|date:"M d, Y H:i" }}</strong>
+            </p>
+        </div>
+        <a href="{% url 'academics:teacher_assignments' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Assignments
+        </a>
+    </div>
+
+    <!-- Submissions Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-check2-all text-success"></i> Received Submissions ({{ submissions.count }})
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>STUDENT</th>
+                        <th>SUBMITTED AT</th>
+                        <th>FILE &amp; NOTES</th>
+                        <th>STATUS</th>
+                        <th>SCORE</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in submissions %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ sub.student.get_full_name|default:sub.student.username }}</strong>
+                            <div class="small text-secondary">{{ sub.student.email }}</div>
+                        </td>
+                        <td>
+                            <small class="text-light">{{ sub.submitted_at|date:"M d, Y H:i" }}</small>
+                            {% if sub.is_late %}
+                            <span class="badge bg-danger-subtle text-danger ms-1">Late Submission</span>
+                            {% else %}
+                            <span class="badge bg-success-subtle text-success ms-1">On Time</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ sub.submission_file.url }}" target="_blank" class="btn btn-sm btn-outline-info me-2">
+                                <i class="bi bi-download me-1"></i> File
+                            </a>
+                            {% if sub.notes %}
+                            <small class="text-secondary" title="{{ sub.notes }}">{{ sub.notes|truncatechars:30 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub.score is not None %}
+                            <span class="badge bg-success">Graded</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Pending Grade</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if sub.score is not None %}
+                            <strong class="text-primary fs-6">{{ sub.score }}</strong> / {{ assignment.max_score }}
+                            {% else %}
+                            <span class="text-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'academics:teacher_grade_submission' sub.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil-square me-1"></i> {% if sub.score is not None %}Re-grade{% else %}Grade{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-secondary">No student submissions received yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Missing Students (Not Submitted) -->
+    {% if missing_students %}
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h6 class="fw-bold mb-3 text-secondary d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle text-warning"></i> Enrolled Students With Pending Submissions ({{ missing_students.count }})
+        </h6>
+        <div class="d-flex flex-wrap gap-2">
+            {% for s in missing_students %}
+            <span class="badge bg-dark border border-secondary text-light px-3 py-2">
+                {{ s.get_full_name|default:s.username }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

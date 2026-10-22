@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}My Assignments - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Coursework</span>
+            </div>
+            <h2 class="fw-bold mb-1">My Assignments &amp; Tasks</h2>
+            <p class="text-secondary small mb-0">View assigned tasks, download briefs, upload your solutions, and view faculty grading and comments.</p>
+        </div>
+        <a href="{% url 'academics:student_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-journal-check text-info"></i> Enrolled Coursework ({{ assignment_list|length }})
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>ASSIGNMENT &amp; SUBJECT</th>
+                        <th>CLASS</th>
+                        <th>DUE DATE</th>
+                        <th>BRIEF</th>
+                        <th>SUBMISSION STATUS</th>
+                        <th>SCORE &amp; FEEDBACK</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in assignment_list %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ item.assignment.title }}</strong>
+                            <div class="small text-secondary">{{ item.assignment.subject_name }} (Max: {{ item.assignment.max_score }})</div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ item.assignment.classroom.code }}</span></td>
+                        <td>
+                            <small class="{% if item.assignment.is_past_due %}text-danger fw-bold{% else %}text-light{% endif %}">
+                                {{ item.assignment.due_datetime|date:"M d, Y H:i" }}
+                            </small>
+                            {% if item.assignment.is_past_due %}
+                            <div class="small text-danger">Past Due</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.assignment.attachment %}
+                            <a href="{{ item.assignment.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-paperclip"></i>
+                            </a>
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.submission %}
+                                {% if item.submission.is_late %}
+                                <span class="badge bg-warning text-dark">Late Submission</span>
+                                {% else %}
+                                <span class="badge bg-success">Submitted</span>
+                                {% endif %}
+                                <div class="small text-secondary">{{ item.submission.submitted_at|date:"M d, H:i" }}</div>
+                            {% else %}
+                                {% if item.assignment.is_past_due %}
+                                <span class="badge bg-danger">Not Submitted</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Pending</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.submission and item.submission.score is not None %}
+                            <div>
+                                <strong class="text-primary">{{ item.submission.score }}</strong> / {{ item.assignment.max_score }}
+                            </div>
+                            {% if item.submission.feedback %}
+                            <small class="text-info d-block" title="{{ item.submission.feedback }}">
+                                <i class="bi bi-chat-left-quote me-1"></i> {{ item.submission.feedback|truncatechars:35 }}
+                            </small>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-secondary small">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'academics:student_submit_assignment' item.assignment.id %}" class="btn btn-sm btn-primary">
+                                {% if item.submission %}Review / Resubmit{% else %}Submit{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-secondary">No coursework assigned for your enrolled subjects.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

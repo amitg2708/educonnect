@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Session Records - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'attendance:teacher_home' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Teaching Assignments
+            </a>
+            <h2 class="fw-bold mb-1">Correct Attendance: {{ session.subject_name }}</h2>
+            <p class="text-secondary small mb-0">
+                Class: <strong>{{ session.classroom.name }}</strong> | Date: <strong>{{ session.session_date }}</strong> | Slot: <strong>{{ session.session_period }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-pencil-square text-warning"></i> Modify Attendance Statuses
+            </h5>
+
+            <div class="table-responsive mb-4">
+                <table class="table table-dark table-hover align-middle mb-0 small">
+                    <thead>
+                        <tr class="text-secondary">
+                            <th>Student</th>
+                            <th class="text-center">Current Status</th>
+                            <th class="text-center">Update Status</th>
+                            <th>Remarks</th>
+                            <th>Last Modified By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in records %}
+                        <tr>
+                            <td>
+                                <strong class="text-light">{{ r.student.get_full_name|default:r.student.username }}</strong>
+                                <span class="text-secondary d-block"><code>{{ r.student.student_id|default:r.student.username }}</code></span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge {% if r.status == 'present' %}bg-success-subtle text-success{% elif r.status == 'absent' %}bg-danger-subtle text-danger{% elif r.status == 'late' %}bg-warning-subtle text-warning{% else %}bg-info-subtle text-info{% endif %}">
+                                    {{ r.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <select name="status_{{ r.id }}" class="form-select form-select-sm">
+                                    {% for code, label in status_choices %}
+                                    <option value="{{ code }}" {% if r.status == code %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="remarks_{{ r.id }}" value="{{ r.remarks }}" class="form-control form-control-sm" placeholder="Remarks">
+                            </td>
+                            <td class="small text-secondary">
+                                {% if r.modified_by %}
+                                {{ r.modified_by.username }} ({{ r.modified_at|date:"M d, H:i" }})
+                                {% else %}
+                                {{ r.marked_by.username|default:"Original" }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mandatory Audit Reason -->
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-light">
+                    Mandatory Audit Rationale / Justification <span class="text-danger">*</span>
+                </label>
+                <textarea name="audit_reason" rows="2" class="form-control" placeholder="Required explanation of why attendance records are being corrected (e.g. excused sick note submitted, student was in principal's office, clerical error)..." required></textarea>
+                <div class="form-text small text-secondary">Logged in institutional immutable audit records.</div>
+            </div>
+
+            <div class="border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                <a href="{% url 'attendance:teacher_home' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-warning px-4 fw-bold">
+                    <i class="bi bi-shield-check me-1"></i> Save Changes &amp; Log Audit
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Session Audit Trail -->
+    {% if audit_logs %}
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <h6 class="fw-bold mb-3 d-flex align-items-center gap-2 text-secondary">
+            <i class="bi bi-clock-history"></i> Session Correction History
+        </h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm align-middle mb-0 font-monospace small" style="font-size: 0.8rem;">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>Status Transition</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in audit_logs %}
+                    <tr>
+                        <td>{{ l.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        <td><span class="badge bg-secondary">{{ l.action }}</span></td>
+                        <td>{{ l.actor.username|default:"System" }}</td>
+                        <td>{{ l.old_status|default:"-" }} &rarr; {{ l.new_status|default:"-" }}</td>
+                        <td>{{ l.reason }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

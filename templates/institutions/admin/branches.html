@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Branches - {{ institution.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom border-secondary-subtle">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary text-uppercase px-2 py-1">Multi-Campus Architecture</span>
+                <span class="badge bg-secondary-subtle text-secondary">{{ institution.code }}</span>
+            </div>
+            <h1 class="h2 fw-bold text-light mb-1">Branches &amp; Campuses</h1>
+            <p class="text-secondary mb-0">Define coaching centers, local branches, and regional campuses for <strong>{{ institution.name }}</strong>.</p>
+        </div>
+        <div>
+            <a href="{% url 'institutions:manage_members' %}" class="btn btn-outline-light d-flex align-items-center gap-2">
+                <i class="bi bi-people"></i> Member Directory
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Branch List -->
+        <div class="col-lg-7">
+            <div class="card border-secondary bg-dark shadow-sm">
+                <div class="card-header border-secondary bg-dark py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="h6 fw-bold text-light mb-0">
+                        <i class="bi bi-geo-alt-fill text-primary me-2"></i>Active Campuses
+                    </h5>
+                    <span class="badge bg-secondary-subtle text-secondary">{{ branches.count }} campuses</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-secondary small text-uppercase border-secondary">
+                                    <th>Campus Name</th>
+                                    <th>Code</th>
+                                    <th>Location</th>
+                                    <th>Contact</th>
+                                    <th>Main</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in branches %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-light">{{ b.name }}</div>
+                                        {% if b.address %}<small class="text-secondary">{{ b.address|truncatechars:35 }}</small>{% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-light font-monospace">{{ b.code }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-light small">{{ b.city|default:"—" }}{% if b.state %}, {{ b.state }}{% endif %}</span>
+                                    </td>
+                                    <td>
+                                        <div class="small text-secondary">
+                                            {% if b.phone %}<div><i class="bi bi-telephone me-1"></i>{{ b.phone }}</div>{% endif %}
+                                            {% if b.email %}<div><i class="bi bi-envelope me-1"></i>{{ b.email }}</div>{% endif %}
+                                            {% if not b.phone and not b.email %}—{% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if b.is_main %}
+                                        <span class="badge bg-primary-subtle text-primary"><i class="bi bi-star-fill me-1"></i>Main</span>
+                                        {% else %}
+                                        <span class="text-secondary small">Branch</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-secondary">No campuses defined yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Branch Form -->
+        <div class="col-lg-5">
+            <div class="card border-secondary bg-dark shadow-sm">
+                <div class="card-header border-secondary bg-dark py-3">
+                    <h5 class="h6 fw-bold text-light mb-0">
+                        <i class="bi bi-plus-circle-fill text-success me-2"></i>Add New Branch
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger border-danger-subtle bg-danger-subtle bg-opacity-10 py-2 small mb-3">
+                            {% for err in form.non_field_errors %}
+                            <div><i class="bi bi-exclamation-circle me-1"></i>{{ err }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label text-light fw-semibold">Branch Name <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label text-light fw-semibold">Short Code <span class="text-danger">*</span></label>
+                            {{ form.code }}
+                            {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors.0 }}</div>{% endif %}
+                            <div class="form-text text-secondary small">Unique within {{ institution.code }} (e.g. DOWNTOWN, NORTH, SOUTH).</div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="{{ form.city.id_for_label }}" class="form-label text-light fw-semibold">City</label>
+                                {{ form.city }}
+                            </div>
+                            <div class="col-6">
+                                <label for="{{ form.state.id_for_label }}" class="form-label text-light fw-semibold">State</label>
+                                {{ form.state }}
+                            </div>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label text-light fw-semibold">Phone</label>
+                                {{ form.phone }}
+                            </div>
+                            <div class="col-6">
+                                <label for="{{ form.email.id_for_label }}" class="form-label text-light fw-semibold">Email</label>
+                                {{ form.email }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label text-light fw-semibold">Physical Address</label>
+                            {{ form.address }}
+                        </div>
+
+                        <div class="form-check mb-4">
+                            {{ form.is_main }}
+                            <label class="form-check-label text-light" for="{{ form.is_main.id_for_label }}">
+                                Primary Headquarters / Main Campus
+                            </label>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary fw-semibold">
+                                <i class="bi bi-building-add me-1"></i> Create Campus Branch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

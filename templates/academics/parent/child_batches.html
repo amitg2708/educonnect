@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Child Coaching Batches - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Parent Guardian Portal</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-light">Child Coaching Cohorts &amp; Schedules</h2>
+            <p class="text-secondary small mb-0">Track your ward's tuition batches, entrance exam preparations, timetable routines, and faculty mentors.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'notifications:parent_hub' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-people me-1"></i> Parent Hub
+            </a>
+            <a href="{% url 'academics:parent_child_academics' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-award me-1"></i> Academic Grades
+            </a>
+        </div>
+    </div>
+
+    <!-- Children Switcher -->
+    {% if children_links %}
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <span class="text-secondary small fw-semibold text-uppercase d-block mb-2">Select Student Ward:</span>
+        <div class="d-flex flex-wrap gap-2">
+            {% for link in children_links %}
+            <a href="{% url 'academics:parent_child_batches_detail' link.student.id %}" class="btn btn-sm {% if selected_student.id == link.student.id %}btn-primary fw-bold{% else %}btn-outline-light{% endif %}">
+                <i class="bi bi-person-fill me-1"></i> {{ link.student.get_full_name|default:link.student.username }}
+                <span class="badge bg-dark border border-secondary text-light ms-1">{{ link.relationship|default:"Ward" }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if selected_student %}
+    <div class="mb-4">
+        <h4 class="fw-bold text-light mb-3">
+            Enrolled Batches for <span class="text-info">{{ selected_student.get_full_name|default:selected_student.username }}</span> ({{ enrollments|length }})
+        </h4>
+
+        {% if enrollments %}
+        <div class="row g-4">
+            {% for e in enrollments %}
+            <div class="col-lg-6">
+                <div class="card p-4 border-0 rounded-4 feature-card shadow-lg h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="badge bg-info-subtle text-info small mb-1">{{ e.batch.course.get_category_display }}</span>
+                            <h4 class="fw-bold text-light mb-0">{{ e.batch.name }}</h4>
+                            <span class="text-secondary small font-monospace">{{ e.batch.code }}</span>
+                        </div>
+                        <span class="badge {% if e.status == 'active' %}bg-success-subtle text-success{% elif e.status == 'waitlisted' %}bg-warning-subtle text-warning{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                            {{ e.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div class="row g-2 mb-3 text-secondary small">
+                        <div class="col-6">
+                            <i class="bi bi-book me-1 text-info"></i> Course: <strong class="text-light">{{ e.batch.course.title }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <i class="bi bi-geo-alt me-1 text-danger"></i> Branch: <strong class="text-light">{{ e.batch.branch.name|default:"Main Campus" }}</strong>
+                        </div>
+                        <div class="col-6">
+                            <i class="bi bi-mortarboard me-1 text-warning"></i> Class/Stream: <strong class="text-light">{{ e.batch.target_class|default:e.batch.course.target_class }} ({{ e.batch.stream|default:e.batch.course.get_stream_display }})</strong>
+                        </div>
+                        <div class="col-6">
+                            <i class="bi bi-person-badge me-1 text-success"></i> Roll #: <strong class="text-light">{{ e.roll_number|default:"Assigned" }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Timetable Slots -->
+                    <div class="mt-3 pt-3 border-top border-secondary">
+                        <span class="text-secondary small fw-bold text-uppercase d-block mb-2">
+                            <i class="bi bi-clock-history me-1 text-warning"></i> Weekly Class Timing
+                        </span>
+                        {% if e.batch.schedules.all %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for s in e.batch.schedules.all %}
+                            <div class="badge bg-dark border border-secondary text-light p-2 text-start">
+                                <span class="text-warning fw-bold d-block">{{ s.get_day_of_week_display }}</span>
+                                <span class="font-monospace small">{{ s.start_time|time:"H:i" }}-{{ s.end_time|time:"H:i" }}</span>
+                                {% if s.subject %}<span class="text-info small d-block">&bull; {{ s.subject.name }}</span>{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-secondary small fst-italic">Schedule routine to be announced.</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Faculty Mentors -->
+                    <div class="mt-3 pt-3 border-top border-secondary">
+                        <span class="text-secondary small fw-bold text-uppercase d-block mb-2">
+                            <i class="bi bi-person-video3 me-1 text-info"></i> Subject Faculty
+                        </span>
+                        {% if e.batch.teacher_assignments.all %}
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for ta in e.batch.teacher_assignments.all %}
+                            <span class="badge bg-secondary-subtle text-light py-1 px-2">
+                                <strong class="text-info">{{ ta.subject.name }}:</strong> {{ ta.teacher.get_full_name|default:ta.teacher.username }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-secondary small fst-italic">Faculty assignment pending.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card p-5 border-0 rounded-4 feature-card text-center">
+            <i class="bi bi-collection-play text-secondary" style="font-size: 3rem;"></i>
+            <h5 class="text-secondary mt-3">No coaching batches enrolled for this student</h5>
+            <p class="text-secondary small">Your ward is not currently placed in any coaching cohorts.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="card p-5 border-0 rounded-4 feature-card text-center">
+        <i class="bi bi-people text-secondary" style="font-size: 3rem;"></i>
+        <h5 class="text-secondary mt-3">No student ward accounts linked to your parent profile</h5>
+        <p class="text-secondary small">Contact the institute administration desk to link your child's student registration.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

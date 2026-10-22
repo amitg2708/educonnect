@@ -13,19 +13,22 @@
                     <span class="small fw-bold text-primary text-uppercase">Admissions Open &bull; Academic Year 2026-27</span>
                 </div>
                 <h1 class="display-4 fw-extrabold mb-3 text-light">
-                    Empowering Minds, <br><span class="text-gradient">Shaping Tomorrow</span>
+                    {% if institution %}{{ institution.name }}<br><span class="text-gradient">{{ institution.tagline|default:"Excellence in Education" }}</span>{% else %}Empowering Minds, <br><span class="text-gradient">Shaping Tomorrow</span>{% endif %}
                 </h1>
                 <p class="lead text-secondary mb-4">
-                    EduConnect is a forward-thinking school and college institution delivering world-class curriculum, cutting-edge STEM laboratories, holistic athletics, and values-driven leadership.
+                    {% if institution and institution.description %}{{ institution.description }}{% else %}EduConnect is a forward-thinking school and college institution delivering world-class curriculum, cutting-edge STEM laboratories, holistic athletics, and values-driven leadership.{% endif %}
                 </p>
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="{% url 'core:admissions' %}" class="btn btn-primary px-4 py-3 fw-bold d-inline-flex align-items-center gap-2 shadow-sm">
+                    <a href="{% if institution.slug %}{% url 'core:institute_admissions' institution.slug %}{% else %}{% url 'core:admissions' %}{% endif %}" class="btn btn-primary px-4 py-3 fw-bold d-inline-flex align-items-center gap-2 shadow-sm">
                         <i class="bi bi-mortarboard-fill"></i> Apply for Admission
                     </a>
-                    <a href="{% url 'core:courses' %}" class="btn btn-outline-light px-4 py-3 fw-semibold d-inline-flex align-items-center gap-2">
+                    <a href="{% if institution.slug %}{% url 'core:institute_courses' institution.slug %}{% else %}{% url 'core:courses' %}{% endif %}" class="btn btn-outline-light px-4 py-3 fw-semibold d-inline-flex align-items-center gap-2">
                         <i class="bi bi-book-half"></i> Explore Programs
                     </a>
-                    <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary px-4 py-3 fw-semibold d-inline-flex align-items-center gap-2">
+                    <a href="{% if institution.slug %}{% url 'core:institute_batches' institution.slug %}{% else %}{% url 'core:batches' %}{% endif %}" class="btn btn-outline-info px-4 py-3 fw-semibold d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-collection-play"></i> Batches
+                    </a>
+                    <a href="{% if institution.slug %}{% url 'core:institute_login' institution.slug %}{% else %}{% url 'accounts:login' %}{% endif %}" class="btn btn-outline-secondary px-4 py-3 fw-semibold d-inline-flex align-items-center gap-2">
                         <i class="bi bi-shield-lock"></i> Portal Login
                     </a>
                 </div>
@@ -194,17 +197,17 @@
             <div class="row align-items-center g-4">
                 <div class="col-lg-8">
                     <span class="badge bg-primary-subtle text-primary text-uppercase px-3 py-1 rounded-pill mb-2">Join Our Community</span>
-                    <h2 class="display-6 fw-extrabold text-light mb-2">Ready to Start Your Journey at EduConnect?</h2>
+                    <h2 class="display-6 fw-extrabold text-light mb-2">Ready to Start Your Journey at {{ institution.name|default:"EduConnect" }}?</h2>
                     <p class="text-secondary lead mb-0">
                         Explore admissions pathways, book a personalized campus tour, or speak with an admissions officer today.
                     </p>
                 </div>
                 <div class="col-lg-4 text-md-end">
                     <div class="d-inline-flex flex-column gap-2 w-100 w-md-auto">
-                        <a href="{% url 'core:admissions' %}" class="btn btn-primary px-4 py-3 fw-bold">
+                        <a href="{% if institution.slug %}{% url 'core:institute_admissions' institution.slug %}{% else %}{% url 'core:admissions' %}{% endif %}" class="btn btn-primary px-4 py-3 fw-bold">
                             <i class="bi bi-pencil-square me-1"></i> Apply Online
                         </a>
-                        <a href="{% url 'core:contact' %}" class="btn btn-outline-light px-4 py-2 small">
+                        <a href="{% if institution.slug %}{% url 'core:institute_contact' institution.slug %}{% else %}{% url 'core:contact' %}{% endif %}" class="btn btn-outline-light px-4 py-2 small">
                             <i class="bi bi-envelope me-1"></i> Contact Admissions
                         </a>
                     </div>

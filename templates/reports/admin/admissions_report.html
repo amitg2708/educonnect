@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Admissions Report - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-danger"></span>
+                <span class="small fw-bold text-danger text-uppercase">Admissions Intelligence</span>
+            </div>
+            <h2 class="fw-bold mb-1">Admissions Pipeline &amp; Applications Report</h2>
+            <p class="text-secondary small mb-0">Search and filter applicant cohorts, verify status distribution, and export data.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="?{% if selected_status %}status={{ selected_status }}&{% endif %}{% if search_query %}q={{ search_query }}&{% endif %}export=csv" class="btn btn-outline-success btn-sm fw-bold">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export to CSV
+            </a>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Search applicant email...">
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                    <option value="">All Application Statuses</option>
+                    <option value="draft" {% if selected_status == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="submitted" {% if selected_status == 'submitted' %}selected{% endif %}>Submitted</option>
+                    <option value="under_review" {% if selected_status == 'under_review' %}selected{% endif %}>Under Review</option>
+                    <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100 fw-bold">Filter</button>
+                <a href="{% url 'reports:admissions_report' %}" class="btn btn-sm btn-outline-light">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Report Table -->
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0 text-light">Filtered Applications ({{ total_count }})</h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>APP #</th>
+                        <th>APPLICANT</th>
+                        <th>EMAIL</th>
+                        <th>PHONE</th>
+                        <th>PROGRAM</th>
+                        <th>STATUS</th>
+                        <th>SUBMITTED</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in page_obj %}
+                    <tr>
+                        <td><code>{{ app.application_number }}</code></td>
+                        <td><strong class="text-light">{{ app.applicant.get_full_name|default:app.applicant.username }}</strong></td>
+                        <td>{{ app.applicant.email }}</td>
+                        <td>{{ app.phone }}</td>
+                        <td><span class="badge bg-secondary">{{ app.course.title|default:"General" }}</span></td>
+                        <td>
+                            <span class="badge {% if app.status == 'approved' %}bg-success{% elif app.status == 'rejected' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                        </td>
+                        <td><small class="text-secondary">{{ app.submitted_at|date:"M d, Y" }}</small></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center py-4 text-secondary">No admissions applications match criteria.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="mt-4 d-flex justify-content-between align-items-center">
+            <small class="text-secondary">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</small>
+            <div class="btn-group btn-group-sm">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-outline-light">&larr; Prev</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" class="btn btn-outline-light">Next &rarr;</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

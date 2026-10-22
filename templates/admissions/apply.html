@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Admission Application - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'core:admissions' %}" class="text-secondary text-decoration-none">Admissions</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Apply</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-5">
+            <span class="text-primary text-uppercase fw-bold small">Online Admission Portal</span>
+            <h1 class="display-6 fw-extrabold text-light mb-2">Student <span class="text-gradient">Admission Application</span></h1>
+            <p class="text-secondary small">
+                Complete all required sections accurately. Once submitted, a unique application reference number will be issued for tracking your review status.
+            </p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger border-0 rounded-3 mb-4">
+                {% for err in form.non_field_errors %}
+                <p class="mb-0 small"><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ err }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Target Course Selection -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-circle">1</span> Academic Program Selection
+                </h5>
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Target Course / Program <span class="text-danger">*</span></label>
+                    {{ form.course }}
+                    {% if form.course.errors %}
+                    <div class="text-danger small mt-1">{{ form.course.errors.0 }}</div>
+                    {% endif %}
+                    <div class="form-text text-secondary small">
+                        Choose the degree or certificate program you are seeking admission to.
+                        <a href="{% url 'admissions:eligibility' %}" target="_blank" class="text-primary text-decoration-none ms-1">View prerequisites</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Personal Information -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-circle">2</span> Applicant Personal Details
+                </h5>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">First Name <span class="text-danger">*</span></label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Last Name <span class="text-danger">*</span></label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Email Address <span class="text-danger">*</span></label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}<div class="text-danger small mt-1">{{ form.phone_number.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-secondary small fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}<div class="text-danger small mt-1">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-secondary small fw-semibold">Gender <span class="text-danger">*</span></label>
+                        {{ form.gender }}
+                        {% if form.gender.errors %}<div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-secondary small fw-semibold">Nationality <span class="text-danger">*</span></label>
+                        {{ form.nationality }}
+                        {% if form.nationality.errors %}<div class="text-danger small mt-1">{{ form.nationality.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Residential Address <span class="text-danger">*</span></label>
+                    {{ form.address_line1 }}
+                    {% if form.address_line1.errors %}<div class="text-danger small mt-1">{{ form.address_line1.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label text-secondary small fw-semibold">City <span class="text-danger">*</span></label>
+                        {{ form.city }}
+                        {% if form.city.errors %}<div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-secondary small fw-semibold">State / Province <span class="text-danger">*</span></label>
+                        {{ form.state }}
+                        {% if form.state.errors %}<div class="text-danger small mt-1">{{ form.state.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-secondary small fw-semibold">Postal Code <span class="text-danger">*</span></label>
+                        {{ form.postal_code }}
+                        {% if form.postal_code.errors %}<div class="text-danger small mt-1">{{ form.postal_code.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-secondary small fw-semibold">Country <span class="text-danger">*</span></label>
+                        {{ form.country }}
+                        {% if form.country.errors %}<div class="text-danger small mt-1">{{ form.country.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Guardian Details -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-circle">3</span> Parent / Guardian / Emergency Contact
+                </h5>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Guardian Full Name <span class="text-danger">*</span></label>
+                        {{ form.guardian_name }}
+                        {% if form.guardian_name.errors %}<div class="text-danger small mt-1">{{ form.guardian_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Relationship to Applicant <span class="text-danger">*</span></label>
+                        {{ form.guardian_relationship }}
+                        {% if form.guardian_relationship.errors %}<div class="text-danger small mt-1">{{ form.guardian_relationship.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Guardian Phone Number <span class="text-danger">*</span></label>
+                        {{ form.guardian_phone }}
+                        {% if form.guardian_phone.errors %}<div class="text-danger small mt-1">{{ form.guardian_phone.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Guardian Email (Optional)</label>
+                        {{ form.guardian_email }}
+                        {% if form.guardian_email.errors %}<div class="text-danger small mt-1">{{ form.guardian_email.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Academic Background -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-circle">4</span> Prior Academic Qualifications
+                </h5>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Last Institution Attended <span class="text-danger">*</span></label>
+                        {{ form.previous_institution }}
+                        {% if form.previous_institution.errors %}<div class="text-danger small mt-1">{{ form.previous_institution.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Highest Qualification Attained <span class="text-danger">*</span></label>
+                        {{ form.previous_qualification }}
+                        {% if form.previous_qualification.errors %}<div class="text-danger small mt-1">{{ form.previous_qualification.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Grade / Percentage / GPA <span class="text-danger">*</span></label>
+                        {{ form.previous_grade_or_percentage }}
+                        {% if form.previous_grade_or_percentage.errors %}<div class="text-danger small mt-1">{{ form.previous_grade_or_percentage.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Graduation / Passing Year <span class="text-danger">*</span></label>
+                        {{ form.year_of_passing }}
+                        {% if form.year_of_passing.errors %}<div class="text-danger small mt-1">{{ form.year_of_passing.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label text-secondary small fw-semibold">Statement of Purpose / Academic Goals</label>
+                    {{ form.statement_of_purpose }}
+                    {% if form.statement_of_purpose.errors %}<div class="text-danger small mt-1">{{ form.statement_of_purpose.errors.0 }}</div>{% endif %}
+                    <div class="form-text text-secondary small">Briefly explain your academic motivation and reasons for choosing this course.</div>
+                </div>
+            </div>
+
+            <!-- Section 5: Verification Documents -->
+            <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-circle">5</span> Required Verification Documents
+                </h5>
+                <p class="text-secondary small mb-3">
+                    Accepted formats: <strong>PDF, JPG, JPEG, PNG</strong>. Maximum allowable size: <strong>5 MB per file</strong>.
+                </p>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">
+                        1. Identity Proof (National ID / Passport / Birth Certificate) <span class="text-danger">*</span>
+                    </label>
+                    {{ form.identity_proof_file }}
+                    {% if form.identity_proof_file.errors %}<div class="text-danger small mt-1">{{ form.identity_proof_file.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">
+                        2. Prior Academic Transcript / Official Marksheet <span class="text-danger">*</span>
+                    </label>
+                    {{ form.transcript_file }}
+                    {% if form.transcript_file.errors %}<div class="text-danger small mt-1">{{ form.transcript_file.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">
+                        3. Recent Passport Size Photo (Optional)
+                    </label>
+                    {{ form.passport_photo_file }}
+                    {% if form.passport_photo_file.errors %}<div class="text-danger small mt-1">{{ form.passport_photo_file.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Declaration & Submission -->
+            <div class="card p-4 border-0 rounded-4 hero-card shadow-lg mb-4 text-center">
+                <div class="form-check text-start mb-3">
+                    <input class="form-check-input" type="checkbox" id="declarationCheck" required checked>
+                    <label class="form-check-label text-secondary small" for="declarationCheck">
+                        I hereby declare that all information furnished in this admission application is true, complete, and authentic to the best of my knowledge.
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg fw-bold py-3">
+                    <i class="bi bi-send-check me-2"></i> Submit Official Application
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Answer Student Doubt - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Answer Academic Question</h3>
+                    <p class="text-secondary small mb-0">{{ doubt.subject_name }} - {{ doubt.classroom.name }}</p>
+                </div>
+                <a href="{% url 'academics:teacher_doubts' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Doubts Inbox
+                </a>
+            </div>
+
+            <!-- Student Question Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 mb-2">
+                            {{ doubt.subject_name }}
+                        </span>
+                        <h4 class="fw-bold text-light mb-1">{{ doubt.question_title }}</h4>
+                        <small class="text-secondary">
+                            Asked by <strong class="text-light">{{ doubt.student.get_full_name|default:doubt.student.username }}</strong>
+                            on {{ doubt.created_at|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                    {% if doubt.is_resolved %}
+                    <span class="badge bg-success">Resolved</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-3 rounded-3 bg-dark border border-secondary-subtle">
+                    <p class="text-light mb-0" style="white-space: pre-wrap;">{{ doubt.question_text }}</p>
+                </div>
+            </div>
+
+            <!-- Teacher Reply Form -->
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-reply-fill text-warning"></i> Your Detailed Answer
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Explanation &amp; Guidance *</label>
+                        {{ form.answer_text }}
+                        {% if form.answer_text.errors %}<div class="text-danger small">{{ form.answer_text.errors }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold">
+                        <i class="bi bi-send me-1"></i> Submit Answer to Student
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

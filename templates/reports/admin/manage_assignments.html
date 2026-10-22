@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Faculty Teaching Assignments - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-info"></span>
+                <span class="small fw-bold text-info text-uppercase">Faculty Staffing</span>
+            </div>
+            <h2 class="fw-bold mb-1">Faculty Subject Teaching Assignments</h2>
+            <p class="text-secondary small mb-0">Authorize teacher assignments to specific academic subjects and classrooms. Grants subject access for attendance, marks, and assignments.</p>
+        </div>
+        <div>
+            <a href="{% url 'reports:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Return to Admin Hub
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Assign Teacher Form Column -->
+        <div class="col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2 border-bottom border-secondary-subtle pb-2">
+                    <i class="bi bi-person-badge text-primary"></i> Assign Teacher to Subject
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">SELECT FACULTY TEACHER</label>
+                        {{ form.teacher }}
+                        {% if form.teacher.errors %}<div class="text-danger small mt-1">{{ form.teacher.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">TARGET CLASSROOM</label>
+                        {{ form.classroom }}
+                        {% if form.classroom.errors %}<div class="text-danger small mt-1">{{ form.classroom.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">SUBJECT / COURSE NAME</label>
+                        {{ form.subject_name }}
+                        {% if form.subject_name.errors %}<div class="text-danger small mt-1">{{ form.subject_name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="form-check form-switch mb-4">
+                        {{ form.is_active }}
+                        <label class="form-check-label text-light small" for="{{ form.is_active.id_for_label }}">Active teaching authorization</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-shield-check me-1"></i> Authorize Assignment
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Assignments Table Column -->
+        <div class="col-lg-8">
+            <div class="card border-0 rounded-4 feature-card overflow-hidden">
+                <div class="card-header bg-transparent border-secondary-subtle p-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-person-video3 text-info"></i> Authorized Teaching Assignments ({{ assignments.count }})
+                    </h5>
+                    <a href="{% url 'timetable:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-calendar3 me-1"></i> Timetable Matrix
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>TEACHER</th>
+                                <th>SUBJECT</th>
+                                <th>CLASSROOM</th>
+                                <th>ASSIGNED DATE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in assignments %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ a.teacher.get_full_name|default:a.teacher.username }}</strong>
+                                    <div class="small text-secondary">{{ a.teacher.email }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary fw-bold">{{ a.subject_name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary font-monospace">{{ a.classroom.code }}</span>
+                                    <div class="small text-secondary">{{ a.classroom.name }}</div>
+                                </td>
+                                <td class="small text-secondary text-nowrap">
+                                    {{ a.assigned_date|date:"M d, Y" }}
+                                </td>
+                                <td>
+                                    {% if a.is_active %}
+                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-secondary">
+                                    <i class="bi bi-person-video2 fs-1 d-block mb-2 text-muted"></i>
+                                    No faculty teaching assignments created yet.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

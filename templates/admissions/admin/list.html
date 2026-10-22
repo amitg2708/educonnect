@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Admissions Desk - Applications Directory - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard_redirect' %}" class="text-secondary text-decoration-none">Admin Portal</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Admissions Desk</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Admissions Management</span>
+            </div>
+            <h2 class="fw-bold text-light mb-1">Admissions Desk &bull; Applications</h2>
+            <p class="text-secondary small mb-0">Search, review applicant dossiers, request missing documentation, and enroll students</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'admissions:admin_enquiry_list' %}" class="btn btn-primary btn-sm fw-semibold">
+                <i class="bi bi-funnel me-1"></i> CRM Enquiries &amp; Leads
+            </a>
+            <a href="{% url 'admissions:admin_enquiry_reports' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-bar-chart-line me-1"></i> Source Reports
+            </a>
+            <a href="{% url 'accounts:dashboard_redirect' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-speedometer2 me-1"></i> Admin Portal
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center h-100">
+                <span class="text-secondary small d-block">Total</span>
+                <h3 class="fw-bold text-light mb-0">{{ stats.total }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center h-100">
+                <span class="text-info small d-block">Submitted</span>
+                <h3 class="fw-bold text-info mb-0">{{ stats.submitted }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center h-100">
+                <span class="text-warning small d-block">Under Review</span>
+                <h3 class="fw-bold text-warning mb-0">{{ stats.under_review }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center h-100">
+                <span class="text-danger small d-block">Action Required</span>
+                <h3 class="fw-bold text-danger mb-0">{{ stats.action_required }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center h-100">
+                <span class="text-success small d-block">Approved</span>
+                <h3 class="fw-bold text-success mb-0">{{ stats.approved }}</h3>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center h-100">
+                <span class="text-primary small d-block">Enrolled</span>
+                <h3 class="fw-bold text-primary mb-0">{{ stats.enrolled }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="card p-4 border-0 rounded-4 feature-card shadow-sm mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label text-secondary small fw-semibold">Search Applications</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary-subtle text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control bg-dark text-light border-secondary-subtle" placeholder="Ref #, Name, Email, Phone...">
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label text-secondary small fw-semibold">Status Filter</label>
+                <select name="status" class="form-select bg-dark text-light border-secondary-subtle">
+                    <option value="">All Statuses</option>
+                    {% for st_key, st_label in statuses %}
+                    <option value="{{ st_key }}" {% if selected_status == st_key %}selected{% endif %}>{{ st_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label text-secondary small fw-semibold">Course / Program</label>
+                <select name="course" class="form-select bg-dark text-light border-secondary-subtle">
+                    <option value="">All Courses</option>
+                    {% for c in courses %}
+                    <option value="{{ c.code }}" {% if selected_course == c.code %}selected{% endif %}>{{ c.code }} - {{ c.title|truncatechars:28 }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-lg-2 col-md-6 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+                <a href="{% url 'admissions:admin_application_list' %}" class="btn btn-outline-secondary text-light">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Applications Table -->
+    <div class="card border-0 rounded-4 feature-card shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary border-bottom border-secondary-subtle">
+                        <th class="ps-4">Reference #</th>
+                        <th>Applicant Name</th>
+                        <th>Program</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th>Docs</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td class="ps-4">
+                            <a href="{% url 'admissions:admin_application_detail' app.application_number %}" class="fw-bold text-primary text-decoration-none">
+                                {{ app.application_number }}
+                            </a>
+                        </td>
+                        <td>
+                            <strong class="text-light d-block">{{ app.full_name }}</strong>
+                            <span class="text-secondary">{{ app.email }} &bull; {{ app.phone_number }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary-subtle text-secondary me-1">{{ app.course.code }}</span>
+                            <span class="text-light">{{ app.course.title|truncatechars:32 }}</span>
+                        </td>
+                        <td class="text-secondary">
+                            {{ app.submitted_at|date:"M d, Y" }}
+                        </td>
+                        <td>
+                            {% if app.status == 'submitted' %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle">Submitted</span>
+                            {% elif app.status == 'under_review' %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Under Review</span>
+                            {% elif app.status == 'action_required' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Action Required</span>
+                            {% elif app.status == 'approved' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Approved</span>
+                            {% elif app.status == 'enrolled' %}
+                            <span class="badge bg-primary text-light">Enrolled</span>
+                            {% elif app.status == 'rejected' %}
+                            <span class="badge bg-danger text-light">Rejected</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ app.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-dark border border-secondary-subtle">
+                                <i class="bi bi-paperclip me-1"></i>{{ app.documents.count }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'admissions:admin_application_detail' app.application_number %}" class="btn btn-outline-light btn-sm">
+                                Review Dossier <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-secondary">
+                            <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                            No admission applications matched the search criteria.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

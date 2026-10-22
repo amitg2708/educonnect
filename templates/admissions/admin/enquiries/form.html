@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Log New Enquiry - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container py-1">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard_redirect' %}" class="text-secondary text-decoration-none">Admin Portal</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admissions:admin_enquiry_list' %}" class="text-secondary text-decoration-none">CRM Enquiries</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Log Lead</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold text-light mb-1">
+                        <i class="bi bi-telephone-plus text-primary me-2"></i> Log New Prospect Enquiry
+                    </h2>
+                    <p class="text-secondary small mb-0">Record an inquiry received over phone call, campus walk-in, referral, or email.</p>
+                </div>
+                <a href="{% url 'admissions:admin_enquiry_list' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Directory
+                </a>
+            </div>
+
+            <div class="card p-4 p-md-5 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-3 small mb-4">
+                        {% for error in form.non_field_errors %}
+                        <div><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Lead Origin & Contact -->
+                    <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-lines-fill text-primary"></i> 1. Lead Source &amp; Contact Info
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Inquiry Source <span class="text-danger">*</span></label>
+                            {{ form.source }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Campus Branch</label>
+                            {{ form.branch }}
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-secondary small fw-semibold">Student / Parent Full Name <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Primary Phone Number <span class="text-danger">*</span></label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Email Address <span class="text-danger">*</span></label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Alternate Phone / WhatsApp</label>
+                            {{ form.alternate_phone }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">City / Location</label>
+                            {{ form.city }}
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary-subtle my-4">
+
+                    <!-- Academic Interest -->
+                    <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-book text-info"></i> 2. Academic &amp; Batch Interest
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Target Class / Grade</label>
+                            {{ form.target_class }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Stream / Field</label>
+                            {{ form.stream }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Course</label>
+                            {{ form.course }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Preferred Coaching Batch</label>
+                            {{ form.batch_interest }}
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary-subtle my-4">
+
+                    <!-- CRM Assignment & Follow-up -->
+                    <h5 class="fw-bold text-light mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-warning"></i> 3. Lead Assignment &amp; Follow-up
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Initial Status</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Assign Counselor / Staff</label>
+                            {{ form.assigned_to }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Next Follow-up Date</label>
+                            {{ form.next_follow_up_date }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-semibold">Trial Class Date (If Scheduled)</label>
+                            {{ form.trial_class_date }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-secondary small fw-semibold">Discussion Notes / Prospect Background</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{% url 'admissions:admin_enquiry_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary fw-bold px-4 py-2">
+                            <i class="bi bi-check-circle me-1"></i> Save &amp; Log Lead
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

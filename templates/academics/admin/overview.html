@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Academics Oversight Desk - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-primary"></span>
+                <span class="small fw-bold text-primary text-uppercase">Institutional Administration</span>
+            </div>
+            <h2 class="fw-bold mb-1">Academic Affairs &amp; Assessments Desk</h2>
+            <p class="text-secondary small mb-0">Campus-wide supervision of curriculum delivery, coursework assignments, and official examination results publication.</p>
+        </div>
+        <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Admin Portal
+        </a>
+    </div>
+
+    <!-- Metrics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small fw-bold">TOTAL ASSESSMENTS</span>
+                <h3 class="fw-bold mb-0 text-light">{{ assessments.count }}</h3>
+                <span class="text-secondary small">Exams &amp; Quizzes</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small fw-bold">ASSIGNMENTS</span>
+                <h3 class="fw-bold mb-0 text-info">{{ assignments.count }}</h3>
+                <span class="text-secondary small">Coursework modules</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small fw-bold">STUDENT SUBMISSIONS</span>
+                <h3 class="fw-bold mb-0 text-primary">{{ total_submissions }}</h3>
+                <span class="text-secondary small">Total turned in</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <span class="text-secondary small fw-bold">GRADED SUBMISSIONS</span>
+                <h3 class="fw-bold mb-0 text-success">{{ total_graded }}</h3>
+                <span class="text-secondary small">Evaluated coursework</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Institutional Assessments -->
+    <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+        <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+            <i class="bi bi-award text-success"></i> Campus Examinations &amp; Assessments ({{ assessments.count }})
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0">
+                <thead class="text-secondary small">
+                    <tr>
+                        <th>ASSESSMENT</th>
+                        <th>CLASS</th>
+                        <th>FACULTY</th>
+                        <th>MAX MARKS</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asm in assessments %}
+                    <tr>
+                        <td>
+                            <strong class="text-light">{{ asm.title }}</strong>
+                            <div class="small text-secondary">{{ asm.subject_name }} &bull; {{ asm.get_assessment_type_display }}</div>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ asm.classroom.code }}</span></td>
+                        <td>
+                            <span class="text-light">{{ asm.teacher.get_full_name|default:asm.teacher.username }}</span>
+                        </td>
+                        <td><strong>{{ asm.max_marks }}</strong></td>
+                        <td>
+                            {% if asm.is_published %}
+                            <span class="badge bg-success">Published</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Confidential Draft</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'academics:teacher_enter_marks' asm.id %}" class="btn btn-sm btn-outline-info">
+                                Review / Scores
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-secondary">No institutional assessments recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

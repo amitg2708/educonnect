@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Ticket {{ ticket.ticket_number }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <code>{{ ticket.ticket_number }}</code>
+                <span class="small fw-bold text-info text-uppercase">{{ ticket.category.name }}</span>
+            </div>
+            <h2 class="fw-bold mb-1">{{ ticket.subject }}</h2>
+            <p class="text-secondary small mb-0">
+                Submitted by <strong class="text-light">{{ ticket.submitter.get_full_name|default:ticket.submitter.username }}</strong>
+                ({{ ticket.submitter.get_role_display }}) &bull; {{ ticket.submitter.email }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'complaints:staff_desk' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Complaints Desk
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Conversation & Notes Column -->
+        <div class="col-lg-8">
+            <!-- Issue Details Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <h5 class="fw-bold mb-2 text-light">Issue Summary</h5>
+                <p class="text-light mb-3" style="white-space: pre-wrap;">{{ ticket.description }}</p>
+
+                {% if ticket.attachment %}
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-dark border border-secondary-subtle">
+                    <span class="small text-secondary">
+                        <i class="bi bi-paperclip me-1"></i> Submitter Documentation
+                    </span>
+                    <a href="{{ ticket.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-download me-1"></i> Download File
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Resolution Summary (if resolved) -->
+            {% if ticket.resolution_details %}
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4 border border-success-subtle">
+                <h5 class="fw-bold text-success mb-2 d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i> Recorded Resolution Details
+                </h5>
+                <p class="text-light mb-2" style="white-space: pre-wrap;">{{ ticket.resolution_details }}</p>
+                <div class="small text-secondary">
+                    Resolved by <strong class="text-light">{{ ticket.resolved_by.get_full_name|default:ticket.resolved_by.username }}</strong>
+                    on {{ ticket.resolved_at|date:"M d, Y H:i" }}
+                </div>
+                {% if ticket.satisfaction_rating %}
+                <div class="mt-3 pt-3 border-top border-secondary-subtle small text-secondary">
+                    <i class="bi bi-star-fill text-warning me-1"></i>
+                    User Satisfaction Rating: <strong class="text-warning">{{ ticket.get_satisfaction_rating_display }}</strong>
+                    {% if ticket.feedback_comment %}&bull; <em>"{{ ticket.feedback_comment }}"</em>{% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Communication History (Public & Internal) -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-left-text text-info"></i> Activity &amp; Communication Thread
+                </h5>
+
+                <div class="d-flex flex-column gap-3 mb-4">
+                    {% for c in comments %}
+                    {% if c.is_internal %}
+                    <!-- Internal Staff Note -->
+                    <div class="p-3 rounded-3 bg-warning bg-opacity-10 border border-warning">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-warning text-dark fw-bold">
+                                <i class="bi bi-lock-fill me-1"></i> INTERNAL STAFF NOTE
+                            </span>
+                            <small class="text-secondary">{{ c.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <p class="text-warning-emphasis mb-1 small" style="white-space: pre-wrap;">{{ c.message }}</p>
+                        <small class="text-secondary d-block">Logged by: {{ c.author.get_full_name|default:c.author.username }}</small>
+                    </div>
+                    {% else %}
+                    <!-- Public Comment -->
+                    <div class="p-3 rounded-3 {% if c.author == ticket.submitter %}bg-dark border border-secondary-subtle{% else %}bg-secondary bg-opacity-10 border border-info border-opacity-25{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="{% if c.author == ticket.submitter %}text-light{% else %}text-info{% endif %}">
+                                {{ c.author.get_full_name|default:c.author.username }}
+                                {% if c.author != ticket.submitter %}<span class="badge bg-info-subtle text-info ms-1">Staff Reply</span>{% endif %}
+                            </strong>
+                            <small class="text-secondary">{{ c.created_at|date:"M d, H:i" }}</small>
+                        </div>
+                        <p class="text-light small mb-0" style="white-space: pre-wrap;">{{ c.message }}</p>
+                        {% if c.attachment %}
+                        <div class="mt-2 pt-2 border-top border-secondary-subtle">
+                            <a href="{{ c.attachment.url }}" target="_blank" class="small text-info text-decoration-none">
+                                <i class="bi bi-paperclip me-1"></i> Download Attachment
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% empty %}
+                    <div class="text-secondary text-center py-3">No messages or notes recorded yet.</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Action Tabs for Replies & Notes -->
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active btn-sm" id="pills-reply-tab" data-bs-toggle="pill" data-bs-target="#pills-reply" type="button" role="tab">
+                            <i class="bi bi-reply me-1"></i> Public Reply
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm text-warning" id="pills-note-tab" data-bs-toggle="pill" data-bs-target="#pills-note" type="button" role="tab">
+                            <i class="bi bi-lock me-1"></i> Internal Staff Note
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="pills-tabContent">
+                    <!-- Public Reply Tab -->
+                    <div class="tab-pane fade show active" id="pills-reply" role="tabpanel">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="public_reply">
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small fw-bold">Message to Student / Parent</label>
+                                {{ comment_form.message }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small fw-bold">Attach Document (Optional)</label>
+                                {{ comment_form.attachment }}
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm fw-bold">
+                                <i class="bi bi-send me-1"></i> Post Public Reply
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Internal Note Tab -->
+                    <div class="tab-pane fade" id="pills-note" role="tabpanel">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="internal_note">
+                            <div class="mb-3">
+                                <label class="form-label text-warning small fw-bold">Internal Staff Investigation Note (Private)</label>
+                                {{ note_form.message }}
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-sm fw-bold">
+                                <i class="bi bi-lock-fill me-1"></i> Save Internal Note
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side Panel: Status, Assignment, Audit Trail -->
+        <div class="col-lg-4">
+            <!-- Status Update Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-gear text-primary"></i> Lifecycle Status
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_status">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Current Status *</label>
+                        {{ status_form.status }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Resolution Details (If Resolving)</label>
+                        {{ status_form.resolution_details }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Audit Remarks / Reason</label>
+                        {{ status_form.remarks }}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold">
+                        <i class="bi bi-check2-circle me-1"></i> Update Status
+                    </button>
+                </form>
+            </div>
+
+            <!-- Case Assignment Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-person-check text-info"></i> Case Assignee
+                </h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="assign_ticket">
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Staff Member</label>
+                        {{ assign_form.assigned_to }}
+                    </div>
+                    <button type="submit" class="btn btn-outline-info w-100 btn-sm fw-bold">
+                        Assign Staff
+                    </button>
+                </form>
+            </div>
+
+            <!-- Status Transition Audit History -->
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h6 class="fw-bold mb-3 text-secondary d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-secondary"></i> Status Audit Trail
+                </h6>
+                <ul class="list-group list-group-flush bg-transparent">
+                    {% for h in status_history %}
+                    <li class="list-group-item bg-transparent text-light border-secondary-subtle px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-secondary small">{{ h.old_status }} &rarr; {{ h.new_status }}</span>
+                            <small class="text-secondary">{{ h.created_at|date:"M d, H:i" }}</small>
+                        </div>
+                        {% if h.changed_by %}
+                        <div class="small text-secondary mt-1">By: {{ h.changed_by.username }}</div>
+                        {% endif %}
+                        {% if h.remarks %}
+                        <div class="small text-light fst-italic">{{ h.remarks }}</div>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item bg-transparent text-secondary px-0">No transitions logged.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

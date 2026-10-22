@@ -29,14 +29,16 @@ def role_required(*allowed_roles):
             if request.user.is_superuser:
                 return view_func(request, *args, **kwargs)
 
-            # Check user role against allowed roles
-            if request.user.role in allowed_roles:
+            # Check user's active institute role (or fallback to user.role)
+            active_role = getattr(request, "user_role", None) or getattr(request.user, "role", None)
+            if active_role in allowed_roles:
                 return view_func(request, *args, **kwargs)
 
             # Raise 403 PermissionDenied for unauthorized roles
+            inst_name = getattr(getattr(request, "institution", None), "name", "the current institution")
             raise PermissionDenied(
-                f"Access denied: You do not have the required permissions for this section. "
-                f"Your active role is '{request.user.get_role_display()}'. Required: {', '.join(allowed_roles)}."
+                f"Access denied: You do not have the required permissions for this section in {inst_name}. "
+                f"Your active role is '{active_role}'. Required: {', '.join(allowed_roles)}."
             )
 
         return _wrapped_view

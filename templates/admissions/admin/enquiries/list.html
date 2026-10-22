@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}CRM Enquiries &amp; Leads Desk - EduConnect{% endblock %}
+
+{% block breadcrumb %}
+<div class="bg-dark-subtle border-bottom border-secondary-subtle py-2">
+    <div class="container-fluid px-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{% url 'core:index' %}" class="text-secondary text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard_redirect' %}" class="text-secondary text-decoration-none">Admin Portal</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'admissions:admin_application_list' %}" class="text-secondary text-decoration-none">Admissions</a></li>
+                <li class="breadcrumb-item active text-primary" aria-current="page">Enquiries CRM</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6">CRM Pipeline</span>
+                <span class="text-secondary small">&bull; {{ request.institution.name|default:"Institute" }}</span>
+            </div>
+            <h2 class="fw-bold text-light mb-0">Coaching Enquiries &amp; Prospects</h2>
+            <p class="text-secondary small mb-0">Track leads from initial web/phone inquiry to trial class, counseling, and batch enrolment.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'admissions:admin_enquiry_create' %}" class="btn btn-primary fw-bold btn-sm">
+                <i class="bi bi-telephone-plus me-1"></i> Log Phone / Walk-in Enquiry
+            </a>
+            <a href="{% url 'admissions:admin_enquiry_reports' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-bar-chart-line me-1"></i> Source Reports
+            </a>
+            <a href="{% url 'admissions:admin_application_list' %}" class="btn btn-outline-secondary text-light btn-sm">
+                <i class="bi bi-folder-check me-1"></i> Formal Applications
+            </a>
+            <a href="{% url 'admissions:public_enquiry' %}" target="_blank" class="btn btn-outline-light btn-sm" title="Open Public Enquiry Form">
+                <i class="bi bi-box-arrow-up-right me-1"></i> Public Form
+            </a>
+        </div>
+    </div>
+
+    <!-- Pipeline KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle text-center shadow-sm h-100">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Total Prospects</span>
+                <h3 class="fw-bold text-light mb-0 mt-1">{{ stats.total }}</h3>
+                <span class="text-secondary extra-small mt-1">All Channels</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle text-center shadow-sm h-100">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">New Leads</span>
+                <h3 class="fw-bold text-info mb-0 mt-1">{{ stats.new }}</h3>
+                <span class="text-info extra-small mt-1">Pending Outreach</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle text-center shadow-sm h-100">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Trial Classes</span>
+                <h3 class="fw-bold text-warning mb-0 mt-1">{{ stats.trial_class }}</h3>
+                <span class="text-warning extra-small mt-1">Demo Scheduled</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle text-center shadow-sm h-100">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Follow-up Req.</span>
+                <h3 class="fw-bold text-primary mb-0 mt-1">{{ stats.follow_up_required }}</h3>
+                <span class="text-primary extra-small mt-1">In Counseling</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle text-center shadow-sm h-100">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Converted</span>
+                <h3 class="fw-bold text-success mb-0 mt-1">{{ stats.converted }}</h3>
+                <span class="text-success extra-small mt-1">Enrolled Students</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3 col-xl-2">
+            <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle text-center shadow-sm h-100">
+                <span class="text-secondary extra-small text-uppercase fw-semibold">Conversion Rate</span>
+                <h3 class="fw-bold text-success mb-0 mt-1">{{ stats.conversion_rate }}%</h3>
+                <span class="text-secondary extra-small mt-1">Overall Pipeline</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert for Overdue or Due Today Follow-ups -->
+    {% if stats.overdue_follow_ups > 0 or stats.follow_ups_due_today > 0 %}
+    <div class="alert alert-warning border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center gap-3">
+        <i class="bi bi-alarm-fill fs-3 text-warning"></i>
+        <div>
+            <strong class="text-light">Action Required on Follow-ups:</strong>
+            <span class="text-secondary ms-1">
+                You have <strong class="text-warning">{{ stats.follow_ups_due_today }}</strong> follow-ups scheduled for today,
+                and <strong class="text-danger">{{ stats.overdue_follow_ups }}</strong> overdue follow-ups awaiting counselor touchpoints.
+            </span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filter Bar -->
+    <div class="card p-3 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm mb-4">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-dark-subtle border-secondary-subtle text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control bg-dark text-light border-secondary-subtle" placeholder="Search by name, email, phone, reference...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary-subtle">
+                    <option value="">All Statuses</option>
+                    {% for code, label in statuses %}
+                    <option value="{{ code }}" {% if selected_status == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="source" class="form-select form-select-sm bg-dark text-light border-secondary-subtle">
+                    <option value="">All Sources</option>
+                    {% for code, label in sources %}
+                    <option value="{{ code }}" {% if selected_source == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="assigned_to" class="form-select form-select-sm bg-dark text-light border-secondary-subtle">
+                    <option value="">All Counselors</option>
+                    <option value="unassigned" {% if selected_assigned == 'unassigned' %}selected{% endif %}>Unassigned Leads</option>
+                    {% for staff in staff_members %}
+                    <option value="{{ staff.id }}" {% if selected_assigned == staff.id|stringformat:"s" %}selected{% endif %}>{{ staff.get_full_name|default:staff.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100 fw-semibold">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+                {% if query or selected_status or selected_source or selected_assigned %}
+                <a href="{% url 'admissions:admin_enquiry_list' %}" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Enquiries Table -->
+    <div class="card p-0 border-0 rounded-4 bg-dark border-secondary-subtle shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary border-bottom border-secondary-subtle">
+                        <th class="ps-4">Reference</th>
+                        <th>Prospect</th>
+                        <th>Interest (Course / Batch)</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Counselor</th>
+                        <th>Next Follow-up</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eq in enquiries %}
+                    <tr>
+                        <td class="ps-4">
+                            <a href="{% url 'admissions:admin_enquiry_detail' eq.enquiry_number %}" class="fw-bold text-primary text-decoration-none font-monospace">
+                                {{ eq.enquiry_number }}
+                            </a>
+                            <div class="text-secondary extra-small">{{ eq.created_at|date:"M d, Y" }}</div>
+                        </td>
+                        <td>
+                            <strong class="text-light d-block">{{ eq.name }}</strong>
+                            <div class="text-secondary extra-small">
+                                <i class="bi bi-telephone me-1"></i>{{ eq.phone }}
+                                {% if eq.city %} &bull; {{ eq.city }}{% endif %}
+                            </div>
+                            <div class="text-secondary extra-small">{{ eq.email }}</div>
+                        </td>
+                        <td>
+                            {% if eq.course %}
+                            <span class="text-light fw-semibold d-block">{{ eq.course.title }}</span>
+                            {% elif eq.target_class %}
+                            <span class="text-light d-block">{{ eq.target_class }}{% if eq.stream %} - {{ eq.stream }}{% endif %}</span>
+                            {% else %}
+                            <span class="text-secondary fst-italic">General Inquiry</span>
+                            {% endif %}
+                            {% if eq.batch_interest %}
+                            <span class="badge bg-secondary-subtle text-secondary extra-small mt-1">
+                                <i class="bi bi-clock me-1"></i>{{ eq.batch_interest.name }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if eq.source == 'website' %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-globe me-1"></i>Website</span>
+                            {% elif eq.source == 'phone' %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-telephone me-1"></i>Phone</span>
+                            {% elif eq.source == 'walk_in' %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-building me-1"></i>Walk-in</span>
+                            {% elif eq.source == 'referral' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-people me-1"></i>Referral</span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary">{{ eq.get_source_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if eq.status == 'new' %}
+                            <span class="badge bg-info text-dark fw-bold">New</span>
+                            {% elif eq.status == 'contacted' %}
+                            <span class="badge bg-primary text-white">Contacted</span>
+                            {% elif eq.status == 'trial_class' %}
+                            <span class="badge bg-warning text-dark fw-bold">Trial Class</span>
+                            {% elif eq.status == 'follow_up_required' %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Follow-up Req.</span>
+                            {% elif eq.status == 'converted' %}
+                            <span class="badge bg-success text-white fw-bold"><i class="bi bi-check-circle me-1"></i>Converted</span>
+                            {% elif eq.status == 'not_interested' %}
+                            <span class="badge bg-secondary-subtle text-secondary">Not Interested</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if eq.assigned_to %}
+                            <span class="text-light fw-semibold d-block">{{ eq.assigned_to.get_full_name|default:eq.assigned_to.username }}</span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Unassigned</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if eq.next_follow_up_date %}
+                            <span class="text-light d-block">{{ eq.next_follow_up_date|date:"M d, Y" }}</span>
+                            {% else %}
+                            <span class="text-secondary extra-small">Not set</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'admissions:admin_enquiry_detail' eq.enquiry_number %}" class="btn btn-outline-light btn-sm" title="View Dossier">
+                                <i class="bi bi-arrow-right-circle"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-secondary">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            No enquiries found matching your search or filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

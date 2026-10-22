@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance: {{ assignment.subject_name }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'attendance:teacher_home' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to My Assignments
+            </a>
+            <h2 class="fw-bold mb-1">Mark Register: {{ assignment.subject_name }}</h2>
+            <p class="text-secondary small mb-0">Class: <strong>{{ classroom.name }}</strong> (<code>{{ classroom.code }}</code>) | Enrolled Students: <strong>{{ enrollments.count }}</strong></p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-success btn-sm" id="btn-mark-all-present">
+                <i class="bi bi-check-all me-1"></i> Mark All Present
+            </button>
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Session Parameters Card -->
+        <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-sliders text-primary"></i> Session Parameters
+            </h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-light">Session Date <span class="text-danger">*</span></label>
+                    <input type="date" name="session_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                    <div class="form-text small text-secondary">
+                        Active Term: {{ classroom.academic_session.start_date }} to {{ classroom.academic_session.end_date }}
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-light">Period / Timetable Slot <span class="text-danger">*</span></label>
+                    <select name="session_period" class="form-select">
+                        <option value="Period 1 (08:30 - 09:20)" selected>Period 1 (08:30 - 09:20)</option>
+                        <option value="Period 2 (09:25 - 10:15)">Period 2 (09:25 - 10:15)</option>
+                        <option value="Period 3 (10:30 - 11:20)">Period 3 (10:30 - 11:20)</option>
+                        <option value="Period 4 (11:25 - 12:15)">Period 4 (11:25 - 12:15)</option>
+                        <option value="Period 5 (13:00 - 13:50)">Period 5 (13:00 - 13:50)</option>
+                        <option value="Period 6 (13:55 - 14:45)">Period 6 (13:55 - 14:45)</option>
+                        <option value="Lab Session (Afternoon)">Lab Session (Afternoon)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-light">Lecture Topic / Learning Milestone</label>
+                    <input type="text" name="topic" class="form-control" placeholder="e.g. Chapter 4: Database Normalization">
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Roster Table -->
+        <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+            <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-people-fill text-success"></i> Student Attendance Roster ({{ enrollments.count }})
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0 small">
+                    <thead>
+                        <tr class="text-secondary">
+                            <th style="width: 10%;">Roll #</th>
+                            <th style="width: 30%;">Student Name</th>
+                            <th style="width: 35%; text-align: center;">Attendance Status</th>
+                            <th style="width: 25%;">Teacher Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in enrollments %}
+                        <tr>
+                            <td><code>{{ e.roll_number|default:forloop.counter }}</code></td>
+                            <td>
+                                <strong class="text-light">{{ e.student.get_full_name|default:e.student.username }}</strong>
+                                <span class="text-secondary d-block">ID: {{ e.student.student_id|default:e.student.username }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input status-radio status-present" type="radio" name="status_{{ e.student.id }}" id="status_{{ e.student.id }}_present" value="present" checked>
+                                        <label class="form-check-label text-success fw-bold" for="status_{{ e.student.id }}_present">
+                                            Present
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input status-radio status-absent" type="radio" name="status_{{ e.student.id }}" id="status_{{ e.student.id }}_absent" value="absent">
+                                        <label class="form-check-label text-danger fw-bold" for="status_{{ e.student.id }}_absent">
+                                            Absent
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input status-radio status-late" type="radio" name="status_{{ e.student.id }}" id="status_{{ e.student.id }}_late" value="late">
+                                        <label class="form-check-label text-warning fw-bold" for="status_{{ e.student.id }}_late">
+                                            Late
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input status-radio status-excused" type="radio" name="status_{{ e.student.id }}" id="status_{{ e.student.id }}_excused" value="excused">
+                                        <label class="form-check-label text-info fw-bold" for="status_{{ e.student.id }}_excused">
+                                            Excused
+                                        </label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" name="remarks_{{ e.student.id }}" class="form-control form-control-sm" placeholder="Optional notes">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-secondary py-5">
+                                No active student enrollments found in this classroom.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if enrollments %}
+            <div class="border-top border-secondary-subtle pt-3 mt-4 d-flex justify-content-end gap-2">
+                <a href="{% url 'attendance:teacher_home' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary px-4 fw-bold">
+                    <i class="bi bi-save2-fill me-1"></i> Save &amp; Finalize Attendance Session
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const markAllBtn = document.getElementById("btn-mark-all-present");
+        if (markAllBtn) {
+            markAllBtn.addEventListener("click", function() {
+                const presentRadios = document.querySelectorAll(".status-present");
+                presentRadios.forEach(radio => radio.checked = true);
+            });
+        }
+    });
+</script>
+{% endblock %}

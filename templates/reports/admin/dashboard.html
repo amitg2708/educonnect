@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Oversight & Analytics - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-2 rounded-pill status-pill">
+                <span class="badge-status-dot bg-danger"></span>
+                <span class="small fw-bold text-danger text-uppercase">Role 1: Institutional Administrator &bull; Administrative Control Center</span>
+            </div>
+            <h2 class="fw-bold mb-1">Administrative Command &amp; Intelligence Hub</h2>
+            <p class="text-secondary small mb-0">{{ institution_settings.institution_name }} &bull; Academic Session: <strong class="text-light">{{ institution_settings.academic_year }}</strong></p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'reports:institution_settings' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-gear-fill me-1"></i> Institution Settings
+            </a>
+            <a href="{% url 'reports:admin_audit_logs' %}" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-shield-check me-1"></i> Audit Logs
+            </a>
+            <a href="{% url 'accounts:admin_users' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-people-fill me-1"></i> User Directory
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Operational Desks Bar -->
+    <div class="card p-3 border-0 rounded-4 feature-card mb-4 bg-dark-subtle border border-secondary-subtle">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span class="text-secondary small fw-bold text-uppercase d-flex align-items-center gap-1">
+                <i class="bi bi-folder2 text-primary"></i> Management Desks:
+            </span>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'reports:manage_classes' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-building me-1"></i> Classrooms ({{ total_classrooms }})
+                </a>
+                <a href="{% url 'reports:manage_enrollments' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-person-plus me-1"></i> Enrolments ({{ active_enrolments }})
+                </a>
+                <a href="{% url 'reports:manage_assignments' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-person-video3 me-1"></i> Faculty Teaching Roster ({{ active_assignments }})
+                </a>
+                <a href="{% url 'notifications:admin_announcements' %}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-megaphone me-1"></i> Announcements
+                </a>
+                <a href="{% url 'accounts:admin_link_parent' %}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-link-45deg me-1"></i> Link Parent &amp; Child
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6 Role Counts Metric Row -->
+    <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+        <i class="bi bi-people-fill text-primary"></i> Active Campus Population by Role
+    </h5>
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">STUDENTS</span>
+                <h3 class="fw-bold my-1 text-primary">{{ role_counts.student }}</h3>
+                <span class="badge bg-primary-subtle text-primary small">Active</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">TEACHERS</span>
+                <h3 class="fw-bold my-1 text-info">{{ role_counts.teacher }}</h3>
+                <span class="badge bg-info-subtle text-info small">Faculty</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">PARENTS</span>
+                <h3 class="fw-bold my-1 text-success">{{ role_counts.parent }}</h3>
+                <span class="badge bg-success-subtle text-success small">Guardians</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">ACCOUNTS</span>
+                <h3 class="fw-bold my-1 text-warning">{{ role_counts.accounts }}</h3>
+                <span class="badge bg-warning-subtle text-warning small">Finance</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">APPLICANTS</span>
+                <h3 class="fw-bold my-1 text-danger">{{ role_counts.applicant }}</h3>
+                <span class="badge bg-danger-subtle text-danger small">Admissions</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card p-3 border-0 rounded-4 feature-card text-center">
+                <span class="text-secondary small">ADMINS</span>
+                <h3 class="fw-bold my-1 text-light">{{ role_counts.admin }}</h3>
+                <span class="badge bg-secondary-subtle text-secondary small">Superusers</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Database Modules Metric Overview Grid -->
+    <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+        <i class="bi bi-speedometer2 text-info"></i> Real Database Aggregates &amp; Operational Metrics
+    </h5>
+    <div class="row g-4 mb-4">
+        <!-- Admissions Pipeline -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">ADMISSIONS PIPELINE</span>
+                    <i class="bi bi-file-earmark-person-fill text-danger fs-4"></i>
+                </div>
+                <h3 class="fw-bold text-light mb-1">{{ admissions_total }} Applications</h3>
+                <div class="text-secondary small mb-3">
+                    Pending Staff Action: <strong class="text-warning">{{ admissions_pending }}</strong>
+                </div>
+                <div class="mt-auto border-top border-secondary-subtle pt-3">
+                    <a href="{% url 'reports:admissions_report' %}" class="btn btn-outline-danger btn-sm w-100 fw-bold">
+                        <i class="bi bi-graph-up me-1"></i> Admissions Report &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fee Collections & Dues -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">TREASURY &amp; FEES</span>
+                    <i class="bi bi-cash-stack text-warning fs-4"></i>
+                </div>
+                <h3 class="fw-bold text-success mb-1">${{ total_fees_collected }}</h3>
+                <div class="text-secondary small mb-3">
+                    Total Billing: <strong class="text-light">${{ total_gross_fees }}</strong> &bull; Outstanding Balance: <strong class="text-warning">${{ total_fees_outstanding }}</strong>
+                </div>
+                <div class="mt-auto border-top border-secondary-subtle pt-3">
+                    <a href="{% url 'reports:fees_report' %}" class="btn btn-outline-warning btn-sm w-100 fw-bold">
+                        <i class="bi bi-receipt me-1"></i> Fee Collections Report &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campus Attendance Rate -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">CAMPUS ATTENDANCE</span>
+                    <i class="bi bi-calendar-check text-primary fs-4"></i>
+                </div>
+                <h3 class="fw-bold text-light mb-1">{{ overall_attendance_rate }}% Presence</h3>
+                <div class="text-secondary small mb-3">
+                    Total Sessions: <strong class="text-light">{{ attendance_sessions_count }}</strong> &bull; Records: <strong class="text-light">{{ attendance_records_count }}</strong>
+                </div>
+                <div class="mt-auto border-top border-secondary-subtle pt-3">
+                    <a href="{% url 'reports:attendance_report' %}" class="btn btn-outline-primary btn-sm w-100 fw-bold">
+                        <i class="bi bi-clipboard-data me-1"></i> Attendance Roster Report &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Examinations -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">ACADEMIC PERFORMANCE</span>
+                    <i class="bi bi-award text-success fs-4"></i>
+                </div>
+                <h3 class="fw-bold text-light mb-1">Assessments Desk</h3>
+                <div class="text-secondary small mb-3">
+                    Class Cohorts: <strong class="text-light">{{ total_classrooms }}</strong> &bull; Active Faculty: <strong class="text-info">{{ active_teachers }}</strong>
+                    {% if recent_classrooms %}
+                    <div class="mt-1">
+                        {% for c in recent_classrooms %}<span class="badge bg-secondary-subtle text-light me-1">{{ c.name }}</span>{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="mt-auto border-top border-secondary-subtle pt-3">
+                    <a href="{% url 'reports:academics_report' %}" class="btn btn-outline-success btn-sm w-100 fw-bold">
+                        <i class="bi bi-bar-chart-line me-1"></i> Academic Scores Report &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grievances & Complaints -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">HELPDESK &amp; COMPLAINTS</span>
+                    <i class="bi bi-chat-left-dots text-danger fs-4"></i>
+                </div>
+                <h3 class="fw-bold {% if overdue_complaints > 0 %}text-danger{% else %}text-light{% endif %} mb-1">
+                    {{ open_complaints }} Open Issues
+                </h3>
+                <div class="text-secondary small mb-3">
+                    Overdue SLA Tickets: <strong class="text-danger">{{ overdue_complaints }}</strong>
+                </div>
+                <div class="mt-auto border-top border-secondary-subtle pt-3">
+                    <a href="{% url 'reports:complaints_report' %}" class="btn btn-outline-info btn-sm w-100 fw-bold">
+                        <i class="bi bi-clock-history me-1"></i> Complaints &amp; SLA Report &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campus Broadcasts & Events -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-secondary small fw-bold">COMMUNICATIONS</span>
+                    <i class="bi bi-megaphone text-info fs-4"></i>
+                </div>
+                <h3 class="fw-bold text-light mb-1">{{ active_announcements }} Active Bulletins</h3>
+                <div class="text-secondary small mb-3">
+                    Campus-wide circulars &amp; cohort notices
+                </div>
+                <div class="mt-auto border-top border-secondary-subtle pt-3">
+                    <a href="{% url 'notifications:admin_announcements' %}" class="btn btn-outline-light btn-sm w-100 fw-bold">
+                        <i class="bi bi-broadcast me-1"></i> Broadcast Center &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Administrative Audit Trail & Recent Users -->
+    <div class="row g-4">
+        <!-- Audit Logs -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-info"></i> Recent Administrative Audit Logs
+                    </h5>
+                    <a href="{% url 'reports:admin_audit_logs' %}" class="small text-info text-decoration-none">View All Logs</a>
+                </div>
+                <ul class="list-group list-group-flush bg-transparent">
+                    {% for log in recent_logs %}
+                    <li class="list-group-item bg-transparent text-light border-secondary-subtle px-0 py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-secondary small">{{ log.action }}</span>
+                            <small class="text-secondary">{{ log.created_at|date:"M d, H:i" }}</small>
+                        </div>
+                        <div class="small text-light mt-1">{{ log.description }}</div>
+                        <small class="text-secondary">By {{ log.actor.username }}{% if log.ip_address %} &bull; IP: {{ log.ip_address }}{% endif %}</small>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item bg-transparent text-secondary px-0">No administrative audit entries logged.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recent Registered Accounts -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-light d-flex align-items-center gap-2">
+                        <i class="bi bi-person-check text-primary"></i> Recently Registered Users
+                    </h5>
+                    <a href="{% url 'accounts:admin_users' %}" class="small text-info text-decoration-none">User Directory</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead class="text-secondary small">
+                            <tr>
+                                <th>USER</th>
+                                <th>ROLE</th>
+                                <th>DATE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in recent_users %}
+                            <tr>
+                                <td>
+                                    <strong class="text-light">{{ u.get_full_name|default:u.username }}</strong>
+                                    <div class="small text-secondary">{{ u.email }}</div>
+                                </td>
+                                <td><span class="badge bg-primary-subtle text-primary">{{ u.get_role_display }}</span></td>
+                                <td><small class="text-secondary">{{ u.date_joined|date:"M d" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center py-3 text-secondary">No users found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

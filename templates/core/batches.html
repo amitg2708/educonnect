@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Coaching Batches & Schedules - {{ institution.name|default:"EduConnect" }}{% endblock %}
+
+{% block content %}
+<!-- Header Hero -->
+<section class="py-5 border-bottom border-secondary-subtle position-relative overflow-hidden">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 mb-3 rounded-pill bg-primary-subtle text-primary border border-primary-subtle small fw-semibold">
+                    <i class="bi bi-collection-play-fill"></i>
+                    <span>Cohort Schedules &bull; {{ institution.name|default:"EduConnect" }}</span>
+                </div>
+                <h1 class="display-5 fw-extrabold text-light mb-3">Academic Coaching Batches</h1>
+                <p class="lead text-secondary mb-0">
+                    Find the perfect cohort timing, exam preparation stream, and target grade for the upcoming academic session.
+                </p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                <a href="{% if institution %}{% url 'core:institute_admissions' institution.slug %}{% else %}{% url 'core:admissions' %}{% endif %}" class="btn btn-primary px-4 py-2 fw-semibold">
+                    <i class="bi bi-pencil-square me-1"></i> Apply for a Batch
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Batches Grid -->
+<section class="py-5">
+    <div class="container">
+        {% if batches %}
+        <div class="row g-4">
+            {% for batch in batches %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-secondary bg-dark shadow-sm hover-elevate transition-all">
+                    <div class="card-header border-secondary bg-transparent py-3 d-flex justify-content-between align-items-center">
+                        <span class="badge bg-secondary-subtle text-secondary font-monospace">{{ batch.code }}</span>
+                        {% if batch.status == 'ongoing' %}
+                        <span class="badge bg-success-subtle text-success small"><i class="bi bi-play-circle me-1"></i> Ongoing</span>
+                        {% elif batch.status == 'upcoming' %}
+                        <span class="badge bg-info-subtle text-info small"><i class="bi bi-clock me-1"></i> Enrolling Soon</span>
+                        {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary small">{{ batch.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold text-light mb-2">{{ batch.name }}</h5>
+                        <p class="text-primary small fw-semibold mb-3">
+                            <i class="bi bi-mortarboard me-1"></i> {{ batch.course.title }}
+                        </p>
+
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            {% if batch.target_class %}
+                            <span class="badge bg-dark border border-secondary text-light small">{{ batch.target_class }}</span>
+                            {% endif %}
+                            {% if batch.stream %}
+                            <span class="badge bg-dark border border-secondary text-info small">{{ batch.stream }}</span>
+                            {% endif %}
+                            {% if batch.board %}
+                            <span class="badge bg-dark border border-secondary text-warning small">{{ batch.board }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="p-3 rounded-3 bg-dark-subtle border border-secondary small mb-3">
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-secondary"><i class="bi bi-calendar-event me-1"></i> Duration:</span>
+                                <span class="text-light fw-semibold">{{ batch.start_date|date:"M Y" }} &ndash; {{ batch.end_date|date:"M Y" }}</span>
+                            </div>
+                            {% if batch.branch %}
+                            <div class="d-flex justify-content-between py-1 border-top border-secondary-subtle">
+                                <span class="text-secondary"><i class="bi bi-geo-alt me-1"></i> Campus:</span>
+                                <span class="text-light">{{ batch.branch.name }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="d-flex justify-content-between py-1 border-top border-secondary-subtle">
+                                <span class="text-secondary"><i class="bi bi-people me-1"></i> Cohort Limit:</span>
+                                <span class="text-light">{{ batch.capacity }} Students</span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <a href="{% if institution %}{% url 'core:institute_admissions' institution.slug %}{% else %}{% url 'core:admissions' %}{% endif %}?batch={{ batch.id }}&program={{ batch.course.title }}"
+                               class="btn btn-outline-primary fw-semibold">
+                                <i class="bi bi-check-circle me-1"></i> Enquire for This Batch
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border-secondary bg-dark p-5 text-center shadow-sm">
+            <div class="mb-3 text-secondary" style="font-size: 3rem;">
+                <i class="bi bi-calendar-x"></i>
+            </div>
+            <h4 class="text-light fw-bold">New Cohorts Opening Soon</h4>
+            <p class="text-secondary mb-3">
+                Coaching batch schedules for {{ institution.name|default:"EduConnect" }} are being finalized. Check back or register your interest early.
+            </p>
+            <div>
+                <a href="{% if institution %}{% url 'core:institute_admissions' institution.slug %}{% else %}{% url 'core:admissions' %}{% endif %}" class="btn btn-primary">
+                    <i class="bi bi-pencil-square me-1"></i> Submit General Enquiry
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

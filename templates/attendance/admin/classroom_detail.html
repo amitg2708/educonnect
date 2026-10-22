@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Classroom: {{ classroom.name }} - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'attendance:admin_classrooms' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Classrooms
+            </a>
+            <h2 class="fw-bold mb-1">{{ classroom.name }} (<code>{{ classroom.code }}</code>)</h2>
+            <p class="text-secondary small mb-0">
+                Term: <strong>{{ classroom.academic_session.name }}</strong> | Location: <strong>{{ classroom.room_number|default:"TBA" }}</strong> | Capacity: <strong>{{ classroom.capacity }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Student Roster & Enroll Form -->
+        <div class="col-lg-7">
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill text-success"></i> Enrolled Student Roster ({{ enrollments.count }})
+                    </h5>
+                    <span class="badge bg-success-subtle text-success">{{ enrollments.count }} / {{ classroom.capacity }} Enrolled</span>
+                </div>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Roll #</th>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th>Enrolled Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in enrollments %}
+                            <tr>
+                                <td><code>{{ e.roll_number|default:forloop.counter }}</code></td>
+                                <td>
+                                    <strong class="text-light">{{ e.student.get_full_name|default:e.student.username }}</strong>
+                                    <span class="text-secondary d-block">ID: {{ e.student.student_id|default:e.student.username }}</span>
+                                </td>
+                                <td>{{ e.student.email }}</td>
+                                <td>{{ e.enrolled_date }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-4">No students enrolled yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Enroll Student Subform -->
+                <div class="border-top border-secondary-subtle pt-3">
+                    <h6 class="fw-bold mb-2 text-secondary small">Enroll Student to this Classroom</h6>
+                    <form method="POST" class="row g-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="enroll_student">
+                        <input type="hidden" name="classroom" value="{{ classroom.id }}">
+                        <div class="col-md-7">
+                            {{ enroll_form.student }}
+                        </div>
+                        <div class="col-md-3">
+                            {{ enroll_form.roll_number }}
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-success w-100 btn-sm">Enroll</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Assignments -->
+        <div class="col-lg-5">
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-video3 text-info"></i> Subject Faculty Assignments
+                    </h5>
+                    <span class="badge bg-info-subtle text-info">{{ assignments.count }} Subjects</span>
+                </div>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-dark table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr class="text-secondary">
+                                <th>Subject</th>
+                                <th>Faculty Member</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in assignments %}
+                            <tr>
+                                <td class="fw-bold text-light">{{ a.subject_name }}</td>
+                                <td>{{ a.teacher.get_full_name|default:a.teacher.username }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-secondary py-3">No teacher assignments configured.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Assign Faculty Subform -->
+                <div class="border-top border-secondary-subtle pt-3">
+                    <h6 class="fw-bold mb-2 text-secondary small">Assign Faculty to Subject</h6>
+                    <form method="POST" class="row g-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="assign_teacher">
+                        <input type="hidden" name="classroom" value="{{ classroom.id }}">
+                        <div class="col-12">
+                            <label class="form-label small text-secondary">Faculty Member</label>
+                            {{ teacher_form.teacher }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small text-secondary">Subject Name</label>
+                            {{ teacher_form.subject_name }}
+                        </div>
+                        <div class="col-12 mt-3">
+                            <button type="submit" class="btn btn-info w-100 btn-sm fw-bold">Authorize Assignment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

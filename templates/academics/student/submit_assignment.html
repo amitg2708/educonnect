@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Assignment - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Submit Coursework</h3>
+                    <p class="text-secondary small mb-0">{{ assignment.title }} - {{ assignment.subject_name }}</p>
+                </div>
+                <a href="{% url 'academics:student_assignments' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> My Assignments
+                </a>
+            </div>
+
+            <!-- Assignment Brief Card -->
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 mb-2">
+                            {{ assignment.subject_name }}
+                        </span>
+                        <h4 class="fw-bold text-light mb-1">{{ assignment.title }}</h4>
+                        <div class="text-secondary small">
+                            Max Score: <strong class="text-light">{{ assignment.max_score }}</strong> |
+                            Due: <strong class="{% if assignment.is_past_due %}text-danger{% else %}text-light{% endif %}">
+                                {{ assignment.due_datetime|date:"M d, Y H:i" }}
+                            </strong>
+                        </div>
+                    </div>
+                    {% if assignment.is_past_due %}
+                    <span class="badge bg-danger">Past Due (Late Submission Policy Applies)</span>
+                    {% else %}
+                    <span class="badge bg-success">Active</span>
+                    {% endif %}
+                </div>
+
+                <div class="p-3 rounded-3 bg-dark border border-secondary-subtle mb-3">
+                    <h6 class="text-secondary small fw-bold mb-2">Instructions:</h6>
+                    <p class="text-light small mb-0" style="white-space: pre-wrap;">{{ assignment.description }}</p>
+                </div>
+
+                {% if assignment.attachment %}
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-dark border border-secondary-subtle">
+                    <span class="text-secondary small">
+                        <i class="bi bi-paperclip me-1"></i> Faculty Assignment Brief / Resource:
+                    </span>
+                    <a href="{{ assignment.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-download me-1"></i> Download Brief
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Existing Submission Status (if already submitted) -->
+            {% if existing_submission %}
+            <div class="card p-4 border-0 rounded-4 feature-card mb-4 border border-info-subtle">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-info mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Current Submission On Record
+                    </h6>
+                    <small class="text-secondary">Submitted: {{ existing_submission.submitted_at|date:"M d, Y H:i" }}</small>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <span class="small text-light">
+                        File: <code>{{ existing_submission.submission_file.name }}</code>
+                    </span>
+                    <a href="{{ existing_submission.submission_file.url }}" target="_blank" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-eye me-1"></i> View Submitted File
+                    </a>
+                </div>
+                {% if existing_submission.score is not None %}
+                <div class="mt-3 pt-3 border-top border-secondary-subtle">
+                    <h6 class="text-success fw-bold mb-1">
+                        <i class="bi bi-award me-1"></i> Graded Score: {{ existing_submission.score }} / {{ assignment.max_score }}
+                    </h6>
+                    {% if existing_submission.feedback %}
+                    <p class="text-secondary small mb-0">Teacher Feedback: <em>"{{ existing_submission.feedback }}"</em></p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Upload Coursework Form -->
+            {% if not existing_submission or existing_submission.score is None %}
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <h5 class="fw-bold mb-3 text-light d-flex align-items-center gap-2">
+                    <i class="bi bi-cloud-arrow-up text-primary"></i> {% if existing_submission %}Replace / Update Submission{% else %}Upload Your Solution{% endif %}
+                </h5>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Solution File (PDF, DOC, ZIP up to 10MB) *</label>
+                        {{ form.submission_file }}
+                        {% if form.submission_file.errors %}<div class="text-danger small">{{ form.submission_file.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary small fw-bold">Student Notes / Explanation</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-check2-circle me-1"></i> Submit Coursework
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <div class="alert alert-info border-0 rounded-4 text-center">
+                This submission has already been graded and closed by faculty. Further submissions are disabled.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

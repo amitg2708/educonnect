@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Corrections Review - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{% url 'attendance:admin_dashboard' %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                &larr; Back to Attendance Desk
+            </a>
+            <h2 class="fw-bold mb-1">Attendance Dispute &amp; Correction Queue</h2>
+            <p class="text-secondary small mb-0">Review student and parent submitted excuse notes, medical claims, and clerical error requests.</p>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="d-flex gap-2 mb-4">
+        <a href="{% url 'attendance:admin_corrections' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-dark border-secondary-subtle{% endif %}">
+            All ({{ corrections.count }})
+        </a>
+        <a href="{% url 'attendance:admin_corrections' %}?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-warning{% else %}btn-dark border-secondary-subtle{% endif %}">
+            Pending Review
+        </a>
+        <a href="{% url 'attendance:admin_corrections' %}?status=approved" class="btn btn-sm {% if status_filter == 'approved' %}btn-success{% else %}btn-dark border-secondary-subtle{% endif %}">
+            Approved
+        </a>
+        <a href="{% url 'attendance:admin_corrections' %}?status=rejected" class="btn btn-sm {% if status_filter == 'rejected' %}btn-danger{% else %}btn-dark border-secondary-subtle{% endif %}">
+            Rejected
+        </a>
+    </div>
+
+    <div class="card p-4 border-0 rounded-4 feature-card">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0 small">
+                <thead>
+                    <tr class="text-secondary">
+                        <th>Date Submitted</th>
+                        <th>Student</th>
+                        <th>Session / Subject</th>
+                        <th>Current Status</th>
+                        <th>Requested Status</th>
+                        <th>Reason</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in corrections %}
+                    <tr>
+                        <td>{{ c.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            <strong class="text-light">{{ c.student.get_full_name|default:c.student.username }}</strong>
+                            <span class="text-secondary d-block">ID: {{ c.student.student_id|default:c.student.username }}</span>
+                        </td>
+                        <td>
+                            <strong>{{ c.record.session.subject_name }}</strong>
+                            <span class="text-secondary d-block">{{ c.record.session.session_date }}</span>
+                        </td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">{{ c.record.get_status_display }}</span></td>
+                        <td><span class="badge bg-info-subtle text-info">{{ c.get_requested_status_display }}</span></td>
+                        <td>{{ c.reason|truncatewords:8 }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if c.status == 'approved' %}bg-success-subtle text-success{% elif c.status == 'rejected' %}bg-danger-subtle text-danger{% else %}bg-warning-subtle text-warning{% endif %}">
+                                {{ c.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'attendance:admin_review_correction' c.id %}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-eye me-1"></i> Review
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-5">
+                            <i class="bi bi-check2-all fs-2 mb-2 d-block text-success"></i>
+                            No correction requests in this queue.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

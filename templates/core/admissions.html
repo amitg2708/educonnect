@@ -68,7 +68,7 @@
                     Complete this form and an admissions counselor will reach out within 24 business hours.
                 </p>
 
-                <form method="post" action="{% url 'core:admissions' %}" novalidate>
+                <form method="post" action="" novalidate>
                     {% csrf_token %}
 
                     <div class="mb-3">
@@ -133,12 +133,22 @@
                 <p class="text-secondary small mb-4">
                     Create an <strong>Applicant Account</strong> to track your application status in real-time through the EduConnect Portal.
                 </p>
-                <a href="{% url 'accounts:register' %}" class="btn btn-primary w-100 py-2 fw-semibold mb-2">
-                    <i class="bi bi-person-plus me-1"></i> Register as Applicant
+                <a href="{% url 'admissions:apply' %}" class="btn btn-primary w-100 py-2 fw-semibold mb-2">
+                    <i class="bi bi-file-earmark-plus me-1"></i> Submit Online Application
                 </a>
-                <a href="{% url 'accounts:login' %}" class="btn btn-outline-light w-100 py-2 small">
-                    Sign In to Existing Application
+                <a href="{% url 'admissions:eligibility' %}" class="btn btn-outline-light w-100 py-2 small mb-2">
+                    <i class="bi bi-check2-circle me-1"></i> View Program Eligibility
                 </a>
+                {% if not user.is_authenticated %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'accounts:register' %}" class="btn btn-sm btn-outline-secondary text-light w-50 py-1 small">
+                        Register
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-sm btn-outline-secondary text-light w-50 py-1 small">
+                        Sign In
+                    </a>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Financial Assistance Box -->

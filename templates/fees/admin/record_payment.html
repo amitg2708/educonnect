@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Record Offline Payment - EduConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <a href="{% url 'fees:allocation_detail' allocation.id %}" class="small text-secondary text-decoration-none mb-1 d-inline-block">
+                        &larr; Back to Student Ledger
+                    </a>
+                    <h2 class="fw-bold mb-1">Record Authorized Offline Payment</h2>
+                    <p class="text-secondary small mb-0">
+                        Student: <strong class="text-light">{{ allocation.student.get_full_name|default:allocation.student.username }}</strong>
+                        (ID: <code>{{ allocation.student.student_id|default:allocation.student.username }}</code>)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Current Ledger Quick Info -->
+            <div class="alert alert-dark border border-secondary-subtle rounded-4 p-3 mb-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-secondary small d-block">Applicable Fee Structure:</span>
+                    <strong>{{ allocation.fee_structure.title }}</strong>
+                </div>
+                <div class="text-end">
+                    <span class="text-secondary small d-block">Current Outstanding Balance:</span>
+                    <h4 class="fw-bold text-danger mb-0">${{ allocation.outstanding_balance|floatformat:2 }}</h4>
+                </div>
+            </div>
+
+            <div class="card p-4 border-0 rounded-4 feature-card">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Payment Amount ($) <span class="text-danger">*</span></label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}<div class="text-danger small">{{ form.amount.errors }}</div>{% endif %}
+                            <div class="form-text small text-secondary">Supports exact partial payments or full settlement.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Payment Method <span class="text-danger">*</span></label>
+                            {{ form.payment_method }}
+                            {% if form.payment_method.errors %}<div class="text-danger small">{{ form.payment_method.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold text-light">Transaction Reference / UTR / Cheque No <span class="text-danger">*</span></label>
+                            {{ form.transaction_reference }}
+                            {% if form.transaction_reference.errors %}<div class="text-danger small">{{ form.transaction_reference.errors }}</div>{% endif %}
+                            <div class="form-text small text-secondary">Must be unique to prevent duplicate processing.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-light">Payment Date <span class="text-danger">*</span></label>
+                            {{ form.payment_date }}
+                            {% if form.payment_date.errors %}<div class="text-danger small">{{ form.payment_date.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Payer Full Name <span class="text-danger">*</span></label>
+                            {{ form.payer_name }}
+                            {% if form.payer_name.errors %}<div class="text-danger small">{{ form.payer_name.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-light">Relationship to Student</label>
+                            {{ form.payer_relationship }}
+                            {% if form.payer_relationship.errors %}<div class="text-danger small">{{ form.payer_relationship.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-light">Target Installment Milestone</label>
+                            {{ form.installment_id }}
+                            {% if form.installment_id.errors %}<div class="text-danger small">{{ form.installment_id.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-light">Counter Cashier Remarks</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12 border-top border-secondary-subtle pt-3 d-flex justify-content-end gap-2">
+                            <a href="{% url 'fees:allocation_detail' allocation.id %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success px-4 fw-bold">
+                                <i class="bi bi-check2-circle me-1"></i> Confirm &amp; Issue Official Receipt
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
